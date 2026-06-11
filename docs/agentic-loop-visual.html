@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>
+  /* Sized for a 16:9 slide image: 1600x900 */
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1600px;height:900px;overflow:hidden;
+    font-family:"Salesforce Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#0b1220 0%,#0d1b3a 55%,#10254f 100%);color:#fff;}
+  .stage{position:relative;width:1600px;height:900px;padding:56px 64px;}
+  h1{font-size:46px;font-weight:800;letter-spacing:-.5px;}
+  h1 .accent{color:#7ab8ff;}
+  .subtitle{font-size:21px;color:#9fb3d1;margin-top:8px;font-weight:500;}
+
+  /* The loop ring */
+  .loop{position:absolute;top:200px;left:50%;transform:translateX(-50%);width:760px;height:600px;}
+  .ring{position:absolute;top:60px;left:130px;width:500px;height:500px;border-radius:50%;
+    border:3px dashed rgba(122,184,255,.35);}
+  .center{position:absolute;top:230px;left:360px;width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#1b9bff,#0a4ea8);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;box-shadow:0 0 60px rgba(27,155,255,.55);text-align:center;}
+  .center .bot{font-size:46px;}
+  .center .lbl{font-size:17px;font-weight:700;margin-top:2px;}
+
+  /* nodes */
+  .node{position:absolute;width:260px;background:rgba(255,255,255,.06);border:1px solid rgba(122,184,255,.4);
+    border-radius:18px;padding:18px 20px;backdrop-filter:blur(4px);box-shadow:0 10px 30px rgba(0,0,0,.35);}
+  .node .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;
+    background:#7ab8ff;color:#06132b;font-weight:800;font-size:16px;margin-bottom:8px;}
+  .node h3{font-size:21px;font-weight:700;}
+  .node p{font-size:15.5px;color:#bcd0ec;margin-top:5px;line-height:1.4;}
+  .n1{top:6px;left:250px;}        /* Understand - top */
+  .n2{top:215px;left:545px;}      /* Decide - right */
+  .n3{top:430px;left:250px;}      /* Act - bottom */
+  .n4{top:215px;left:-45px;}      /* Observe - left */
+
+  /* arrows between nodes (curved hint via small chevrons) */
+  .chev{position:absolute;font-size:34px;color:#7ab8ff;}
+  .c1{top:120px;left:545px;}      /* top -> right */
+  .c2{top:400px;left:545px;}      /* right -> bottom */
+  .c3{top:400px;left:185px;}      /* bottom -> left */
+  .c4{top:120px;left:185px;}      /* left -> top */
+
+  /* footer strip */
+  .foot{position:absolute;bottom:42px;left:64px;right:64px;display:flex;gap:18px;}
+  .pill{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;
+    padding:16px 20px;}
+  .pill .k{font-size:14px;color:#7ab8ff;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+  .pill .v{font-size:17px;color:#e7eefb;margin-top:4px;}
+  .brand{position:absolute;top:56px;right:64px;font-size:16px;color:#7ab8ff;font-weight:700;text-align:right;}
+</style>
+</head>
+<body>
+<div class="stage">
+  <h1>How an Agent Works — the <span class="accent">Agentic Loop</span></h1>
+  <div class="subtitle">An agent doesn't follow a fixed script. It reasons in a loop: understand → decide → act → observe — until the goal is done.</div>
+  <div class="brand">Agentforce<br/>Employee Agent V1</div>
+
+  <div class="loop">
+    <div class="ring"></div>
+    <div class="center"><div class="bot">🤖</div><div class="lbl">Agent<br/>(LLM&nbsp;reasoning)</div></div>
+
+    <div class="node n1"><span class="num">1</span><h3>Understand</h3>
+      <p>Read the user's message + context (the open record, the conversation, your instructions).</p></div>
+    <div class="node n2"><span class="num">2</span><h3>Decide</h3>
+      <p>Reason about what to do next — answer directly, or pick the right <b>action</b> to call.</p></div>
+    <div class="node n3"><span class="num">3</span><h3>Act</h3>
+      <p>Call an action: run a Flow, a Prompt Template, Apex, or a standard action (e.g. log a note, query records).</p></div>
+    <div class="node n4"><span class="num">4</span><h3>Observe</h3>
+      <p>Read the result, decide if the goal is met. If not — loop again with what it just learned.</p></div>
+
+    <div class="chev c1">⟶</div>
+    <div class="chev c2">⟶</div>
+    <div class="chev c3">⟵</div>
+    <div class="chev c4">⟵</div>
+  </div>
+
+  <div class="foot">
+    <div class="pill"><div class="k">You write</div><div class="v">Reasoning <b>Instructions</b> — the agent's judgment: what to do, when, and how.</div></div>
+    <div class="pill"><div class="k">You add</div><div class="v"><b>Actions</b> — the agent's capabilities: the things it can actually do.</div></div>
+    <div class="pill"><div class="k">The magic</div><div class="v">Instructions + Actions, run in the loop = an agent that gets work done.</div></div>
+  </div>
+</div>
+</body>
+</html>

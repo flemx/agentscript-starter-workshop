@@ -1,0 +1,118 @@
+system:
+    instructions: |
+        You are an AI Agent.
+
+        The user's current context is:
+        Current App Name: {!@variables.currentAppName}
+        Current Object Name: {!@variables.currentObjectApiName}
+        Current Page Type: {!@variables.currentPageType}
+        Current Record ID: {!@variables.currentRecordId}
+    messages:
+        welcome: |
+            Hi, I'm Agentforce! I use AI to search trusted sources, and more. Ask me "What else can you do?" to see how I can simplify your workday. How can I help?
+        error: "Something went wrong. Try again."
+
+config:
+    agent_label: "Note taking agent"
+    agent_template: "EmployeeCopilot__AgentforceEmployeeAgent"
+    developer_name: "Note_taking_agent"
+    agent_type: "AgentforceEmployeeAgent"
+    description: "Automate common business tasks and assist users in their flow of work. Agentforce Employee Agent can search knowledge articles and other data sources. Customize it further to meet your employees' business needs."
+
+language:
+    default_locale: "en_US"
+    additional_locales: "en_GB"
+    all_additional_locales: False
+
+variables:
+    EndUserId: linked string
+        source: @MessagingSession.MessagingEndUserId
+        description: "This variable may also be referred to as MessagingEndUser Id"
+    RoutableId: linked string
+        source: @MessagingSession.Id
+        description: "This variable may also be referred to as MessagingSession Id"
+    ContactId: linked string
+        source: @MessagingEndUser.ContactId
+        description: "This variable may also be referred to as MessagingEndUser ContactId"
+    EndUserLanguage: linked string
+        source: @MessagingSession.EndUserLanguage
+        description: "This variable may also be referred to as MessagingSession EndUserLanguage"
+    ChannelType: linked string
+        source: @MessagingSession.ChannelType
+        description: "This variable may also be referred to as MessagingSession ChannelType"
+    currentAppName: mutable string
+        description: "Salesforce Application Name"
+        visibility: "External"
+    currentObjectApiName: mutable string
+        description: "The API name of the current Salesforce object"
+        visibility: "External"
+    currentPageType: mutable string
+        description: "Page type (record, list, home)"
+        visibility: "External"
+    currentRecordId: mutable string
+        description: "The Salesforce ID of the current record"
+        visibility: "External"
+    VerifiedCustomerId: mutable string
+        description: "This variable may also be referred to as VerifiedCustomerId"
+        visibility: "Internal"
+
+knowledge:
+    rag_feature_config_id: ""
+    citations_url: ""
+    citations_enabled: False
+
+start_agent notes_agent:
+    label: "Notes Agent"
+    description: "Welcome the user and determine the appropriate subagent based on user input"
+    model_config:
+        model: "model://sfdc_ai__DefaultVertexAIGemini35Flash"
+    reasoning:
+        instructions: ->
+            | You are a meeting note researcher and summarizer agent, your job is to take unstructured meeting notes, perform some research to enhance the notes and store it into a notes record, associate it to an existing record if available from the @variables.currentRecordId, add this to the varAccountID inpout of the First_Agent_Log_Account_Note action
+            
+        actions:
+            First_Agent_Log_Account_Note: @actions.First_Agent_Log_Account_Note
+                with varAccountID = ...
+                with varNoteBody = ...
+                with varNoteTitle = ...
+
+
+    actions:
+        First_Agent_Log_Account_Note:
+            description: |
+                This flow ensures the inputted note is captured on the account as a note record
+            label: "First Agent Log  Note"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Logging Notes"
+            source: "First_Agent_Log_Account_Note"
+            target: "flow://First_Agent_Log_Account_Note"
+                
+            inputs:
+                "varAccountID": string
+                    description: |
+                      The unique Salesforce 18-character ID of the record associated with the meeting. This should be automatically extracted from the active page context from the currentRecordId
+                    label: "varAccountID"
+                    is_required: True
+                    is_user_input: True
+                "varNoteBody": string
+                    description: |
+                      The raw meeting notes, text blocks, call logs, or audio transcripts provided by the user that need to be analyzed, summarized, and saved to Salesforce
+                    label: "varNoteBody"
+                    is_required: True
+                    is_user_input: True
+                "varNoteTitle": string
+                    description: |
+                      The title assigned to the created note record. The agent should automatically generate this in the format 'Meeting Notes - [Account Name] - [Current Date]' without asking the user for input
+                    label: "varNoteTitle"
+                    is_required: False
+                    is_user_input: False
+                
+            outputs:
+                "varIsSuccess": boolean
+                    description: |
+                      Indicates whether the meeting note was successfully created and linked to the Salesforce account record
+                    label: "varIsSuccess"
+                    is_displayable: True
+                    filter_from_agent: False
+

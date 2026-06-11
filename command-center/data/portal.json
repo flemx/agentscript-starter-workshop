@@ -1,0 +1,241 @@
+{
+  "_comment": "COMMITTED project content for the Command Center portal. index.html is a generic shell that renders THIS file. To reuse the cockpit for a new project, replace this file (+ GOALS.md). `goals` is auto-filled from GOALS.md by build_portal_data.mjs — do not hand-edit it here. Page `blocks` use a fixed block-type vocabulary (hero, callout, secTitle, statGrid, goals, cardGrid, flow, table, modelList, trace, html). Dynamic pages (no `blocks`) keep their UI shell in index.html and only take kicker/title/lead from here.",
+  "brand": { "name": "Agentforce Hackathon", "logoLetter": "A", "tagline": "AI Command Center · living doc" },
+  "liveStatus": "Prep · Active",
+  "updatedLabel": "updated 2026-06-10",
+  "nav": [
+    { "group": "Project", "items": [
+      { "pg": "home", "icon": "◆", "label": "Overview & Goals" },
+      { "pg": "architecture", "icon": "⛓", "label": "How It Works" },
+      { "pg": "workshop", "icon": "🎓", "label": "The 2-Hour Workshop" }
+    ]},
+    { "group": "Deliverables", "items": [
+      { "pg": "package", "icon": "📦", "label": "The SFDX Package" },
+      { "pg": "webapp", "icon": "🌐", "label": "Workshop Web App" },
+      { "pg": "templates", "icon": "🧩", "label": "Agent Templates" }
+    ]},
+    { "group": "Tracks", "items": [
+      { "pg": "build-tasks", "icon": "🧱", "label": "Build Tasks" },
+      { "pg": "research-rounds", "icon": "🧪", "label": "Research Rounds" }
+    ]},
+    { "group": "Meta", "items": [
+      { "pg": "files", "icon": "📁", "label": "Files" },
+      { "pg": "log", "icon": "🗓", "label": "Build Log" },
+      { "pg": "agentic", "icon": "🤖", "label": "Agentic History" },
+      { "pg": "center", "icon": "🧭", "label": "About the Center" }
+    ]}
+  ],
+  "pages": [
+    {
+      "id": "home",
+      "blocks": [
+        { "type": "hero",
+          "eyebrow": "Prep · package + workshop in progress",
+          "titleHtml": "Install a package, <span class=\"gr\">build your own agent</span> — in two hours.",
+          "bodyHtml": "An <b>Agentforce package</b> customers install into their own sandbox — it lands the permission sets, the ready-made actions, a Lightning app, and a starter <b>Employee Agent V1</b> (a meeting-note agent). A <b>self-guided web app</b> then walks a non-developer through building and testing that agent in Agent Studio. From \"installed\" to \"a working agent they made\" inside a hands-on workshop.",
+          "ctas": [
+            { "label": "How it works →", "go": "architecture", "primary": true },
+            { "label": "The 2-hour workshop", "go": "workshop" },
+            { "label": "The package", "go": "package" },
+            { "label": "The web app", "go": "webapp" }
+          ]
+        },
+        { "type": "callout", "variant": "default",
+          "titleHtml": "🎯 The goal, precisely",
+          "bodyHtml": "Ship two things that work together: (1) an <b>installable Salesforce package</b> (install link — <b>not</b> a scary browser-OAuth flow) that lands the <b>permission sets, the action assets, a Lightning app, and the Employee Agent V1 starter</b>; and (2) a <b>self-guided React web app</b> that takes a non-expert from <i>get an org → install → build the agent in Agent Studio (instructions + actions) → preview → commit → test</i>, with org sign-up and a <b>free backup org</b> so nobody gets stuck. The agent itself is built in-org because <code>AiAuthoringBundle</code> can't be packaged." },
+        { "type": "secTitle", "text": "At a glance" },
+        { "type": "statGrid", "stats": [
+          { "n": 2, "label": "deliverables: package + web app" },
+          { "n": 8, "label": "core goals (G1–G8)" },
+          { "n": 2, "suffix": "h", "label": "hands-on workshop window" },
+          { "n": 0, "suffix": " CLI", "label": "CLI steps for attendees" }
+        ]},
+        { "type": "secTitle", "text": "Core goals" },
+        { "type": "goals" },
+        { "type": "secTitle", "text": "How it will work, in one breath" },
+        { "type": "cardGrid", "cols": 3, "cards": [
+          { "icon": "📦", "titleHtml": "1 · Install", "bodyHtml": "The customer installs our package (an install link) into their sandbox. It lands the <b>perm sets, action assets, a Lightning app, and the Employee Agent V1 starter</b> — no Setup spelunking, no CLI." },
+          { "icon": "🛠️", "titleHtml": "2 · Build in Agent Studio", "bodyHtml": "Guided by the web app, the attendee writes <b>reasoning instructions</b> and <b>adds the Note + Summarize actions</b> from the asset library — then previews and <b>commits</b> the agent live." },
+          { "icon": "🧪", "titleHtml": "3 · Test + extend", "bodyHtml": "They <b>test</b> it (notes → summarize → log to a record), then in the free exercise add <b>Query Records, draft email, Search Web</b> and more — all inside the two-hour session." }
+        ]}
+      ]
+    },
+    {
+      "id": "architecture",
+      "kicker": "System Design",
+      "titleHtml": "How it works — <span class=\"gr\">install once, deploy at runtime</span>",
+      "leadHtml": "<b>Decided:</b> distribute the supporting assets as an <b>installable package</b> (install link) — not a browser-OAuth flow that triggers security warnings. The package can't carry the agent itself (Agent Script <code>AiAuthoringBundle</code> isn't packageable), so it ships everything <i>around</i> the agent — permission sets, the action assets, a Lightning app, and a starter template — and the attendee <b>builds the agent in Agent Studio</b> during the workshop.",
+      "blocks": [
+        { "type": "flow", "nodes": [
+          { "head": "Install", "title": "Package → org", "body": "Customer installs the package (install link) into their sandbox. Ships permission sets, the action assets, a Lightning app, and the Employee Agent V1 starter." },
+          { "head": "Authorize", "title": "Perms assigned", "body": "Permission sets (Prompt Template User, Agentforce User, agent-user perms) are assigned via the package / prework — no manual Setup." },
+          { "head": "Build", "title": "Agent Studio", "body": "The attendee opens the starter agent, writes reasoning instructions, and adds the Note + Summarize actions from the asset library." },
+          { "head": "Preview", "title": "Live test", "body": "Test the conversation end-to-end and watch the reasoning + which actions fire — before going live." },
+          { "head": "Commit", "title": "Go live", "body": "Commit the version → the agent's icon appears in the app (because perms were assigned up front)." },
+          { "head": "Extend", "title": "Free exercise", "body": "Add Query Records, draft email, fetch tasks, Search Web, image/voice — their own agent, made richer." }
+        ]},
+        { "type": "secTitle", "text": "Key design decisions" },
+        { "type": "cardGrid", "cols": 2, "cards": [
+          { "titleHtml": "📦 Package-based install — DECIDED", "bodyHtml": "An <b>install link</b>, not a custom browser-OAuth deploy — chosen specifically to avoid the security warnings and participant anxiety that path causes. Reliable, consistent environment for every attendee." },
+          { "titleHtml": "🧱 Ships assets, not the agent", "bodyHtml": "Because <code>AiAuthoringBundle</code> can't be packaged, the package carries the <b>perm sets + action assets + Lightning app + starter template</b>; the <b>agent is built in-org</b> in Agent Studio. <i>(Stretch: a one-click in-org deploy accelerator — secondary.)</i>" },
+          { "titleHtml": "🧩 Out-of-the-box actions first", "bodyHtml": "The agent's actions — <b>Log/Create Note</b> (Flow), <b>Summarize</b> (Prompt Template), plus Query Records / Search Web / draft email — favor <b>standard/OOB actions</b>. Custom Apex only where it earns its keep (HTML notes, SOSL search)." },
+          { "titleHtml": "🛟 A free backup org", "bodyHtml": "Flaky Wi-Fi, provisioning hiccups, mixed skill levels — so a <b>free, pre-configured backup org</b> is on hand for anyone whose own org won't cooperate. No dead-ends." }
+        ]},
+        { "type": "callout", "variant": "warn",
+          "titleHtml": "⚠ Open questions the build resolves",
+          "bodyHtml": "Which Agentforce metadata is <b>packageable</b> vs needs prework; <b>managed vs unlocked</b> 2GP for the install link; exactly how <b>perms get assigned</b> on install; and whether a <b>one-click in-org agent-deploy</b> accelerator is worth adding. See <a data-go=\"build-tasks\" style=\"cursor:pointer\">Build Tasks</a> + <a data-go=\"research-rounds\" style=\"cursor:pointer\">Research Rounds</a>." }
+      ]
+    },
+    {
+      "id": "workshop",
+      "kicker": "The Event",
+      "titleHtml": "The <span class=\"gr\">two-hour</span> hands-on workshop",
+      "leadHtml": "During the hackathon day, customers spend two hours building <b>Employee Agent V1</b> — a meeting-note agent — in their own sandbox, guided by the self-guided web app. The flow is decided: a guided MVP build (Part A), then a free improvement exercise (Part B).",
+      "blocks": [
+        { "type": "callout", "variant": "default",
+          "titleHtml": "🎓 The use case — Employee Agent V1",
+          "bodyHtml": "A conversational agent that accepts <b>notes or meeting transcripts</b> (text / upload / voice) and turns them into action: <b>logs them to a Notes record</b>, <b>summarizes</b>, <b>creates follow-up tasks</b>, and <b>drafts a follow-up email</b>. Universally relevant — the simplest way to grasp <i>agent · instructions · actions</i> before connecting more complex use cases." },
+        { "type": "callout", "variant": "default",
+          "titleHtml": "✅ What's preconfigured (so the 2 hours are spent building, not setting up)",
+          "bodyHtml": "Foundations access; <b>permission sets assigned</b> (Prompt Template User, Agentforce User, …); the <b>action assets</b> (Flow/Apex/prompt templates) in the asset library; and the <b>Employee Agent V1</b> starter framework. All delivered by the <b>installable package</b> (+ light prework)." },
+        { "type": "secTitle", "text": "Part A — guided build (the MVP)" },
+        { "type": "flow", "nodes": [
+          { "head": "1", "title": "Check the basics", "body": "Open Employee Agent V1 in Agent Studio; review details, system & language settings." },
+          { "head": "2", "title": "Reasoning instructions", "body": "Write the natural-language guidance: take unstructured notes → research → store to a Notes record, associate to the current record." },
+          { "head": "3", "title": "Add actions", "body": "From the asset library: Log/Create Note (Flow) + Summarize (Prompt Template). Only the actions it needs." },
+          { "head": "4", "title": "Preview", "body": "Live-test the conversation end-to-end; watch the reasoning + which actions fire." },
+          { "head": "5", "title": "Commit version", "body": "Save & commit → the agent goes live and its icon appears in the app (perms already assigned)." },
+          { "head": "6", "title": "Test on a record", "body": "Ask for notes → it validates the record, summarizes, and logs the notes." }
+        ]},
+        { "type": "secTitle", "text": "Part B — free exercise (improve & fine-tune)" },
+        { "type": "cardGrid", "cols": 2, "cards": [
+          { "titleHtml": "✉️ Draft a follow-up email", "bodyHtml": "Add the draft-email action; play with format and tone to fit the attendee's business." },
+          { "titleHtml": "✅ Fetch tasks from notes", "bodyHtml": "Auto-extract call-to-actions into to-do tasks — input to action with no manual work." },
+          { "titleHtml": "🔎 Query Records / Search Web", "bodyHtml": "Find an account/case to associate the notes to; enrich the transcript with web info or Knowledge." },
+          { "titleHtml": "🖼️ Image / voice input", "bodyHtml": "Enrich the input options (LWC); plus any custom action the attendee dreams up." }
+        ]},
+        { "type": "callout", "variant": "bad",
+          "titleHtml": "🚨 The thing that must not happen",
+          "bodyHtml": "An attendee stuck on a dead-end (org won't provision, perms missing) with no way forward. The safety nets: the <b>free pre-configured backup org</b>, <b>package-based install</b> (no scary browser-OAuth warnings), and perms <b>assigned up front</b>. \"Robust to the room\" is a hard constraint, not a nicety." }
+      ]
+    },
+    {
+      "id": "package",
+      "kicker": "Deliverable 1 · SFDX",
+      "titleHtml": "The <span class=\"gr\">Salesforce package</span>",
+      "leadHtml": "The thing customers install. An SFDX project (this repo) that packages a Lightning Home app, a runtime agent-deploy LWC + its Apex, the permission sets / groups, and a library of template agents. Built with the pre-installed Agentforce DX skills under <code>.agents/skills/</code>.",
+      "blocks": [
+        { "type": "secTitle", "text": "What's in the package" },
+        { "type": "cardGrid", "cols": 2, "cards": [
+          { "titleHtml": "🔐 Permission sets + groups", "bodyHtml": "The perms that authorize the attendee (Prompt Template User, Agentforce User, agent-user perms) — assigned on install / prework, no manual Setup. Model on the scaffold's <code>Resort_Agent</code>/<code>Resort_Admin</code> + <code>AFDX_*</code> groups. <span class=\"badge b-info\">scaffolded</span>" },
+          { "titleHtml": "🧩 The action assets", "bodyHtml": "The Flow/Apex/prompt templates the agent uses — <b>Log/Create Note</b> (Flow), <b>Summarize</b> (Prompt Template), plus Query Records / draft email / Search Web for the free exercise. Loaded into the asset library so attendees just <i>add</i> them. <span class=\"badge b-warn\">planned</span>" },
+          { "titleHtml": "🏠 Lightning app", "bodyHtml": "The surface the install lands in, where the attendee finds Agent Studio + their committed agent's icon. <span class=\"badge b-warn\">planned</span>" },
+          { "titleHtml": "🤖 Employee Agent V1 starter", "bodyHtml": "The starter agent template attendees build on. The repo already ships <code>Note_taking_agent</code> (the V1 use case) + <code>Local_Info_Agent</code> as references. <span class=\"badge b-info\">scaffolded</span>" }
+        ]},
+        { "type": "callout", "variant": "warn",
+          "titleHtml": "🚀 Stretch — one-click in-org agent deploy",
+          "bodyHtml": "Because <code>AiAuthoringBundle</code> can't be packaged, the agent is normally <b>built in Agent Studio</b> during the workshop. An optional accelerator — a component that deploys the agent in-org at runtime (Metadata/Tooling API) — is a <b>secondary</b> nice-to-have, not the primary path." },
+        { "type": "secTitle", "text": "Current SFDX scaffold (starting point)" },
+        { "type": "table",
+          "headers": ["Component", "Type", "Role here"],
+          "rows": [
+            ["<code>Local_Info_Agent</code>", "Agent Script bundle", "Sample agent (resort copilot) — reference + possible template base"],
+            ["<code>Note_taking_agent</code>", "Agent Script bundle", "Employee-agent sample (logs notes to a record) — closer to the workshop's flavor"],
+            ["<code>CheckWeather</code> · <code>CurrentDate</code> · <code>WeatherService</code>", "Apex", "Invocable Apex + service the sample agent calls"],
+            ["<code>Get_Event_Info</code> · <code>Get_Resort_Hours</code>", "Prompt template · Flow", "Subagent action examples"],
+            ["<code>Resort_Agent</code> · <code>Resort_Admin</code>", "Permission sets", "Agent-user + admin perms — model the package's perm sets on these"],
+            ["<code>AFDX_Agent_Perms</code> · <code>AFDX_User_Perms</code>", "Perm-set groups", "Bundles for assignment — the orchestration target"]
+          ]
+        },
+        { "type": "callout", "variant": "default",
+          "titleHtml": "🛠️ Build it with the installed skills",
+          "bodyHtml": "<code>.agents/skills/</code> ships <code>developing-agentforce</code>, <code>generating-lwc-components</code>, <code>generating-permission-set</code>, <code>generating-apex</code>, <code>deploying-metadata</code>, and <code>testing-agentforce</code>. Use them for the real Salesforce work rather than reinventing the conventions." }
+      ]
+    },
+    {
+      "id": "webapp",
+      "kicker": "Deliverable 2 · React",
+      "titleHtml": "The <span class=\"gr\">workshop web app</span>",
+      "leadHtml": "The attendee's guide — a Vite + React single-page app, <b>vendored into <code>web-app/</code></b> from <code>flemx/vibe-code-agenforce-claude</code> and being <b>re-scripted</b> to our Employee Agent V1 flow. All content lives in <code>src/components/MainContent.jsx</code>; it deploys to Heroku as-is.",
+      "blocks": [
+        { "type": "cardGrid", "cols": 2, "cards": [
+          { "titleHtml": "🧭 Self-guided steps", "bodyHtml": "A linear, verifiable flow: get an org → install the package → Part A guided build (instructions → actions → preview → commit → test) → Part B free exercise. Each step shows progress." },
+          { "titleHtml": "🆕 Org acquisition", "bodyHtml": "Guided sign-up for an org from inside the app — so an attendee who arrives with nothing leaves with a working agent." },
+          { "titleHtml": "🛟 Free backup org", "bodyHtml": "A free, pre-configured org for anyone whose primary org fails — the room's safety net, handed over without derailing the session." },
+          { "titleHtml": "♻️ Reused shell, new script", "bodyHtml": "Keep the polished Vite/React shell + Heroku deploy; replace the content (it currently guides a different, vibe-coding workshop). Re-script per <code>web-app/CLAUDE.md</code>." }
+        ]},
+        { "type": "callout", "variant": "warn",
+          "titleHtml": "⏭️ Re-script in progress",
+          "bodyHtml": "The vendored copy still carries the <b>reference workshop's</b> content (CLI vibe-coding). The plan + checklist to re-script it to our flow (Overview → Get an org → Install package → Part A → Part B) is in <code>web-app/NOTES.md</code>; mechanics in <code>web-app/CLAUDE.md</code>. Tracked as the <i>Re-script the workshop web app</i> build task." }
+      ]
+    },
+    {
+      "id": "templates",
+      "kicker": "Raw Material",
+      "titleHtml": "The <span class=\"gr\">Employee Agent V1</span> template",
+      "leadHtml": "The starter attendees build on. One clear, working agent — the <b>meeting-note agent</b> — simple enough to configure inside the two-hour window, useful enough to feel real.",
+      "blocks": [
+        { "type": "callout", "variant": "default",
+          "titleHtml": "🤖 Employee Agent V1 — the meeting-note agent",
+          "bodyHtml": "Already seeded in <code>force-app/</code> as <b><code>Note_taking_agent</code></b> (template <code>EmployeeCopilot__AgentforceEmployeeAgent</code>). It takes unstructured notes/transcripts and <b>logs them to a Notes record</b> (via the <code>First_Agent_Log_Account_Note</code> Flow), associating to the current record. The workshop has attendees add the <b>Summarize</b> action, then extend it (draft email, Query Records, tasks, web search) in the free exercise." },
+        { "type": "callout", "variant": "default",
+          "titleHtml": "🧩 Reference: Local_Info_Agent",
+          "bodyHtml": "The repo also ships <b><code>Local_Info_Agent</code></b> — a resort copilot showing three subagent types (Invocable Apex, Prompt Template, Flow), mutable variables, and deterministic <code>if/else</code> routing. A handy reference for the action patterns, not the workshop's focus." },
+        { "type": "callout", "variant": "warn",
+          "titleHtml": "⏭️ To finalize",
+          "bodyHtml": "The exact starter state for the workshop (the planning doc favors starting from a <b>template with no actions</b> so attendees add them), the final reasoning-instruction wording (kept simple — non-coding), and whether we pre-create the agent framework or have attendees create it. Tracked in Build Tasks." }
+      ]
+    },
+    {
+      "id": "research-rounds",
+      "kicker": "Track A · Research",
+      "titleHtml": "Research rounds",
+      "leadHtml": "Open questions get answered in <b>rounds</b> — fact-checked investigations (e.g. the exact runtime-deploy API for an <code>AiAuthoringBundle</code>, the perm-set-assignment surface, package type). Each round has status, dates, an outcome, and the agent sessions that produced it.",
+      "dynamic": "researchRounds"
+    },
+    {
+      "id": "build-tasks",
+      "kicker": "Track B · Build",
+      "titleHtml": "Build tasks",
+      "leadHtml": "The package and the web app, built as discrete tasks — each with status, dates, outcome and its associated agent sessions. This is how both flavors get built, step by step.",
+      "dynamic": "buildTasks"
+    },
+    {
+      "id": "log",
+      "kicker": "Living Doc",
+      "titleHtml": "Build log",
+      "leadHtml": "Every meaningful step, dated. This is the self-evolving spine of the report — it mirrors the agent-facing <code>PROGRESS.md</code> (and is generated from it). Newest first.",
+      "dynamic": "log"
+    },
+    {
+      "id": "files",
+      "kicker": "Workspace",
+      "titleHtml": "Files",
+      "leadHtml": "Every document this workspace produces — Markdown notes, specs and reports, plus generated HTML reports & decks — in one browsable explorer. <b>Markdown renders inline; HTML opens live.</b> Auto-discovered on each build (<code>scripts/build_portal_data.mjs</code>) — drop a new <code>.md</code>/<code>.html</code> and it appears here, no portal edits.",
+      "dynamic": "files"
+    },
+    {
+      "id": "agentic",
+      "kicker": "Transparency",
+      "titleHtml": "Agentic history",
+      "leadHtml": "Every AI session on this project — captured automatically by a <code>Stop</code> hook each turn. Pick a session to read its summary and the full conversation & tool calls. <b>Sanitized</b>: raw logs are never committed; secrets are stripped; full transcripts stay local (only titles/summaries are shared).",
+      "dynamic": "agentic"
+    },
+    {
+      "id": "center",
+      "kicker": "Meta",
+      "titleHtml": "About the AI Command Center",
+      "leadHtml": "This portal is one half of a <b>reusable</b> cockpit for AI-assisted build projects. The other half is a Markdown/JSON \"brain\" that agents read and update. Built to be shared so colleagues' agents can search it too.",
+      "blocks": [
+        { "type": "cardGrid", "cols": 2, "cards": [
+          { "titleHtml": "👤 For humans", "bodyHtml": "This single-file HTML portal. No build step — open it, email it, host it anywhere. Content is data-driven from <code>GOALS.md</code>, <code>PROGRESS.md</code> and <code>command-center/data/*.json</code>." },
+          { "titleHtml": "🤖 For agents", "bodyHtml": "<code>CLAUDE.md → AGENTS.md → projects/agentforce-hackathon/AGENTS.md → GOALS.md</code> gives any agent instant context; <code>PROGRESS.md</code> is the running log they maintain; harness mechanics live in <code>command-center/HARNESS.md</code>. For Salesforce work, the <code>.agents/skills/</code> skills are authoritative." },
+          { "titleHtml": "🔁 Reusable", "bodyHtml": "The whole harness lives under <code>command-center/</code>; the active project under <code>projects/</code>. This cockpit was <b>lifted from a prior project</b> and repurposed by swapping <code>data/portal.json</code> + <code>GOALS.md</code> and changing one line (<code>PROJECT_DIR</code>) — never touching <code>index.html</code>." },
+          { "titleHtml": "🛡️ Safe by construction", "bodyHtml": "Secrets (<code>.env</code>) and raw chat logs are gitignored; a commit-time hook blocks any key that slips into a diff; only sanitized summaries are published. Important here: <b>the package is handed to customers</b>." }
+        ]},
+        { "type": "secTitle", "text": "The data-flow contract" },
+        { "type": "trace", "html": "<span class=\"d\"># humans see the portal; agents read/write the brain. harness ⊂ command-center/ ; project ⊂ projects/ ; deployable SF source ⊂ force-app/</span>\n<span class=\"d\"># the portal loads data via &lt;script src&gt; bundles so it works on file:// (no CORS).</span>\n<span class=\"c\">projects/agentforce-hackathon/GOALS.md</span> ─► <span class=\"m\">build_portal_data.mjs</span> ─► index.html  <span class=\"d\">(goals — single source of truth)</span>\n<span class=\"c\">PROGRESS.md</span>                       ─► <span class=\"m\">build_portal_data.mjs</span> ─► index.html  <span class=\"d\">(build log)</span>\n<span class=\"c\">command-center/data/portal.json</span>       ─► <span class=\"m\">portal-data.js</span> ─► index.html  <span class=\"d\">(brand · pages · nav)</span>\n<span class=\"c\">command-center/data/work-items.json</span>   ─► <span class=\"m\">portal-data.js</span> ─► index.html  <span class=\"d\">(build tasks · research rounds)</span>\n<span class=\"d\"># Stop hook every turn (deterministic regen + soft LLM fields):</span>  command-center/scripts/capture_session.mjs\n<span class=\"c\">  raw transcript</span>     ──►  command-center/agentic-history/raw/  <span class=\"r\">(GITIGNORED)</span>\n<span class=\"c\">  full timeline</span>      ──►  command-center/data/sessions/&lt;id&gt;.json  <span class=\"r\">(GITIGNORED — full text)</span>\n<span class=\"c\">  session index</span>      ──►  command-center/data/sessions/index.json  <span class=\"g\">(COMMITTED — metadata)</span>\n<span class=\"m\">  portal-data.js</span> (committed) + <span class=\"m\">sessions-data.js</span> (gitignored) ──► index.html" }
+      ]
+    }
+  ]
+}

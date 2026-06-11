@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Permission_Sets__c</fullName>
+    <label>Permission Sets</label>
+    <type>TextArea</type>
+    <description>Comma- or newline-separated API names of permission sets to assign to the running user during setup.</description>
+    <inlineHelpText>API names of permission sets to assign (comma or newline separated).</inlineHelpText>
+    <required>false</required>
+</CustomField>

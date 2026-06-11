@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Getting Started with Agentforce — Workshop Intro</title>
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0d1b3a; --bg3:#10254f;
+    --ink:#ffffff; --muted:#9fb6d6; --accent:#36a8ff; --accent2:#7ab8ff;
+    --card:#16243f; --line:#345488;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,var(--bg),var(--bg2) 55%,var(--bg3));
+    color:var(--ink);overflow:hidden;
+  }
+  /* deck */
+  .deck{position:relative;width:100vw;height:100vh;}
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:7vh 9vw;opacity:0;transition:opacity .35s ease;
+  }
+  .slide.active{display:flex;opacity:1;}
+  .kicker{text-transform:uppercase;letter-spacing:.2em;font-size:1.05vw;font-weight:700;color:var(--accent2);margin-bottom:1.4vh;}
+  h1{font-size:5.2vw;line-height:1.05;font-weight:800;letter-spacing:-1px;}
+  h2{font-size:3.4vw;line-height:1.12;font-weight:800;margin-bottom:2.2vh;}
+  p.lead{font-size:1.9vw;color:var(--muted);max-width:46ch;line-height:1.45;margin-top:2.4vh;}
+  ul.big{list-style:none;margin-top:3vh;}
+  ul.big li{font-size:1.9vw;color:#dceaff;padding:1.1vh 0 1.1vh 4vw;position:relative;}
+  ul.big li::before{content:"";position:absolute;left:1.2vw;top:2.2vh;width:1.1vw;height:1.1vw;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),#0a4ea8);}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6vw;margin-top:4vh;}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:1.2vw;padding:2.6vh 1.8vw;}
+  .tile .n{display:inline-flex;align-items:center;justify-content:center;width:2.6vw;height:2.6vw;border-radius:50%;
+    background:var(--accent);color:#06132b;font-weight:800;font-size:1.4vw;margin-bottom:1.4vh;}
+  .tile h3{font-size:1.7vw;margin-bottom:.8vh;}
+  .tile p{font-size:1.15vw;color:var(--muted);line-height:1.4;}
+  .center{align-items:center;text-align:center;}
+  .center p.lead{max-width:60ch;}
+  img.loop{width:74vw;max-height:66vh;object-fit:contain;margin-top:1vh;
+    background:#0b1220;filter:drop-shadow(0 10px 40px rgba(0,0,0,.5));border-radius:1vw;}
+  .agenda{display:grid;grid-template-columns:auto 1fr;gap:1.2vh 2vw;margin-top:3vh;font-size:1.7vw;}
+  .agenda .t{color:var(--accent2);font-weight:700;font-variant-numeric:tabular-nums;}
+  .agenda .d{color:#dceaff;}
+  .pillrow{display:flex;gap:1.4vw;margin-top:3.5vh;flex-wrap:wrap;}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:1.1vh 1.6vw;font-size:1.25vw;color:#dceaff;}
+  .pill b{color:var(--accent2);}
+  /* progress + controls */
+  .bar{position:fixed;bottom:0;left:0;height:.5vh;background:var(--accent);transition:width .3s ease;z-index:10;}
+  .nav{position:fixed;bottom:2.4vh;right:3vw;display:flex;gap:1vw;align-items:center;z-index:10;}
+  .nav button{background:var(--card);border:1px solid var(--line);color:#dceaff;border-radius:.6vw;
+    width:3vw;height:3vw;font-size:1.4vw;cursor:pointer;}
+  .nav button:hover{background:#1d3056;}
+  .count{position:fixed;bottom:2.9vh;left:3vw;color:var(--muted);font-size:1.1vw;z-index:10;font-variant-numeric:tabular-nums;}
+  .brand{position:fixed;top:3.5vh;right:3vw;font-size:1.05vw;color:var(--accent2);font-weight:700;text-align:right;z-index:10;line-height:1.3;}
+  .robot{width:9vw;height:9vw;margin-bottom:3vh;}
+  .hint{position:fixed;bottom:2.9vh;left:50%;transform:translateX(-50%);color:#5f7299;font-size:.95vw;z-index:10;}
+</style>
+</head>
+<body>
+<div class="brand">MM &times; InspireAI<br/>Agentforce Activation</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 — Title -->
+  <section class="slide center active">
+    <svg class="robot" viewBox="0 0 120 120" fill="none" stroke="#36a8ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="60" cy="60" r="56" stroke="#1d3056" stroke-width="3"/>
+      <rect x="34" y="44" width="52" height="40" rx="11" fill="#10254f"/>
+      <circle cx="50" cy="64" r="5.5" fill="#36a8ff" stroke="none"/>
+      <circle cx="70" cy="64" r="5.5" fill="#36a8ff" stroke="none"/>
+      <line x1="60" y1="30" x2="60" y2="44"/><circle cx="60" cy="28" r="4" fill="#36a8ff" stroke="none"/>
+    </svg>
+    <div class="kicker">Hands-on Workshop</div>
+    <h1>Getting started<br/>with Agentforce</h1>
+    <p class="lead">In the next two hours, you'll build your own AI agent — no code, no prior experience needed.</p>
+  </section>
+
+  <!-- 2 — Why now -->
+  <section class="slide">
+    <div class="kicker">Why this matters</div>
+    <h2>AI agents do work, not just chat</h2>
+    <p class="lead">A chatbot answers questions. An <b style="color:#dceaff">agent</b> takes action on your behalf — it reads your data, decides what to do, and gets it done inside Salesforce. Think of the busywork after every meeting — that's the kind of work an agent just does.</p>
+    <div class="pillrow">
+      <span class="pill"><b>Reads</b> your Salesforce data</span>
+      <span class="pill"><b>Decides</b> what to do</span>
+      <span class="pill"><b>Acts</b> — logs, creates, drafts</span>
+      <span class="pill"><b>Works</b> where you already are</span>
+    </div>
+  </section>
+
+  <!-- 3 — What you'll build -->
+  <section class="slide">
+    <div class="kicker">Today's build</div>
+    <h2>Your first agent: a meeting-note taker</h2>
+    <p class="lead">You give it messy notes or a transcript. It does the rest.</p>
+    <ul class="big">
+      <li><b style="color:#fff">Summarizes</b> your notes into something clear</li>
+      <li><b style="color:#fff">Logs</b> them to the right Salesforce record</li>
+      <li><b style="color:#fff">Creates</b> follow-up tasks and <b style="color:#fff">drafts</b> a follow-up email</li>
+    </ul>
+    <p class="lead" style="font-size:1.4vw">The busywork after every meeting, done for you — and the simplest way to see how an agent works.</p>
+  </section>
+
+  <!-- 4 — The 3 parts -->
+  <section class="slide">
+    <div class="kicker">The mental model</div>
+    <h2>An agent is just three things</h2>
+    <div class="grid3">
+      <div class="tile"><span class="n">1</span><h3>Agent</h3><p>The assistant itself — you give it a name and a job.</p></div>
+      <div class="tile"><span class="n">2</span><h3>Instructions</h3><p>Plain-language rules — what to do, when, and how. Its judgment.</p></div>
+      <div class="tile"><span class="n">3</span><h3>Actions</h3><p>The things it can actually do — log a note, summarize, search. Its capabilities.</p></div>
+    </div>
+    <p class="lead" style="font-size:1.4vw">Everything you'll touch today is one of these three.</p>
+  </section>
+
+  <!-- 5 — Agentic loop visual -->
+  <section class="slide center">
+    <div class="kicker">How it thinks</div>
+    <h2 style="margin-bottom:1vh">It works in a loop until the job's done</h2>
+    <img class="loop" src="screenshots/agentic-loop-v2.png" alt="The agent reasons in a loop: understand, decide, act, observe"/>
+  </section>
+
+  <!-- 6 — Agenda -->
+  <section class="slide">
+    <div class="kicker">The next two hours</div>
+    <h2>How today runs</h2>
+    <div class="agenda">
+      <div class="t">~15 min</div><div class="d">Get your org &amp; install the workshop package</div>
+      <div class="t">~45 min</div><div class="d"><b style="color:#fff">Part A</b> — build the agent together (guided, step by step)</div>
+      <div class="t">~45 min</div><div class="d"><b style="color:#fff">Part B</b> — make it yours (the free exercise)</div>
+      <div class="t">After</div><div class="d">Ideate use cases for your own business</div>
+    </div>
+    <p class="lead" style="font-size:1.4vw">A self-guided web app walks you through every step — and we're here to help.</p>
+  </section>
+
+  <!-- 7 — What's ready -->
+  <section class="slide">
+    <div class="kicker">You're not starting from scratch</div>
+    <h2>We've set the stage for you</h2>
+    <ul class="big">
+      <li>A practice org with <b style="color:#fff">Agentforce already turned on</b></li>
+      <li>One click to install everything — <b style="color:#fff">permissions, actions, and a starter agent</b></li>
+      <li>A step-by-step guide, and a <b style="color:#fff">backup org</b> if anything misbehaves</li>
+    </ul>
+    <p class="lead" style="font-size:1.4vw">Your job is the fun part: shaping the agent — and you can't break anything, so experiment freely.</p>
+  </section>
+
+  <!-- 8 — Close / let's go -->
+  <section class="slide center">
+    <div class="kicker">Let's build</div>
+    <h1>You'll leave with an<br/>agent you made.</h1>
+    <p class="lead">Open the guide on your screen — step 1 gets your org ready. Let's build your first agent.</p>
+  </section>
+
+</div>
+
+<div class="bar" id="bar"></div>
+<div class="count" id="count">1 / 8</div>
+<div class="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <button id="next" aria-label="Next">›</button>
+</div>
+<div class="hint">← → or Space to navigate · F for fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let i = 0;
+  function show(n){
+    i = Math.max(0, Math.min(slides.length-1, n));
+    slides.forEach((s,idx)=>s.classList.toggle('active', idx===i));
+    document.getElementById('bar').style.width = ((i+1)/slides.length*100)+'%';
+    document.getElementById('count').textContent = (i+1)+' / '+slides.length;
+  }
+  document.getElementById('next').onclick = ()=>show(i+1);
+  document.getElementById('prev').onclick = ()=>show(i-1);
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){show(i+1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(i-1);}
+    else if(e.key==='Home'){show(0);}
+    else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key.toLowerCase()==='f'){ if(!document.fullscreenElement)document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  show(0);
+</script>
+</body>
+</html>

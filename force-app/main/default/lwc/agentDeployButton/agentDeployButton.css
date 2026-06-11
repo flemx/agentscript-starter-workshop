@@ -1,0 +1,8 @@
+.accel-card {
+    border-style: dashed;
+}
+
+.accel-card code {
+    font-size: 0.75rem;
+    word-break: break-all;
+}

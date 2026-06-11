@@ -1,0 +1,42 @@
+.viewer {
+    min-height: 320px;
+}
+
+.note-list {
+    border-right: 1px solid #e5e5e5;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.note-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.note-item:hover {
+    background: #f3f6f9;
+}
+
+.note-item_active {
+    background: #eef4ff;
+    border-left: 3px solid #0176d3;
+}
+
+.note-title {
+    font-weight: 600;
+    color: #16325c;
+}
+
+.note-date {
+    font-size: 0.75rem;
+    color: #8a8a8a;
+    margin-top: 2px;
+}
+
+.note-content {
+    max-height: 520px;
+    overflow-y: auto;
+}

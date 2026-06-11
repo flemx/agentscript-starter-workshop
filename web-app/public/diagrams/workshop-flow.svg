@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="step" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b9bff"/><stop offset="1" stop-color="#0a4ea8"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#9bb4d4"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="40" text-anchor="middle" font-size="26" font-weight="800" fill="#0a2540">Your path today</text>
+
+  <!-- 5 steps -->
+  <g>
+    <!-- step template via repeated groups -->
+    <!-- 1 Install -->
+    <circle cx="110" cy="120" r="40" fill="url(#step)"/>
+    <text x="110" y="113" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">1</text>
+    <text x="110" y="135" text-anchor="middle" font-size="12" fill="#cfe6ff">INSTALL</text>
+    <text x="110" y="186" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33425b">Install the package</text>
+
+    <!-- 2 Setup -->
+    <circle cx="320" cy="120" r="40" fill="url(#step)"/>
+    <text x="320" y="113" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">2</text>
+    <text x="320" y="135" text-anchor="middle" font-size="12" fill="#cfe6ff">SET UP</text>
+    <text x="320" y="186" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33425b">Run post-install setup</text>
+
+    <!-- 3 Build -->
+    <circle cx="540" cy="120" r="40" fill="url(#step)"/>
+    <text x="540" y="113" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">3</text>
+    <text x="540" y="135" text-anchor="middle" font-size="12" fill="#cfe6ff">BUILD</text>
+    <text x="540" y="186" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33425b">Instructions + actions</text>
+
+    <!-- 4 Test -->
+    <circle cx="760" cy="120" r="40" fill="url(#step)"/>
+    <text x="760" y="113" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">4</text>
+    <text x="760" y="135" text-anchor="middle" font-size="12" fill="#cfe6ff">TEST</text>
+    <text x="760" y="186" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33425b">Preview &amp; commit</text>
+
+    <!-- 5 Extend -->
+    <circle cx="980" cy="120" r="40" fill="#0a2540"/>
+    <text x="980" y="113" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">5</text>
+    <text x="980" y="135" text-anchor="middle" font-size="12" fill="#9bb4d4">EXTEND</text>
+    <text x="980" y="186" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33425b">Make it yours</text>
+  </g>
+
+  <!-- connectors -->
+  <line x1="158" y1="120" x2="272" y2="120" stroke="#9bb4d4" stroke-width="2.5" marker-end="url(#arr)"/>
+  <line x1="368" y1="120" x2="492" y2="120" stroke="#9bb4d4" stroke-width="2.5" marker-end="url(#arr)"/>
+  <line x1="588" y1="120" x2="712" y2="120" stroke="#9bb4d4" stroke-width="2.5" marker-end="url(#arr)"/>
+  <line x1="808" y1="120" x2="932" y2="120" stroke="#9bb4d4" stroke-width="2.5" marker-end="url(#arr)"/>
+
+  <text x="430" y="222" text-anchor="middle" font-size="13.5" fill="#7a8aa6">Part A — guided MVP</text>
+  <line x1="70" y1="206" x2="800" y2="206" stroke="#d7e3f4" stroke-width="1.5"/>
+  <text x="980" y="222" text-anchor="middle" font-size="13.5" fill="#7a8aa6">Part B — free</text>
+</svg>

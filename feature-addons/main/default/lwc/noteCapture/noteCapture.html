@@ -1,0 +1,123 @@
+<template>
+    <lightning-card title="Capture Meeting Notes" icon-name="standard:voice_call" class="capture-card">
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+
+            <!-- 1. Audio recorder -->
+            <span class="section-label">1 &nbsp;Record audio (optional)</span>
+            <div class="recorder">
+                <button
+                    class={micButtonClass}
+                    onclick={toggleRecording}
+                    title="Record audio"
+                    aria-label="Record audio">
+                    <lightning-icon
+                        icon-name={micIcon}
+                        variant="inverse"
+                        size="medium">
+                    </lightning-icon>
+                </button>
+
+                <template if:true={isRecording}>
+                    <div class="waveform">
+                        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="timer">{timerDisplay}</div>
+                </template>
+
+                <template if:false={isRecording}>
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
+                        {recorderHint}
+                    </p>
+                </template>
+
+                <template if:true={isTranscribing}>
+                    <div class="slds-m-top_small">
+                        <lightning-spinner alternative-text="Transcribing" size="small"></lightning-spinner>
+                        <span class="slds-text-body_small slds-m-left_small">Transcribing…</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 2. File drop -->
+            <span class="section-label">2 &nbsp;Add files (images, docs — optional)</span>
+            <div
+                class={dropzoneClass}
+                ondragover={handleDragOver}
+                ondragleave={handleDragLeave}
+                ondrop={handleDrop}>
+                <lightning-icon icon-name="utility:upload" size="small"></lightning-icon>
+                <p class="slds-m-top_x-small">Drag &amp; drop files here, or
+                    <label class="slds-text-link" style="cursor:pointer">
+                        browse
+                        <input type="file" multiple onchange={handleFilePick} style="display:none" />
+                    </label>
+                </p>
+                <template if:true={hasFiles}>
+                    <div class="slds-m-top_small">
+                        <template for:each={files} for:item="f">
+                            <span key={f.key} class="file-chip">
+                                <lightning-icon icon-name="doctype:image" size="xx-small"></lightning-icon>
+                                {f.name}
+                            </span>
+                        </template>
+                    </div>
+                </template>
+                <template if:true={isProcessingFiles}>
+                    <div class="slds-m-top_small">
+                        <lightning-spinner alternative-text="Processing files" size="small"></lightning-spinner>
+                        <span class="slds-text-body_small slds-m-left_small">Reading {fileCount} file(s) in parallel…</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- 3. Pasted text -->
+            <span class="section-label">3 &nbsp;Or paste notes</span>
+            <lightning-textarea
+                name="pasted"
+                value={pastedText}
+                onchange={handleTextChange}
+                placeholder="Paste or type meeting notes here…">
+            </lightning-textarea>
+
+            <!-- Combined transcript preview -->
+            <template if:true={hasTranscript}>
+                <span class="section-label">Combined transcript</span>
+                <div class="slds-box slds-box_x-small slds-text-body_small" style="white-space:pre-wrap;max-height:160px;overflow:auto">
+                    {combinedTranscript}
+                </div>
+            </template>
+
+            <!-- 4. Send to agent -->
+            <span class="section-label">4 &nbsp;Send to an Employee Agent</span>
+            <div class="slds-grid slds-gutters slds-grid_vertical-align-end">
+                <div class="slds-col slds-size_2-of-3">
+                    <lightning-combobox
+                        name="agent"
+                        label="Agent"
+                        value={selectedAgent}
+                        options={agentOptions}
+                        onchange={handleAgentChange}
+                        placeholder="Choose an agent…">
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-button
+                        label="Send to agent"
+                        variant="brand"
+                        icon-name="utility:send"
+                        disabled={sendDisabled}
+                        onclick={handleSend}
+                        class="slds-m-bottom_xx-small">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <template if:true={error}>
+                <div class="slds-box slds-theme_error slds-m-top_small" role="alert">{error}</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

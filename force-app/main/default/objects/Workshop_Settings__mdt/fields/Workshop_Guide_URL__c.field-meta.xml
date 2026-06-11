@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workshop_Guide_URL__c</fullName>
+    <label>Workshop Guide URL</label>
+    <type>Url</type>
+    <description>Link to the self-guided workshop web app the attendee follows.</description>
+    <inlineHelpText>The full URL of the self-guided workshop guide (the React web app).</inlineHelpText>
+    <required>false</required>
+</CustomField>

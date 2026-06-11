@@ -1,0 +1,108 @@
+{
+  "_comment": "COMMITTED. The two tracks of work for this project. Each item: {id, title, status(planned|active|done|blocked), start, updated, outcome, overview?, sessions[], researchRef?, reportRef?, reportHtml?}. `outcome` = one-line result (markdown spans OK). `overview` = a short markdown summary shown at the top of the detail view. `sessions` = agent-session ids (appended automatically by classify_session.mjs — additive; hand-edits preserved). `researchRef` (research track) points a round at a data/*.json research report. `reportRef` = a repo-relative .md file whose contents build_portal_data.mjs inlines (as reportMd) and the portal renders as a rich report. Files created/changed are derived automatically from each session's tool calls. NOTE: this file is hand-maintained — when a new unit of work happens, add/update an item here so the portal reflects it (the hook regenerates the portal FROM this file but never invents items).",
+  "tracks": {
+    "build": {
+      "label": "Build Tasks",
+      "items": [
+        {
+          "id": "build-command-center",
+          "title": "Stand up the AI Command Center for this project",
+          "status": "done",
+          "start": "2026-06-10",
+          "updated": "2026-06-10",
+          "outcome": "Reused the `meeting_ai` harness verbatim; `PROJECT_DIR` → `projects/agentforce-hackathon`; all prior contextual data reset to empty; authored fresh `GOALS.md` / `portal.json` / `work-items.json`.",
+          "overview": "Lifted the **reusable AI Command Center** (generic portal shell, scripts, hooks, subagents, secret-guard) from the prior `meeting_ai` project and repurposed it for the Agentforce Hackathon — without disturbing the existing SFDX project (`force-app/`, `.agents/skills/`, manifests).\n\n- **Verbatim harness:** `index.html`, `HARNESS.md`, all `command-center/scripts/*.mjs`, `.claude/` agents + `refresh-history` skill (byte-identical verified).\n- **One-line repurpose:** `PROJECT_DIR` in `session_lib.mjs` → `projects/agentforce-hackathon`.\n- **Empty contextual data:** fresh `sessions/index.json` (`[]`), `versions.json` (`[]`), `research.json` (pending); keyless `.env.example`. No meeting_ai content carried over.\n- **Fresh project content:** `GOALS.md`, root + project `AGENTS.md` (Salesforce-aware, points at `.agents/skills/`), `CLAUDE.md`, `portal.json`, this `work-items.json`.",
+          "sessions": []
+        },
+        {
+          "id": "build-plan-from-docs",
+          "title": "Read the Google Docs + clone the web-app; sharpen the plan",
+          "status": "done",
+          "start": "2026-06-10",
+          "updated": "2026-06-10",
+          "outcome": "Pulled the planning doc + the workshop setup-guide (via the Google Workspace MCP) and vendored the reference web app into `web-app/`. **Use case, deployment, and flow are now concrete** — GOALS.md updated.",
+          "overview": "Ingested two Google Docs and a reference repo, then re-grounded the plan on real decisions:\n\n- **Use case = Employee Agent V1** (meeting-note agent: ingest notes/transcript → log to a Notes record, summarize, create tasks, draft email). Maps to the `Note_taking_agent` already in `force-app/`.\n- **Deployment = package-based** (install link), **not** browser-OAuth — a firm decision to avoid security warnings / participant anxiety. `AiAuthoringBundle` still isn't packageable, so the package ships everything *around* the agent and the attendee builds it in Agent Studio.\n- **Workshop flow (decided):** Part A guided (instructions → add Note + Summarize actions → preview → commit → test) + Part B free exercise (draft email, Query Records, Search Web, fetch tasks, image/voice).\n- **Backup = a free pre-configured org** for anyone whose primary org fails.\n- **Web app** vendored into `web-app/` from `flemx/vibe-code-agenforce-claude` (Vite+React; content in `MainContent.jsx`) — to be re-scripted to our flow (see `web-app/NOTES.md`).",
+          "sessions": []
+        },
+        {
+          "id": "build-package-assets",
+          "title": "Lightning app + LWC launchpad + unlocked package (G1/G2/G3)",
+          "status": "done",
+          "start": "2026-06-10",
+          "updated": "2026-06-11",
+          "outcome": "Shipped as an **unlocked package** (`Employee Agent Workshop 0.1.0.1`, `04tWt000000GDJ3IAO`) built from the `hackathon` DevHub and **installed + browser-verified in `hackathon_sandbox`**: the app loads, **Run Setup** assigns all perm sets, the launchpad shows \"Setup complete.\" Fixed three real bugs found via agent-browser (missing tab, broken `AFDX_User_Perms` group, namespaced perm-set lookup) and removed scaffold junk. All **13 Apex tests pass**.",
+          "overview": "The starting point of the workshop — what the install lands in. **Package-based by decision** (avoids browser-OAuth security warnings); ships everything *around* the agent (the agent is built in-org because `AiAuthoringBundle` isn't packageable).\n\n**Built this session:**\n- **`Employee_Agent_Workshop` Lightning app** + **`Employee_Agent_Workshop_Home`** App-page (FlexiPage) + tab — the launchpad surface.\n- **`workshopLaunchpad` LWC** — welcome hero, **Open the workshop guide** link, and a **Run Setup** button with live per-item status (SLDS, accessible, idempotent re-runs).\n- **`WorkshopSetupController`** (`@AuraEnabled`) — assigns the configured permission sets / groups to `UserInfo.getUserId()` idempotently with partial-success DML; **setup-object DML only, so no mixed-DML risk** (validated by the feasibility research). Built-in Apex defaults (`Employee_Agent_Workshop` PS + `AFDX_User_Perms` PSG + `Note_taking_agent`) so it works on a clean install with **no** custom-metadata record.\n- **`Workshop_Settings__mdt`** type (5 fields) as an **optional point-and-click override** for the guide/install URLs.\n- **`Employee_Agent_Workshop`** permission set (package-safe: no `agentAccesses` to the not-yet-built agent).\n\n**Gotcha found & worked around:** deploying a Custom Metadata *record with values* via the CLI throws an opaque `UNKNOWN_EXCEPTION` on these orgs (reproduces for a brand-new throwaway CMDT type; a skeleton record with no values deploys fine). Fix: real defaults live in **Apex**, the record is an optional Setup-edited override moved to `docs/optional-metadata/` so a full-source deploy / package build never breaks.\n\n**Packaged & browser-tested (2026-06-11):** decided **unlocked package**, built `Employee Agent Workshop 0.1.0.1` (`04tWt000000GDJ3IAO`) from the `hackathon` DevHub and installed it into `hackathon_sandbox`. Tested the running app with **agent-browser** and fixed three real bugs: (1) the **Home tab** had been rolled back by an earlier failed multi-component deploy + the perm set lacked tab visibility → redeployed the tab and added `tabSettings`; (2) **Run Setup** referenced the broken scaffold group `AFDX_User_Perms` → switched to assigning the **standard OOB perm sets** (`force__EinsteinGPTPromptTemplateUser`, `force__CopilotSalesforceUser`) + `Employee_Agent_Workshop`; (3) **namespaced perm-set lookup** (`WHERE Name='force__…'` matched nothing) → strip/rederive the namespace. Removed scaffold junk (`Resort_*`, `AFDX_*`, weather Apex, `Get_Event_Info`, `Get_Resort_Hours`, `Local_Info_Agent`) and `.forceignore`d `aiAuthoringBundles`. Verified end-to-end in the sandbox: app loads, Run Setup → all perms assigned, accelerator → agent published+activated.\n\n**Next:** the action assets (Note Flow + Summarize prompt template) in the asset library; finalize the agent starter; set the real guide/install URLs.",
+          "sessions": []
+        },
+        {
+          "id": "build-agent-deploy-accelerator",
+          "title": "Browser-side agent deploy accelerator (NGA Connect API) — stretch G2",
+          "status": "done",
+          "start": "2026-06-11",
+          "updated": "2026-06-11",
+          "outcome": "Proved — and shipped — a one-click **deploy → publish → activate** of the Agent Script agent from the browser, using the internal **Next-Gen Authoring Connect API**. End-to-end verified live on `hackathon_sb` (Bot created + activated) via the `NextGenAgentDeployer` Apex; **12/12 tests pass**, deployer coverage 86%.",
+          "overview": "The stretch accelerator from G2, now real. `AiAuthoringBundle` can't be packaged and `sf agent publish` is CLI-only — but the internal **Next-Gen Authoring Connect API** (`/services/data/v64.0/nextgen-authoring/...`, found via code search of the OpenAPI spec) lets us do it from an in-org callout.\n\n**How it works:**\n- **`NextGenAgentDeployer`** (Apex) reads the Agent Script from a **Static Resource** (`Note_taking_agent_afscript`), rewrites its `developer_name`/`agent_label` to the requested apiName, then calls **create → publish → activate** and assigns the agent-access perm set — all server-side.\n- **`NextGenAgentDeployerSession`** (Visualforce, `{!$Api.Session_ID}`) supplies an **API-enabled session** (the Lightning/LWC session isn't reliably API-enabled; a self-callout to the org My Domain needs no Remote Site Setting).\n- **`agentDeployButton`** LWC — an *optional, clearly-marked* \"deploy the agent for me\" button on the launchpad Home page (for the backup org / stuck attendees; the main path is still build-it-in-Studio).\n\n**Gotchas found & fixed (see `docs/reference/nextgen-authoring-connect-api.md`):** live path has **no `/connect/`** segment; the runtime BotDefinition name comes from `developer_name` *inside* the afscript (collision → `DUPLICATE_VALUE`, fixed by rewriting it); activate returns 204; published agents can't be fully API-deleted.\n\n**Decision:** ship it as an internal accelerator, NOT the customer happy-path — the endpoint is undocumented (fragile) and auto-publishing would remove Part A's learning.",
+          "reportRef": "docs/reference/nextgen-authoring-connect-api.md",
+          "sessions": []
+        },
+        {
+          "id": "build-note-capture-suite",
+          "title": "Note-capture suite: audio/file/text → agent, HTML notes, note viewer",
+          "status": "done",
+          "start": "2026-06-11",
+          "updated": "2026-06-11",
+          "outcome": "Built & sandbox-verified 4 components: **noteCapture** LWC (record audio → speech-to-text, drag files → image-to-text via prompt template, paste text → send to a chosen Employee Agent via the ACC API), **HtmlNoteService** (richly-formatted ContentNote from HTML, 8/8 tests), **noteViewer** LWC + controller (read-only HTML render + Download-PDF, 3/3), and the **NoteCaptureController/AI** backends (4/4 each). All 27 Apex tests pass; the HTML-note round-trip is verified live.",
+          "overview": "A richer capture + notes experience around the agent.\n\n- **`noteCapture` LWC** — three input paths (animated audio recorder → `convertBase64SpeechToText`; multi-file drag → multimodal prompt template `ConnectApi.EinsteinLLM.generateMessagesForPromptTemplate`, parallel; pasted text), combined and sent to a chosen Employee Agent via `lightning/accApi` (open + execute).\n- **`HtmlNoteService`** (Apex + `@InvocableMethod`) — creates a formatted `ContentNote` (HTML in a Blob, sanitized to an allowed-tag whitelist), links to a record. Unlocks polished meeting summaries + a workshop-report deliverable.\n- **`noteViewer` LWC + `NoteViewerController`** — lists notes, renders HTML read-only via `lightning-formatted-rich-text`, Download-PDF via a print window.\n- **Backends:** `NoteCaptureController` (ContentVersion upload, Employee-Agent listing), `NoteCaptureAI` (speech-to-text + prompt template, graceful degradation when AI is off).\n\n**Packaging decision:** these depend on org features (`ContentNote`, `ConnectApi.EinsteinLLM`, `BotDefinition`) absent from the vanilla 2GP build org, so they're kept in **`feature-addons/`** and deployed directly (own `Employee_Agent_Notes_Addon` perm set) — the core package stays clean. Verified end-to-end in `hackathon_sandbox`; report at `docs/component-test-report.html`.",
+          "reportRef": "docs/component-test-report.html",
+          "sessions": []
+        },
+        {
+          "id": "build-actions-library",
+          "title": "The actions library — Note + Summarize (+ free-exercise add-ons) (G4)",
+          "status": "planned",
+          "start": "2026-06-10",
+          "updated": "2026-06-10",
+          "outcome": "The supporting actions the agent uses: Log/Create Note (Flow), Summarize (Prompt Template), plus Query Records, draft email, fetch tasks, Search Web for the free exercise. OOB-first.",
+          "overview": "The agent's capabilities, shipped in the package's asset library so attendees just **add** them — no building from scratch.\n\n- **Part A (required):** **Log/Create Note** (Flow — already `First_Agent_Log_Account_Note`) + **Summarize** (Prompt Template).\n- **Part B (free exercise):** **Query Records** (find an account/case to associate), **draft follow-up email**, **fetch tasks** from notes, **Search Web**, Knowledge.\n- **Prefer out-of-the-box / standard actions.** Custom Apex only where it clearly adds value — e.g. an **HTML-note** action (Base64 for richer layouts) and a **SOSL record-search** action (dynamic find across objects). These two are owner action items from the planning doc.",
+          "sessions": []
+        },
+        {
+          "id": "build-webapp-script",
+          "title": "Re-script the workshop web app to our Employee-Agent-V1 flow (G5/G6)",
+          "status": "done",
+          "start": "2026-06-10",
+          "updated": "2026-06-11",
+          "outcome": "Re-scripted the vendored `web-app/` to **our** flow (5 sections), added a worked **Query Records** example, and **deployed it live to Heroku** (https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/) with the real package install URL. The guide URL is **wired into the Lightning app**. Agentforce Labs kept as the backup-org path.",
+          "overview": "The reused guide app at `web-app/` (Vite + React, from `flemx/vibe-code-agenforce-claude`) — **shell kept, content fully re-scripted** to the Employee Agent V1 workshop.\n\n**Done this session:**\n- **`MainContent.jsx`** rewritten — sections `overview` · `get-org` · `install-package` · `part-a` · `part-b`, each with right-sidebar step anchors. Part A mirrors Hanne's setup-guide doc verbatim (check basics → reasoning instructions → add **Log Note** + **Summarize** from the asset library → Preview → Commit → test on a record); Part B is the free exercise (draft email, adapt summary, fetch tasks, web search, voice/image, custom actions).\n- **Backup org:** the **Agentforce Labs** instructions are preserved as **Option 2 — the free backup org** (per request).\n- **Install URL:** a top-of-file **`PACKAGE_INSTALL_URL` placeholder** constant (+ `BACKUP_ORG_URL`) — one line to set before the event.\n- **`Sidebar.jsx`** nav + heading updated; **`index.html`** title/description updated; a `cta-button` style added to `index.css`. Production `vite build` succeeds.",
+          "reportRef": "web-app/NOTES.md",
+          "sessions": []
+        },
+        {
+          "id": "build-backup-org",
+          "title": "Free pre-configured backup org (G6)",
+          "status": "planned",
+          "start": "2026-06-10",
+          "updated": "2026-06-10",
+          "outcome": "A free, pre-configured org handed to any attendee whose own org won't cooperate — provisioned and documented so it never derails the room.",
+          "overview": "Decided in the planning doc: provide a **free, pre-configured backup org** as the room's safety net (flaky Wi-Fi, provisioning failures, mixed skill levels). Define how it's provisioned (Agentforce enabled, package pre-installed, perms assigned), how an attendee is handed one mid-session, and document the handoff in the web app's org step.",
+          "sessions": []
+        }
+      ]
+    },
+    "research": {
+      "label": "Research Rounds",
+      "items": [
+        {
+          "id": "research-packaging-and-deploy",
+          "title": "What's packageable for Agentforce + browser-side deploy / perm-assignment path",
+          "status": "done",
+          "start": "2026-06-10",
+          "updated": "2026-06-11",
+          "outcome": "**Confirmed:** perm-set assignment from `@AuraEnabled` Apex is the reliable browser-triggered path (setup-object DML only → no mixed-DML); **runtime publish of the `AiAuthoringBundle` from the browser is NOT viable** — publishing is CLI/Studio-only (no Apex/REST entry point), and `UserInfo.getSessionId()` is intentionally not API-enabled in Lightning. So: LWC button does perm-set assignment; attendee builds the agent in Agent Studio.",
+          "overview": "Source-cited feasibility investigation (background subagent, 2026-06-11) into doing config/deploy **from the browser**:\n\n- **Perm-set assignment (✅ green light):** `Database.insert(new PermissionSetAssignment(AssigneeId=UserInfo.getUserId(), PermissionSetId=…))` from `@AuraEnabled` Apex; look up by `Name` (PS) / `DeveloperName` (PSG); idempotent by checking existing assignments; **no mixed-DML** as long as only setup-object DML runs in the transaction (HIGH confidence).\n- **Runtime `AiAuthoringBundle` deploy/publish (❌ not viable):** publishing an Agent Script bundle is a CLI/Studio-only compile step (`sf agent publish`) with no public Apex/REST endpoint; the MD-API-from-Apex path is blocked because the Lightning-context `UserInfo.getSessionId()` is deliberately **not** API-enabled (Visualforce-page session is the only workaround). Deploying the bundle *source* only stages a DRAFT — it doesn't create the live Bot/BotVersion.\n- **What IS packageable:** perm sets/groups (incl. `agentAccesses`), Apex, Flows, `GenAiPromptTemplate`, Lightning app + Home page + LWC, custom objects/fields, and `BotTemplate` (Bot-based agents). **NOT** `AiAuthoringBundle`.\n- **Net:** the package ships supporting assets; the LWC launchpad assigns perms; the attendee builds & publishes Employee Agent V1 in Agent Studio. (Optionally auto-activate a published BotVersion via the Connect REST `bot-versions/{id}/activation` endpoint, server-side.)\n\nThis directly validated the **`build-package-assets`** architecture.",
+          "sessions": []
+        }
+      ]
+    }
+  }
+}

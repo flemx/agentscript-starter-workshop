@@ -1,0 +1,21 @@
+{
+  "packageDirectories": [
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": true,
+      "package": "Employee Agent Workshop",
+      "versionDescription": ""
+    }
+  ],
+  "name": "inspireai_hackathon",
+  "namespace": "",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "66.0",
+  "packageAliases": {
+    "Employee Agent Workshop": "0HoWt0000000BrVKAU",
+    "Employee Agent Workshop@0.1.0-1": "04tWt000000GDJ3IAO",
+    "Employee Agent Workshop@0.1.0-2": "04tWt000000GDXZIA4"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "mcp-adaptor": {
+      "type": "stdio",
+      "command": "mcp-adaptor",
+      "args": [],
+      "env": {
+        "MCP_ADAPTOR_ENV": "prod",
+        "GW_PROFILE": "git_emu"
+      }
+    },
+    "google-workspace": {
+      "type": "stdio",
+      "command": "mcp-adaptor",
+      "args": ["serve", "--server", "google_workspace", "--env", "prod"]
+    }
+  }
+}

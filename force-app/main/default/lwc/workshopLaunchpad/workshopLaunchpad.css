@@ -1,0 +1,22 @@
+.step-card {
+    height: 100%;
+}
+
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: #0176d3;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.slds-icon-standard-bot {
+    --slds-c-icon-color-background: #0176d3;
+}

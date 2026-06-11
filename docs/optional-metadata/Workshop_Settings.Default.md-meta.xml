@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>Workshop_Guide_URL__c</field>
+        <value xsi:type="xsd:string">https://REPLACE-WITH-YOUR-WORKSHOP-GUIDE-URL.example.com/</value>
+    </values>
+    <values>
+        <field>Package_Install_URL__c</field>
+        <value xsi:type="xsd:string">https://login.salesforce.com/packaging/installPackage.apexp?p0=PLACEHOLDER_PACKAGE_ID</value>
+    </values>
+    <values>
+        <field>Agent_Api_Name__c</field>
+        <value xsi:type="xsd:string">Note_taking_agent</value>
+    </values>
+    <values>
+        <field>Permission_Sets__c</field>
+        <value xsi:type="xsd:string">Employee_Agent_Workshop</value>
+    </values>
+    <values>
+        <field>Permission_Set_Groups__c</field>
+        <value xsi:type="xsd:string">AFDX_User_Perms</value>
+    </values>
+</CustomMetadata>

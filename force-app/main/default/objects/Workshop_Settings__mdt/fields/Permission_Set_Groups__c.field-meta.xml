@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Permission_Set_Groups__c</fullName>
+    <label>Permission Set Groups</label>
+    <type>TextArea</type>
+    <description>Comma- or newline-separated developer names of permission set groups to assign to the running user during setup.</description>
+    <inlineHelpText>Developer names of permission set groups to assign (comma or newline separated).</inlineHelpText>
+    <required>false</required>
+</CustomField>

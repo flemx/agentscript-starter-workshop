@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI Command Center</title>
+<style>
+:root{
+  --bg:#08090d; --bg1:#0e1016; --bg2:#141722; --bg3:#1b1f2e;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.13);
+  --tx:#e7e9f0; --tx2:#969bad; --tx3:#646a7d;
+  --teal:#2dd4bf; --cyan:#38bdf8; --violet:#8b5cf6; --pink:#f472b6;
+  --grad:linear-gradient(120deg,#2dd4bf,#38bdf8 45%,#8b5cf6);
+  --grad2:linear-gradient(120deg,#34d399,#22d3ee);
+  --ok:#34d399; --okbg:rgba(52,211,153,.12); --okbd:rgba(52,211,153,.4);
+  --warn:#fbbf24; --warnbg:rgba(251,191,36,.12); --warnbd:rgba(251,191,36,.4);
+  --bad:#f87171; --badbg:rgba(248,113,113,.12); --badbd:rgba(248,113,113,.4);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+  --sbw:268px; --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--tx);
+  font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased;letter-spacing:-.003em}
+::selection{background:rgba(139,92,246,.45);color:#fff}
+a{color:var(--teal);text-decoration:none}
+h1,h2,h3,h4{color:#fff;letter-spacing:-.02em;line-height:1.14;margin:0}
+p{margin:0 0 14px}
+code{font-family:var(--mono);font-size:.86em;background:var(--bg3);padding:2px 6px;border-radius:6px;color:#bfe9e2}
+.gr{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.muted{color:var(--tx2)}
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--sbw);flex:0 0 var(--sbw);position:fixed;inset:0 auto 0 0;height:100vh;
+  background:linear-gradient(180deg,var(--bg1),var(--bg));border-right:1px solid var(--line);
+  padding:24px 16px;display:flex;flex-direction:column;gap:3px;z-index:40;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.brand .logo{width:36px;height:36px;border-radius:9px;background:var(--grad);display:grid;place-items:center;
+  font-weight:800;color:#04121a;font-size:18px;box-shadow:0 4px 18px rgba(45,212,191,.35);flex:0 0 auto}
+.brand b{font-size:14.5px;font-weight:680;color:#fff;display:block;line-height:1.25}
+.brand span{font-size:11.5px;color:var(--tx3)}
+.navlbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);padding:13px 10px 5px;font-weight:700}
+.nav a{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:10px;color:var(--tx2);
+  font-size:13.7px;font-weight:500;cursor:pointer;transition:.15s;border:1px solid transparent}
+.nav a:hover{background:var(--bg2);color:#fff}
+.nav a.active{background:linear-gradient(120deg,rgba(45,212,191,.16),rgba(139,92,246,.16));color:#fff;border-color:var(--line2)}
+.nav a .ic{width:18px;text-align:center;opacity:.9;font-size:15px}
+.sb-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx3)}
+.sb-foot .live{display:inline-flex;align-items:center;gap:6px;color:var(--ok)}
+.dotpulse{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.main{margin-left:var(--sbw);flex:1;min-width:0;transition:margin-left .22s ease}
+.page{display:none;max-width:1020px;margin:0 auto;padding:44px 48px 90px;animation:fade .5s ease}
+.page.show{display:block}
+/* collapsible left nav (desktop) */
+.navcollapse{position:absolute;top:14px;right:12px;width:24px;height:24px;border-radius:7px;border:1px solid var(--line2);background:var(--bg2);color:var(--tx2);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.13s;z-index:1}
+.navcollapse:hover{color:#fff;border-color:var(--teal)}
+body.nav-collapsed .sidebar{transform:translateX(-100%)}
+body.nav-collapsed .main{margin-left:0}
+.navshow{display:none;position:fixed;top:16px;left:14px;z-index:50;width:38px;height:38px;border-radius:10px;border:1px solid var(--line2);background:var(--bg2);color:#fff;cursor:pointer;font-size:17px;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+body.nav-collapsed .navshow{display:flex}
+@media(max-width:900px){.navcollapse{display:none}body.nav-collapsed .navshow{display:none}}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.kick{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+.page h2{font-size:30px;font-weight:720;margin-bottom:10px}
+.lead{color:var(--tx2);font-size:16.5px;max-width:72ch;margin-bottom:28px}
+.mobtop{display:none}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:linear-gradient(180deg,var(--bg1),var(--bg));border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:.2s}
+.card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.card h3{font-size:16px;margin-bottom:7px}
+.card p{color:var(--tx2);font-size:14px;margin:0}
+.card .ic{font-size:22px;margin-bottom:12px;display:block}
+.stat{background:var(--bg1);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stat .n{font-size:32px;font-weight:780;letter-spacing:-.03em;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat .l{font-size:12.5px;color:var(--tx2);margin-top:7px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;padding:4px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--bg2);color:var(--tx2)}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--tx3)}
+.b-ok{color:var(--ok);background:var(--okbg);border-color:var(--okbd)}.b-ok::before{background:var(--ok)}
+.b-warn{color:var(--warn);background:var(--warnbg);border-color:var(--warnbd)}.b-warn::before{background:var(--warn)}
+.b-bad{color:var(--bad);background:var(--badbg);border-color:var(--badbd)}.b-bad::before{background:var(--bad)}
+.b-info{color:var(--cyan);background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.4)}.b-info::before{background:var(--cyan)}
+.callout{border:1px solid var(--line2);border-left:3px solid var(--teal);background:linear-gradient(120deg,rgba(45,212,191,.06),transparent);border-radius:10px;padding:16px 18px;margin:18px 0}
+.callout.warn{border-left-color:var(--warn);background:linear-gradient(120deg,rgba(251,191,36,.06),transparent)}
+.callout.bad{border-left-color:var(--bad);background:linear-gradient(120deg,rgba(248,113,113,.06),transparent)}
+.callout h4{font-size:14px;margin-bottom:6px}.callout p{font-size:13.5px;color:var(--tx2);margin:0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--tx3);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+td{color:var(--tx)}
+tr:hover td{background:var(--bg1)}
+.twrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;overflow-x:auto;margin:16px 0}
+.sec-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin:38px 0 14px}
+pre.trace{background:#05060a;border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#aeb6c6;overflow-x:auto;margin:16px 0;white-space:pre-wrap}
+pre.trace .c{color:var(--teal)}pre.trace .m{color:var(--violet)}pre.trace .g{color:var(--ok)}pre.trace .d{color:var(--tx3)}pre.trace .r{color:var(--bad)}
+/* rendered-markdown (reports, synthesis, log bullets, work-item overview) */
+.md{font-size:14px;color:var(--tx);line-height:1.7}
+.md p{margin:0 0 12px}
+.md strong{color:#fff;font-weight:680}
+.md em{color:var(--tx)}
+.md code{font-family:var(--mono);font-size:.86em;background:var(--bg3);padding:2px 6px;border-radius:6px;color:#bfe9e2}
+.md a{color:var(--cyan);word-break:break-word}
+.md h3,.md h4,.md h5,.md h6{color:#fff;margin:20px 0 8px;line-height:1.25}
+.md h3{font-size:18px}.md h4{font-size:15.5px}.md h5{font-size:14px;color:var(--teal);text-transform:uppercase;letter-spacing:.05em}
+.md ul,.md ol{margin:6px 0 14px;padding-left:22px}
+.md li{margin:4px 0;color:var(--tx2)}
+.md blockquote.md-q{border-left:3px solid var(--line2);margin:10px 0;padding:4px 14px;color:var(--tx2);background:var(--bg1);border-radius:0 8px 8px 0}
+.md hr.md-hr{border:none;border-top:1px solid var(--line);margin:20px 0}
+.md pre.md-code{background:#05060a;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.6;color:#aeb6c6;overflow-x:auto;white-space:pre;margin:0 0 14px}
+.md-bullets li{color:var(--tx2)}
+.report-wrap{border:1px solid var(--line);border-radius:14px;padding:6px 22px 18px;background:linear-gradient(180deg,var(--bg1),var(--bg));margin:10px 0}
+.files-list{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.files-list .fitem{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--tx2);padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg1)}
+.files-list .fitem .fa{font-weight:700;width:14px;text-align:center}
+.files-list .fitem .fa.new{color:var(--ok)}.files-list .fitem .fa.mod{color:var(--cyan)}
+.files-list .fitem .fp{color:var(--tx);word-break:break-all}
+.files-list .fitem .fc{margin-left:auto;color:var(--tx3);font-size:11px}
+.hero{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line2);
+  background:radial-gradient(900px 400px at 80% -20%,rgba(139,92,246,.22),transparent 60%),
+  radial-gradient(700px 360px at 0% 120%,rgba(45,212,191,.18),transparent 55%),var(--bg1);
+  padding:46px 42px;margin-bottom:28px}
+.hero .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:12px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);border:1px solid var(--okbd);background:var(--okbg);padding:6px 13px;border-radius:999px}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:760;margin:20px 0 16px;max-width:22ch}
+.hero p{font-size:17px;color:var(--tx2);max-width:64ch;margin:0}
+.hero .ctas{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:11px 18px;border-radius:11px;cursor:pointer;border:1px solid var(--line2);color:#fff;background:var(--bg2);transition:.18s}
+.btn.primary{background:var(--grad);color:#04121a;border:none}
+.btn:hover{transform:translateY(-2px)}
+.btn.sm{padding:5px 11px;font-size:12px;border-radius:8px}
+.timeline{position:relative;padding-left:26px;margin-top:10px}
+.timeline::before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:var(--line2)}
+.tli{position:relative;padding:0 0 20px 8px}
+.tli::before{content:"";position:absolute;left:-23px;top:5px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--teal)}
+.tli.done::before{background:var(--teal)}
+.tli.next::before{border-color:var(--violet)}
+.tli.now::before{border-color:var(--cyan);background:var(--cyan);animation:pulse 2s infinite}
+.tli b{color:#fff;font-size:14.5px}.tli span{color:var(--tx2);font-size:13.5px;display:block}
+.tli time{font-family:var(--mono);font-size:11px;color:var(--tx3)}
+.tli ul{margin:6px 0 0;padding-left:18px}.tli li{font-size:13px;color:var(--tx2);margin:2px 0}
+.goal{display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed var(--line)}
+.goal:last-child{border:none}
+.goal .gid{flex:0 0 auto;width:40px;height:40px;border-radius:10px;background:var(--bg3);display:grid;place-items:center;font-weight:800;color:var(--teal);font-size:14px;border:1px solid var(--line2)}
+.goal b{font-size:14.5px;color:#fff}.goal p{margin:3px 0 0;font-size:13.5px;color:var(--tx2)}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:14px 0}
+.fnode{flex:1;min-width:150px;border:1px solid var(--line2);border-radius:13px;padding:14px;background:var(--bg1)}
+.fnode .fh{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:700;margin-bottom:6px}
+.fnode b{font-size:13.5px;color:#fff;display:block}.fnode p{font-size:12px;color:var(--tx2);margin:5px 0 0}
+.farr{display:grid;place-items:center;color:var(--tx3);font-size:22px;flex:0 0 auto}
+@media(max-width:880px){.farr{transform:rotate(90deg)}}
+.conv{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.turn{border:1px solid var(--line);border-radius:12px;padding:12px 15px;background:var(--bg1)}
+.turn.user{border-left:3px solid var(--cyan)}
+.turn.assistant{border-left:3px solid var(--violet)}
+.turn .rhead{display:flex;align-items:center;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--tx3);margin-bottom:6px;flex-wrap:wrap}
+.turn.user .rhead{color:var(--cyan)}.turn.assistant .rhead{color:var(--violet)}
+.turn .rhead time{font-family:var(--mono);font-weight:500;color:var(--tx3);text-transform:none;letter-spacing:0}
+.turn .body{font-size:13.3px;color:var(--tx);white-space:pre-wrap;word-break:break-word}
+.turn .tools{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.tcall{border:1px solid var(--line);border-radius:8px;background:var(--bg2);overflow:hidden}
+.tcall summary{cursor:pointer;list-style:none;padding:6px 10px;font-size:11.5px;font-family:var(--mono);color:#9fe9df;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tcall summary::-webkit-details-marker{display:none}
+.tcall summary::before{content:"▸";color:var(--tx3)}
+.tcall[open] summary::before{content:"▾"}
+.tcall .tname{color:var(--teal);font-weight:700}
+.tcall .tsum{color:var(--tx2)}
+.tcall .tbody{padding:0 10px 10px}
+.tcall .tlabel{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin:8px 0 3px;font-weight:700}
+.tcall pre{background:#05060a;border:1px solid var(--line);border-radius:7px;padding:9px 11px;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#aeb6c6;overflow-x:auto;white-space:pre-wrap;word-break:break-word;margin:0;max-height:420px;overflow-y:auto}
+.tcall.err{border-color:var(--badbd)}.tcall.err .tname{color:var(--bad)}
+.src{font-size:12.5px;color:var(--tx2);word-break:break-all}
+.src a{color:var(--cyan)}
+.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px;align-items:center}
+.chip{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);background:var(--bg2);color:var(--tx2);cursor:pointer;transition:.15s}
+.chip.active{background:linear-gradient(120deg,rgba(45,212,191,.18),rgba(139,92,246,.18));color:#fff;border-color:var(--line2)}
+.finput{font-size:12.5px;padding:7px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--bg1);color:var(--tx);font-family:var(--sans);outline:none}
+.finput:focus{border-color:var(--teal)}
+.finput::placeholder{color:var(--tx3)}
+select.finput{cursor:pointer}
+.modelpill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-family:var(--mono);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:3px 9px;color:var(--tx2);margin:3px 4px 0 0}
+.sesh{display:flex;gap:16px;align-items:flex-start;background:linear-gradient(180deg,var(--bg1),var(--bg));border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:.18s}
+.sesh:hover{border-color:var(--line2);transform:translateY(-2px)}
+.sesh .sicon{flex:0 0 auto;width:44px;height:44px;border-radius:11px;background:var(--grad);display:grid;place-items:center;font-size:20px;color:#04121a}
+.sesh .sbody{flex:1;min-width:0}
+.sesh .stitle{font-size:16px;font-weight:680;color:#fff;margin:0 0 4px}
+.sesh .ssum{font-size:13.3px;color:var(--tx2);margin:0}
+.sesh .smeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11.5px;color:var(--tx3);font-family:var(--mono);align-items:center}
+.sesh .smeta b{color:var(--teal);font-weight:700}
+.sesh .sarrow{flex:0 0 auto;color:var(--tx3);font-size:20px;align-self:center}
+.shdr h3{font-size:20px;margin-bottom:6px}
+.shdr .smeta{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12px;color:var(--tx3);font-family:var(--mono)}
+.shdr .smeta b{color:var(--teal)}
+.verbar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--tx3)}
+.verbar select{max-width:100%;font-size:11px;padding:5px 8px}
+.verframe-wrap{display:none;position:fixed;inset:0 0 0 var(--sbw);z-index:60;background:var(--bg);flex-direction:column}
+.verframe-wrap.show{display:flex}
+.verframe-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line2);background:var(--bg1);font-size:12.5px;color:var(--tx2)}
+.verframe-bar b{color:var(--teal)}
+.verframe-wrap iframe{flex:1;width:100%;border:none;background:#fff}
+/* file explorer */
+.page[data-page="files"]{max-width:1480px}                 /* wider than the 1020px default */
+.fx-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 16px}
+.fx-toolbar .fx-search{min-width:240px;flex:1}
+.fx-seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.fx-seg button{background:var(--bg2);color:var(--tx2);border:none;padding:7px 13px;font-size:12.5px;cursor:pointer;font-family:var(--sans);transition:.13s}
+.fx-seg button+button{border-left:1px solid var(--line2)}
+.fx-seg button.active{background:linear-gradient(120deg,rgba(45,212,191,.2),rgba(139,92,246,.2));color:#fff}
+.fx-count{font-size:11.5px;color:var(--tx3);font-family:var(--mono);margin-left:auto}
+.fx-wrap{display:grid;grid-template-columns:var(--fxw,340px) 12px minmax(0,1fr);align-items:start}
+@media(max-width:880px){.fx-wrap{grid-template-columns:1fr}.fx-gutter{display:none}}
+.fx-gutter{align-self:stretch;min-height:60vh;cursor:col-resize;position:relative}
+.fx-gutter::before{content:"";position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--line);border-radius:2px;transition:.13s}
+.fx-gutter:hover::before,.fx-gutter.drag::before{background:var(--teal);width:3px;left:4px}
+.fx-tree{border:1px solid var(--line);border-radius:14px;background:var(--bg1);padding:10px;max-height:74vh;overflow:auto;position:sticky;top:18px}
+.fx-folder{margin:1px 0}
+.fx-folder>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:8px;font-size:13px;color:var(--tx);font-weight:600}
+.fx-folder>summary::-webkit-details-marker{display:none}
+.fx-folder>summary::before{content:"▸";color:var(--tx3);font-size:11px;width:10px}
+.fx-folder[open]>summary::before{content:"▾"}
+.fx-folder>summary:hover{background:var(--bg2)}
+.fx-folder .fx-children{padding-left:15px;border-left:1px solid var(--line);margin-left:13px}
+.fx-file{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;cursor:pointer;font-size:12.7px;color:var(--tx2);transition:.12s;border:1px solid transparent}
+.fx-file:hover{background:var(--bg2);color:#fff}
+.fx-file.active{background:linear-gradient(120deg,rgba(45,212,191,.16),rgba(139,92,246,.16));color:#fff;border-color:var(--line2)}
+.fx-file .fx-ext{flex:0 0 auto;font-size:11px;font-weight:700;width:16px;text-align:center}
+.fx-file .fx-ext.md{color:var(--cyan)}.fx-file .fx-ext.html{color:var(--violet)}
+.fx-file .fx-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-file .fx-sz{flex:0 0 auto;font-family:var(--mono);font-size:10.5px;color:var(--tx3)}
+.fx-view{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--bg1),var(--bg));min-height:60vh;overflow:hidden}
+.fx-view-bar{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--tx2);font-family:var(--mono);flex-wrap:wrap}
+.fx-view-bar .fx-path{color:var(--teal);word-break:break-all}
+.fx-view-bar .fx-open-ext{margin-left:auto}
+.fx-view-body{padding:8px 24px 26px}
+.fx-view-body.md{padding:18px 28px 30px}
+.fx-view-body iframe{width:100%;height:72vh;border:none;background:#fff;border-radius:0 0 13px 13px;display:block}
+.fx-empty{display:grid;place-items:center;min-height:60vh;color:var(--tx3);text-align:center;padding:30px}
+.fx-empty .fx-big{font-size:40px;margin-bottom:12px;opacity:.5}
+/* flat "all files" table */
+.fx-flat{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg1)}
+.fx-flat table{width:100%;border-collapse:collapse;font-size:12.8px;margin:0}
+.fx-flat th{position:sticky;top:0;background:var(--bg2);color:var(--tx3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:9px 12px;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;z-index:1}
+.fx-flat th:hover{color:var(--tx)}
+.fx-flat th .sortarrow{color:var(--teal);font-size:10px}
+.fx-flat td{padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--tx2)}
+.fx-flat tr:last-child td{border-bottom:none}
+.fx-flat tbody tr:hover td{background:var(--bg2)}
+.fx-flat .fcol-name{color:var(--tx);font-weight:550;display:flex;align-items:center;gap:7px;min-width:0}
+.fx-flat .fcol-name .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-flat .fcol-name.clk{cursor:pointer}.fx-flat .fcol-name.clk:hover .nm{color:var(--teal)}
+.fx-flat .fext{font-weight:700;font-size:10px;flex:0 0 auto}
+.fx-flat .fext.md{color:var(--cyan)}.fx-flat .fext.html{color:var(--violet)}
+.fx-flat .fcol-path{font-family:var(--mono);font-size:11px;color:var(--tx3);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-flat .fcol-date,.fx-flat .fcol-size{font-family:var(--mono);font-size:11px;color:var(--tx3);white-space:nowrap}
+.fx-flat .fcol-act{white-space:nowrap;text-align:right}
+.fx-act{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--tx3);cursor:pointer;font-size:12px;transition:.12s}
+.fx-act:hover{background:var(--bg3);color:#fff;border-color:var(--line2)}
+.fx-act.ok{color:var(--ok)}
+.fx-localnote{font-size:11.5px;color:var(--tx3);margin:0 0 12px}
+.deliv{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.deliv a{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:7px 13px;border-radius:9px;border:1px solid var(--line2);background:var(--bg2);color:var(--tx);cursor:pointer;transition:.15s;text-decoration:none}
+.deliv a:hover{transform:translateY(-1px);border-color:var(--teal);color:#fff}
+.deliv a .dx{font-weight:700}.deliv a .dx.md{color:var(--cyan)}.deliv a .dx.html{color:var(--violet)}
+.files-list .fitem.clk{cursor:pointer}
+.files-list .fitem.clk:hover{border-color:var(--teal);background:var(--bg2)}
+.files-list .fitem .fopen{color:var(--teal);font-size:11px;opacity:0;transition:.12s}
+.files-list .fitem.clk:hover .fopen{opacity:1}
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:.25s;width:250px}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .verframe-wrap{inset:0}
+  .mobtop{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(8,9,13,.92);backdrop-filter:blur(10px);z-index:30}
+  .burger{font-size:22px;cursor:pointer;background:none;border:none;color:#fff}
+  .g2,.g3,.g4{grid-template-columns:1fr 1fr}
+  .page{padding:26px 18px 80px}
+}
+@media(max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <button class="navshow" id="navShow" title="Show navigation (\\)">☰</button>
+  <aside class="sidebar" id="sidebar">
+    <button class="navcollapse" id="navCollapse" title="Collapse navigation (\\)">«</button>
+    <div class="brand" id="brand"><!-- filled from PORTAL.brand --></div>
+    <div id="navRoot"><!-- filled from PORTAL.nav --></div>
+    <div class="sb-foot">
+      <div class="live"><span class="dotpulse"></span> <span id="liveStatus">Active</span></div>
+      <div style="margin-top:6px">Living doc · <span id="updated"></span></div>
+      <div class="verbar" id="verbar" style="display:none">
+        <span>version</span>
+        <select class="finput" id="versionPicker"></select>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="mobtop"><button class="burger" id="burger">☰</button><b id="mobBrand">Command Center</b></div>
+    <div id="pageRoot"><!-- all pages generated here from PORTAL.pages --></div>
+  </div>
+</div>
+
+<!-- Archived-version overlay (iframe of a historical command-center; working tree untouched) -->
+<div class="verframe-wrap" id="verframeWrap">
+  <div class="verframe-bar">
+    <span>📦 Archived version <b id="verframeHash"></b> <span id="verframeSubj" class="muted"></span></span>
+    <button class="btn sm" id="verframeClose" style="margin-left:auto">✕ Back to working copy</button>
+  </div>
+  <iframe id="verframe" src="about:blank"></iframe>
+</div>
+
+<!-- Document viewer overlay: opens an .html (iframe) or .md (rendered) doc fullscreen from anywhere
+     (e.g. a work item's deliverable links) without losing your place. Mirrors the version overlay. -->
+<div class="verframe-wrap" id="docWrap">
+  <div class="verframe-bar">
+    <span>📄 <b id="docTitle"></b> <span id="docPath" class="muted"></span></span>
+    <button class="btn sm" id="docClose" style="margin-left:auto">✕ Close</button>
+  </div>
+  <iframe id="docFrame" src="about:blank" style="display:none"></iframe>
+  <div id="docMd" class="md" style="display:none;flex:1;overflow:auto;padding:30px 40px;max-width:1000px;margin:0 auto;width:100%"></div>
+</div>
+
+<!-- Data bundles loaded as external scripts so they work on file:// (browsers block fetch() of
+     local files via CORS). portal-data.js is committed (project content + research + work items +
+     log + versions + session index); sessions-data.js is gitignored (full sanitized conversation
+     text + tool args/results, local-only). Generated by scripts/build_portal_data.mjs. -->
+<script src="portal-data.js"></script>
+<script src="sessions-data.js"></script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  GENERIC RENDER ENGINE — index.html ships with NO project content.
+//  Everything is rendered from window.PORTAL / WORK_ITEMS / RESEARCH /
+//  LOG / VERSIONS / SESSION_INDEX (committed) + window.SESSIONS
+//  (gitignored full timelines). To reuse the cockpit for a new project,
+//  swap data/portal.json + GOALS.md — never touch this file.
+// ─────────────────────────────────────────────────────────────
+const PORTAL = window.PORTAL || { brand:{name:"Command Center"}, nav:[], pages:[], goals:[], modelGroups:{}, agentSummary:[] };
+const WORK_ITEMS = window.WORK_ITEMS || { tracks:{} };
+const LOG = window.LOG || [];
+const VERSIONS = window.VERSIONS || [];
+const SESSION_INDEX = window.SESSION_INDEX || [];
+const SESSIONS = window.SESSIONS || {};
+const FILES = window.FILES || [];
+
+function esc(s){return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// ── Minimal, XSS-safe markdown renderer ──────────────────────────────────────
+// Reports/logs/synthesis are authored as markdown (in PROGRESS.md, work-items.json, research.json).
+// We ESCAPE first, then apply a small, safe markdown subset — so no author markup can inject HTML.
+// mdSpans: inline spans only (bold/italic/code/links/strikethrough) for one-line fields.
+// mdToHtml: full block grammar (headings, lists, code fences, blockquotes, hr, paragraphs).
+function mdLinks(t){ return t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,(_,txt,url)=>`<a href="${url}" target="_blank" rel="noopener">${txt}</a>`); }
+function mdSpans(s){
+  let t=esc(s||'');
+  t=mdLinks(t);
+  t=t.replace(/`([^`]+)`/g,(_,c)=>`<code>${c}</code>`);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,'$1<em>$2</em>');
+  t=t.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  return t;
+}
+function mdToHtml(md){
+  if(!md) return '';
+  const lines=String(md).replace(/\r\n?/g,'\n').split('\n');
+  const out=[]; let i=0;
+  let para=[], list=null, listType='';
+  const flushPara=()=>{ if(para.length){ out.push('<p>'+mdSpans(para.join(' '))+'</p>'); para=[]; } };
+  const flushList=()=>{ if(list){ out.push(`<${listType}>`+list.map(li=>`<li>${mdSpans(li)}</li>`).join('')+`</${listType}>`); list=null; listType=''; } };
+  while(i<lines.length){
+    const line=lines[i];
+    // fenced code block
+    const fence=line.match(/^```(\w*)/);
+    if(fence){ flushPara(); flushList(); const buf=[]; i++; while(i<lines.length && !/^```/.test(lines[i])){ buf.push(lines[i]); i++; } i++; out.push(`<pre class="md-code">${esc(buf.join('\n'))}</pre>`); continue; }
+    // heading
+    const h=line.match(/^(#{1,4})\s+(.*)$/);
+    if(h){ flushPara(); flushList(); const lvl=h[1].length+2; out.push(`<h${lvl} class="md-h">${mdSpans(h[2])}</h${lvl}>`); i++; continue; }
+    // hr
+    if(/^(\s*([-*_])\s*){3,}$/.test(line)){ flushPara(); flushList(); out.push('<hr class="md-hr"/>'); i++; continue; }
+    // blockquote
+    if(/^>\s?/.test(line)){ flushPara(); flushList(); out.push(`<blockquote class="md-q">${mdSpans(line.replace(/^>\s?/,''))}</blockquote>`); i++; continue; }
+    // list item (- * + or 1.)
+    const ul=line.match(/^\s*[-*+]\s+(.*)$/), ol=line.match(/^\s*\d+\.\s+(.*)$/);
+    if(ul||ol){ flushPara(); const t=ul?'ul':'ol'; if(listType&&listType!==t)flushList(); listType=t; list=list||[]; list.push((ul?ul[1]:ol[1])); i++; continue; }
+    // blank line
+    if(!line.trim()){ flushPara(); flushList(); i++; continue; }
+    // paragraph text
+    para.push(line.trim()); i++;
+  }
+  flushPara(); flushList();
+  return out.join('\n');
+}
+const conf={high:'b-ok',medium:'b-warn',low:'b-bad'};
+const statusBadge={done:'b-ok',active:'b-info',planned:'b-warn',blocked:'b-bad'};
+function fmtDate(iso){ if(!iso) return ''; try{return new Date(iso).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return iso;} }
+function fmtDay(iso){ if(!iso) return ''; try{return new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}catch{return iso;} }
+function dayKey(iso){ if(!iso) return ''; try{return new Date(iso).toISOString().slice(0,10);}catch{return '';} }
+
+// ── Shell: brand + nav ──
+function renderShell(){
+  const b=PORTAL.brand||{name:"Command Center"};
+  document.title=b.name+" — Command Center";
+  document.getElementById('mobBrand').textContent=b.name;
+  document.getElementById('brand').innerHTML=
+    `<div class="logo">${esc(b.logoLetter||b.name.slice(0,1))}</div>
+     <div><b>${esc(b.name)}</b><span>${esc(b.tagline||'AI Command Center')}</span></div>`;
+  if(PORTAL.liveStatus) document.getElementById('liveStatus').textContent=PORTAL.liveStatus;
+  if(PORTAL.updatedLabel) document.getElementById('updated').textContent=PORTAL.updatedLabel;
+  const nav=document.getElementById('navRoot');
+  nav.innerHTML=(PORTAL.nav||[]).map(group=>`
+    <div class="navlbl">${esc(group.group)}</div>
+    <nav class="nav">${(group.items||[]).map(it=>
+      it.href?`<a href="${esc(it.href)}"><span class="ic">${esc(it.icon||'')}</span> ${esc(it.label)}</a>`
+             :`<a data-pg="${esc(it.pg)}"><span class="ic">${esc(it.icon||'')}</span> ${esc(it.label)}</a>`
+    ).join('')}</nav>`).join('');
+}
+
+// ── Block renderer (static content pages) ──
+function renderBlock(bl){
+  switch(bl.type){
+    case 'hero':
+      return `<div class="hero">
+        ${bl.eyebrow?`<span class="eyebrow"><span class="dotpulse"></span> ${esc(bl.eyebrow)}</span>`:''}
+        <h1>${bl.titleHtml||''}</h1>
+        <p>${bl.bodyHtml||''}</p>
+        ${(bl.ctas&&bl.ctas.length)?`<div class="ctas">${bl.ctas.map(c=>
+          c.href?`<a class="btn${c.primary?' primary':''}" href="${esc(c.href)}">${esc(c.label)}</a>`
+                :`<button class="btn${c.primary?' primary':''}" data-go="${esc(c.go)}">${esc(c.label)}</button>`
+        ).join('')}</div>`:''}
+      </div>`;
+    case 'callout':
+      return `<div class="callout ${bl.variant&&bl.variant!=='default'?esc(bl.variant):''}">
+        ${bl.titleHtml?`<h4>${bl.titleHtml}</h4>`:''}<p>${bl.bodyHtml||''}</p></div>`;
+    case 'secTitle':
+      return `<div class="sec-title">${esc(bl.text)}</div>`;
+    case 'statGrid':
+      return `<div class="grid g4">${(bl.stats||[]).map(s=>{
+        const num=typeof s.n==='number';
+        return `<div class="stat"><div class="n"${num?` data-count="${s.n}"`:''}${s.suffix?` data-suffix="${esc(s.suffix)}"`:''}>${num?'0':esc(s.n)}</div><div class="l">${esc(s.label)}</div></div>`;
+      }).join('')}</div>`;
+    case 'goals':
+      return `<div class="card">${(PORTAL.goals||[]).map(g=>
+        `<div class="goal"><div class="gid">${esc(g.id||'•')}</div><div><b>${esc(g.title)}</b><p>${esc(g.body)}</p></div></div>`
+      ).join('')||'<p class="muted">No goals parsed from GOALS.md.</p>'}</div>`;
+    case 'cardGrid':
+      return `<div class="grid g${bl.cols||3}">${(bl.cards||[]).map(c=>`
+        <div class="card">
+          ${c.icon?`<span class="ic">${esc(c.icon)}</span>`:''}
+          ${c.badge?`<span class="badge ${esc(c.badge)}">${esc(c.badgeText||'')}</span>`:''}
+          ${c.titleHtml?`<h3${c.badge?' style="margin-top:10px"':''}>${c.titleHtml}</h3>`:''}
+          ${c.bodyHtml?`<p${(c.badge&&!c.titleHtml)?' style="margin-top:10px"':''}>${c.bodyHtml}</p>`:''}
+        </div>`).join('')}</div>`;
+    case 'flow':
+      return `<div class="flow">${(bl.nodes||[]).map((n,i)=>
+        `${i>0?'<div class="farr">→</div>':''}<div class="fnode"><div class="fh">${esc(n.head)}</div><b>${n.title||''}</b><p>${n.body||''}</p></div>`
+      ).join('')}</div>`;
+    case 'table':
+      return `<div class="twrap"><table>
+        <tr>${(bl.headers||[]).map(h=>`<th>${esc(h)}</th>`).join('')}</tr>
+        ${(bl.rows||[]).map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}
+      </table></div>`;
+    case 'modelList':
+      return `<div>${Object.entries(PORTAL.modelGroups||{}).map(([fam,arr])=>
+        `<div style="margin-bottom:10px"><span class="badge b-info">${esc(fam)}</span><div style="margin-top:6px">${arr.map(m=>`<span class="modelpill">${esc(m)}</span>`).join('')}</div></div>`
+      ).join('')}</div>`;
+    case 'trace':
+      return `<pre class="trace">${bl.html||''}</pre>`;
+    case 'html':
+      return bl.html||'';
+    default: return '';
+  }
+}
+
+// Inner HTML templates for DYNAMIC pages (data-bound shells the loaders populate).
+const DYNAMIC_SHELLS={
+  research:`
+    <div class="grid g4" id="researchStats">
+      <div class="stat"><div class="n" id="raCount">…</div><div class="l">research angles</div></div>
+      <div class="stat"><div class="n" id="rfCount">…</div><div class="l">findings extracted</div></div>
+      <div class="stat"><div class="n" id="rcCount">…</div><div class="l">confirmed by panel</div></div>
+      <div class="stat"><div class="n" id="rkCount">…</div><div class="l">killed by panel</div></div>
+    </div>
+    <div id="researchStatus" class="callout warn" style="margin-top:18px">
+      <h4>⏳ No verified research yet</h4>
+      <p>When a research round completes, this page fills with confirmed findings, sources and the synthesis (from <code>data/research.json</code>).</p>
+    </div>
+    <div id="synthesisBox"></div>
+    <div class="sec-title">Findings by angle</div>
+    <div class="filterbar" id="angleFilter"></div>
+    <div class="grid g2" id="findings"></div>`,
+  sources:`<div id="sourceList"><p class="muted">Sources appear here once a research round completes.</p></div>`,
+  log:`<div class="timeline" id="logTimeline"></div>`,
+  researchRounds:`<div id="researchRoundsView"></div>`,
+  buildTasks:`<div id="buildTasksView"></div>`,
+  files:`
+    <div class="fx-toolbar">
+      <input class="finput fx-search" id="fxSearch" type="search" placeholder="🔎 filter by name or path"/>
+      <div class="fx-seg" id="fxMode">
+        <button data-mode="docs" class="active">📄 Docs (md/html)</button>
+        <button data-mode="all">🗂 All files</button>
+      </div>
+      <select class="finput" id="fxSort" title="Sort">
+        <option value="name">sort: name ↑</option>
+        <option value="name-d">sort: name ↓</option>
+        <option value="date-d">sort: newest first</option>
+        <option value="date">sort: oldest first</option>
+        <option value="size-d">sort: largest first</option>
+        <option value="size">sort: smallest first</option>
+      </select>
+      <span class="fx-count" id="fxCount"></span>
+    </div>
+    <div id="fxEmpty" class="callout" style="display:none">
+      <h4>No documents yet</h4>
+      <p>Markdown and HTML files we create in the workspace appear here automatically on the next build (<code>scripts/build_portal_data.mjs</code>) — no portal edits needed.</p>
+    </div>
+    <!-- DOCS mode: folder tree (resizable) + preview pane -->
+    <div class="fx-wrap" id="fxWrap">
+      <div class="fx-tree" id="fxTree"></div>
+      <div class="fx-gutter" id="fxGutter" title="Drag to resize"></div>
+      <div class="fx-view" id="fxView">
+        <div class="fx-empty" id="fxViewEmpty"><div><div class="fx-big">📂</div>Select a file to preview it here.<br><span style="font-size:12px">Markdown renders inline · HTML opens live.</span></div></div>
+      </div>
+    </div>
+    <!-- ALL-FILES mode: flat, sortable table over the whole tree (incl. hidden) -->
+    <div id="fxAllWrap" style="display:none">
+      <p class="fx-localnote" id="fxAllNote"></p>
+      <div class="fx-flat"><table>
+        <thead><tr>
+          <th data-sort="name" style="width:34%">Name</th>
+          <th data-sort="path">Path</th>
+          <th data-sort="date" style="width:140px">Modified</th>
+          <th data-sort="size" style="width:80px">Size</th>
+          <th style="width:90px;cursor:default">Actions</th>
+        </tr></thead>
+        <tbody id="fxFlatBody"></tbody>
+      </table></div>
+    </div>`,
+  agentic:`
+    <div id="sessionListView">
+      <div class="filterbar" id="sessionFilter"></div>
+      <div id="sessionStatus" class="callout" style="display:none">
+        <h4>No sessions captured yet</h4>
+        <p>Sessions are recorded automatically by the <code>Stop</code> hook (<code>scripts/capture_session.mjs</code>).</p>
+      </div>
+      <div id="sessionList"></div>
+    </div>
+    <div id="sessionDetail" style="display:none">
+      <button class="btn" id="backToSessions" style="margin-bottom:18px">← All sessions</button>
+      <div class="card" id="sessionHeader" style="margin-bottom:8px"></div>
+      <div class="sec-title">Conversation &amp; tool-call timeline</div>
+      <div class="filterbar" id="convFilter"></div>
+      <div class="conv" id="convTimeline"></div>
+      <div id="convLocalNote" class="callout warn" style="display:none">
+        <h4>Full transcript not in this copy</h4>
+        <p>This shared copy includes the session <b>index</b> (title + summary) but not the full conversation text (it's gitignored, local-only). Run <code>node command-center/scripts/build_portal_data.mjs</code> in the original workspace to read the timeline.</p>
+      </div>
+    </div>`,
+};
+
+// ── Generate all pages from PORTAL.pages ──
+function renderPages(){
+  const root=document.getElementById('pageRoot');
+  root.innerHTML=(PORTAL.pages||[]).map(pg=>{
+    let inner='';
+    if(pg.id!=='home'){
+      inner+=`${pg.kicker?`<div class="kick">${esc(pg.kicker)}</div>`:''}
+        ${pg.titleHtml?`<h2>${pg.titleHtml}</h2>`:''}
+        ${pg.leadHtml?`<p class="lead">${pg.leadHtml}</p>`:''}`;
+    }
+    if(pg.dynamic){ inner+=DYNAMIC_SHELLS[pg.dynamic]||''; }
+    else { inner+=(pg.blocks||[]).map(renderBlock).join(''); }
+    return `<section class="page" data-page="${esc(pg.id)}">${inner}</section>`;
+  }).join('');
+}
+
+// ── Deep research (reused by the research page AND a research round's detail) ──
+function loadResearch(d, root){
+  root=root||document;
+  d=d||window.RESEARCH;
+  if(!d || (!d.confirmed && !(d.angles&&d.angles.length))) return;
+  const items=(d.confirmed||[]).map(f=>({...f,_state:'confirmed'})).concat((d.killed||[]).map(f=>({...f,_state:'killed'})));
+  const angles=[...new Set(items.map(f=>f.angle))];
+  const rf=(d.angles||[]).reduce((n,a)=>n+((a.findings||[]).length),0) || items.length;
+  const set=(id,v)=>{const el=root.querySelector('#'+id); if(el)el.textContent=v;};
+  set('raCount',(d.angles||[]).length||angles.length); set('rfCount',rf);
+  set('rcCount',(d.confirmed||[]).length); set('rkCount',(d.killed||[]).length);
+  const status=root.querySelector('#researchStatus'); if(status)status.style.display='none';
+  const synth=root.querySelector('#synthesisBox');
+  if(synth&&d.synthesis) synth.innerHTML=`<div class="sec-title">Synthesis</div><div class="report-wrap"><div class="md">${mdToHtml(d.synthesis)}</div></div>`;
+  const fb=root.querySelector('#angleFilter'), fg=root.querySelector('#findings');
+  if(fb&&fg){
+    fb.innerHTML=['all',...angles].map((a,i)=>`<span class="chip ${i===0?'active':''}" data-a="${esc(a)}">${esc(a)}</span>`).join('');
+    const paint=sel=>{ fg.innerHTML=items.filter(f=>sel==='all'||f.angle===sel).map(f=>`
+      <div class="card">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <span class="badge ${conf[f.confidence]||'b-warn'}">${esc(f.confidence||'')} conf</span>
+          <span class="badge ${f._state==='confirmed'?'b-ok':'b-bad'}">${f._state==='confirmed'?'✓ confirmed':'✗ killed'}</span>
+          <span class="badge b-info">${esc(f.angle)}</span>
+        </div>
+        <b style="font-size:14.5px;color:#fff">${mdSpans(f.claim)}</b>
+        <p style="margin-top:8px;font-size:13.3px">${mdSpans(f.detail)}</p>
+        ${(f.sourceUrls||[]).length?`<div class="src" style="margin-top:8px">${(f.sourceUrls||[]).slice(0,3).map(u=>`<a href="${esc(u)}" target="_blank">${esc(u)}</a>`).join('<br>')}</div>`:''}
+      </div>`).join('')||'<p class="muted">No findings for this angle.</p>'; };
+    paint('all');
+    fb.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{fb.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');paint(c.dataset.a);}));
+  }
+  // sources (only when rendering the standalone sources page)
+  const sl=document.querySelector('[data-page="sources"] #sourceList');
+  if(sl){
+    const srcs=[]; (d.angles||[]).forEach(a=>(a.sources||[]).forEach(s=>srcs.push(s)));
+    items.forEach(f=>(f.sourceUrls||[]).forEach(u=>{if(!srcs.find(s=>s.url===u))srcs.push({url:u,title:u});}));
+    const uniq=[...new Map(srcs.map(s=>[s.url,s])).values()];
+    if(uniq.length) sl.innerHTML=`<div class="twrap"><table><tr><th>#</th><th>Source</th></tr>${uniq.map((s,i)=>`<tr><td>${i+1}</td><td><a href="${esc(s.url)}" target="_blank">${esc(s.title||s.url)}</a><div class="src">${esc(s.url)}</div></td></tr>`).join('')}</table></div>`;
+  }
+}
+
+// ── Research log (from PROGRESS.md) ──
+function loadLog(){
+  const el=document.getElementById('logTimeline'); if(!el) return;
+  el.innerHTML=(LOG||[]).map(e=>`
+    <div class="tli ${e.cls||'done'}"><time>${esc(e.date)}</time><b>${mdSpans(e.title)}</b>
+      ${(e.bullets&&e.bullets.length)?`<ul class="md md-bullets">${e.bullets.map(b=>`<li>${mdSpans(b)}</li>`).join('')}</ul>`:''}
+    </div>`).join('')||'<p class="muted">No log entries parsed from PROGRESS.md.</p>';
+}
+
+// Render a files-touched list (new = created via Write, mod = edited). `files` = [{path,touches,created}].
+// ── File explorer ────────────────────────────────────────────────────────────
+// Two modes over one toolbar (search + sort, shared):
+//   • DOCS  — folder tree of the previewable .md/.html docs (window.FILES, content embedded);
+//             click → inline preview (md via mdToHtml; html in an iframe). Tree pane is drag-resizable.
+//   • ALL   — flat, sortable table of EVERY file incl. hidden (window.ALL_FILES, metadata only — local
+//             bundle, never committed). Per-row: open (if a previewable doc), copy path, open in Finder.
+// No fetch() anywhere — md content is embedded, html referenced by relative href; works on file://.
+const ALL_FILES = window.ALL_FILES || [];
+const FILES_ROOT = window.FILES_ROOT || '';
+const FILE_BY_PATH = Object.fromEntries(FILES.map(f=>[f.path,f]));
+function fmtBytes(n){ if(!n) return ''; if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(n<10240?1:0)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+function fmtMtime(ms){ if(!ms) return ''; try{return new Date(ms).toLocaleString(undefined,{year:'2-digit',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return '';} }
+
+// Shared explorer state.
+const _fx={ mode:'docs', q:'', sort:'name' };
+function fxSorter(sort){
+  const dir=sort.endsWith('-d')?-1:1; const key=sort.replace('-d','');
+  return (a,b)=>{
+    if(key==='date') return dir*(((a.mtime||0)-(b.mtime||0)));
+    if(key==='size') return dir*(((a.size||0)-(b.size||0)));
+    return dir*((a.name||'').localeCompare(b.name||'')|| (a.path||'').localeCompare(b.path||''));
+  };
+}
+function fxMatch(f){ if(!_fx.q) return true; const q=_fx.q.toLowerCase(); return (f.path||'').toLowerCase().includes(q)||(f.name||'').toLowerCase().includes(q); }
+
+// Build a nested folder tree from a flat path list. Returns {dirs:{name:node}, files:[]}.
+function buildFileTree(files){
+  const root={dirs:{},files:[]};
+  for(const f of files){
+    const parts=f.path.split('/'); parts.pop();
+    let node=root;
+    for(const dir of parts){ node.dirs[dir]=node.dirs[dir]||{dirs:{},files:[]}; node=node.dirs[dir]; }
+    node.files.push(f);
+  }
+  return root;
+}
+function fileTreeHtml(node, depth, sorter){
+  const dirNames=Object.keys(node.dirs).sort();
+  let html='';
+  for(const dn of dirNames){
+    const inner=fileTreeHtml(node.dirs[dn],depth+1,sorter);
+    if(!inner) continue;   // prune empty branches (after filtering)
+    const openAttr=(depth<1||_fx.q)?'open':'';   // expand all while searching
+    html+=`<details class="fx-folder" ${openAttr}><summary>📁 ${esc(dn)}</summary><div class="fx-children">${inner}</div></details>`;
+  }
+  for(const f of [...node.files].sort(sorter)){
+    if(!fxMatch(f)) continue;
+    html+=`<div class="fx-file" data-path="${esc(f.path)}" title="${esc(f.path)} · ${esc(fmtMtime(f.mtime))}">
+      <span class="fx-ext ${f.ext}">${f.ext==='md'?'▤':'◈'}</span>
+      <span class="fx-nm">${esc(f.name)}</span>
+      <span class="fx-sz">${fmtBytes(f.size)}</span>
+    </div>`;
+  }
+  return html;
+}
+
+function loadFiles(){
+  const tree=document.getElementById('fxTree'); if(!tree) return;
+  const empty=document.getElementById('fxEmpty');
+  if(!FILES.length && !ALL_FILES.length){ if(empty)empty.style.display='block'; document.getElementById('fxWrap').style.display='none'; document.querySelector('.fx-toolbar').style.display='none'; return; }
+  // Toolbar wiring (once).
+  const search=document.getElementById('fxSearch'), sortSel=document.getElementById('fxSort'), modeSeg=document.getElementById('fxMode');
+  if(search && !search.dataset.wired){
+    search.dataset.wired='1';
+    search.addEventListener('input',e=>{_fx.q=e.target.value;paintFiles();});
+    sortSel.addEventListener('change',e=>{_fx.sort=e.target.value;paintFiles();});
+    modeSeg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      _fx.mode=b.dataset.mode; modeSeg.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b)); paintFiles();
+    }));
+    initTreeResize();
+  }
+  paintFiles();
+}
+
+function paintFiles(){
+  const docsMode=_fx.mode==='docs';
+  document.getElementById('fxWrap').style.display=docsMode?'grid':'none';
+  document.getElementById('fxAllWrap').style.display=docsMode?'none':'block';
+  const sorter=fxSorter(_fx.sort);
+  if(docsMode) paintTree(sorter); else paintFlat(sorter);
+}
+
+function paintTree(sorter){
+  const tree=document.getElementById('fxTree'); if(!tree) return;
+  const visible=FILES.filter(fxMatch).length;
+  document.getElementById('fxCount').textContent=`${visible} / ${FILES.length} docs`;
+  tree.innerHTML=fileTreeHtml(buildFileTree(FILES),0,sorter)||'<p class="muted" style="padding:10px">No files match.</p>';
+  tree.querySelectorAll('.fx-file').forEach(el=>el.addEventListener('click',()=>{
+    tree.querySelectorAll('.fx-file').forEach(x=>x.classList.remove('active')); el.classList.add('active');
+    showFileInline(el.dataset.path);
+  }));
+}
+
+function paintFlat(sorter){
+  const body=document.getElementById('fxFlatBody'); if(!body) return;
+  const rows=ALL_FILES.filter(fxMatch).sort(sorter);
+  document.getElementById('fxCount').textContent=`${rows.length} / ${ALL_FILES.length} files`;
+  const note=document.getElementById('fxAllNote');
+  note.innerHTML = FILES_ROOT
+    ? `Every file in the workspace (incl. hidden) · root <code>${esc(FILES_ROOT)}</code> · copy-path & open-in-Finder are local-only.`
+    : `Full file listing is local-only (this shared copy has metadata but no local paths).`;
+  body.innerHTML=rows.map(f=>{
+    const openable=!!FILE_BY_PATH[f.path];
+    const extCls=(f.ext==='md'||f.ext==='html')?f.ext:'';
+    return `<tr>
+      <td><div class="fcol-name ${openable?'clk':''}" ${openable?`data-open-doc="${esc(f.path)}"`:''}>
+        <span class="fext ${extCls}">${f.ext==='md'?'▤':f.ext==='html'?'◈':'·'}</span>
+        <span class="nm" title="${esc(f.name)}">${esc(f.name)}</span></div></td>
+      <td><span class="fcol-path" title="${esc(f.path)}">${esc(f.path)}</span></td>
+      <td><span class="fcol-date">${esc(fmtMtime(f.mtime))}</span></td>
+      <td><span class="fcol-size">${esc(fmtBytes(f.size))}</span></td>
+      <td class="fcol-act">
+        ${openable?`<button class="fx-act" data-open-doc="${esc(f.path)}" title="Preview">⤢</button>`:''}
+        <button class="fx-act" data-copy="${esc(f.path)}" title="Copy path">⧉</button>
+        ${FILES_ROOT?`<button class="fx-act" data-finder="${esc(f.path)}" title="Reveal in Finder">📂</button>`:''}
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" class="muted" style="padding:16px">No files match.</td></tr>';
+  wireDocOpeners(body);
+  body.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>copyPath(b,b.dataset.copy)));
+  body.querySelectorAll('[data-finder]').forEach(b=>b.addEventListener('click',()=>revealInFinder(b.dataset.finder)));
+}
+
+// Header-click sorting in the flat table maps to the sort <select>.
+function fxHeaderSort(key){
+  const cur=_fx.sort;
+  if(cur===key) _fx.sort=key+'-d';
+  else if(cur===key+'-d') _fx.sort=key;
+  else _fx.sort=(key==='date'||key==='size')?key+'-d':key;   // date/size default to descending
+  const sel=document.getElementById('fxSort'); if(sel) sel.value=_fx.sort;
+  paintFiles();
+}
+
+const ABS=(p)=>FILES_ROOT?(FILES_ROOT.replace(/\/$/,'')+'/'+p):p;
+// Copy the absolute path. Clipboard API needs a secure context; fall back to a hidden textarea+execCommand.
+function copyPath(btn,p){
+  const text=ABS(p);
+  const done=()=>{ const o=btn.textContent; btn.textContent='✓'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1100); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done)); }
+  else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  try{ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done&&done(); }catch{ /* */ }
+}
+// Reveal in Finder: on file:// we can only navigate the OS file browser by opening the containing
+// folder URL in a new tab (macOS/most OSes hand file:// dir URLs to the system browser/Finder).
+function revealInFinder(p){
+  const dir=ABS(p).split('/').slice(0,-1).join('/');
+  try{ window.open('file://'+encodeURI(dir),'_blank'); }catch{ /* */ }
+}
+
+// Drag-to-resize the docs tree pane (persists to localStorage). Sets --fxw on .fx-wrap.
+function initTreeResize(){
+  const gutter=document.getElementById('fxGutter'), wrap=document.getElementById('fxWrap'); if(!gutter||!wrap) return;
+  const saved=(()=>{try{return localStorage.getItem('fxTreeW');}catch{return null;}})();
+  if(saved) wrap.style.setProperty('--fxw',saved+'px');
+  let dragging=false;
+  const onMove=e=>{ if(!dragging) return; const x=(e.touches?e.touches[0].clientX:e.clientX);
+    const left=wrap.getBoundingClientRect().left; let w=Math.max(200,Math.min(720,x-left));
+    wrap.style.setProperty('--fxw',w+'px'); };
+  const stop=()=>{ if(!dragging) return; dragging=false; gutter.classList.remove('drag'); document.body.style.userSelect='';
+    const w=parseInt(getComputedStyle(wrap).getPropertyValue('--fxw'))||340; try{localStorage.setItem('fxTreeW',w);}catch{} };
+  const start=e=>{ dragging=true; gutter.classList.add('drag'); document.body.style.userSelect='none'; e.preventDefault(); };
+  gutter.addEventListener('mousedown',start); gutter.addEventListener('touchstart',start,{passive:false});
+  document.addEventListener('mousemove',onMove); document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',stop); document.addEventListener('touchend',stop);
+}
+
+// Inline preview inside the Files page (right pane).
+function showFileInline(p){
+  const f=FILE_BY_PATH[p]; const view=document.getElementById('fxView'); if(!f||!view) return;
+  const bar=`<div class="fx-view-bar"><span class="fx-path">${esc(f.path)}</span>
+    <span class="fx-sz" style="font-family:var(--mono);color:var(--tx3)">${esc(fmtMtime(f.mtime))} · ${fmtBytes(f.size)}</span>
+    <a class="btn sm fx-open-ext" data-open="${esc(f.path)}">⤢ Open fullscreen</a></div>`;
+  if(f.ext==='html'){
+    view.innerHTML=bar+`<div class="fx-view-body"><iframe src="${esc(f.href)}" title="${esc(f.name)}"></iframe></div>`;
+  } else {
+    view.innerHTML=bar+`<div class="fx-view-body md">${f.md!=null?mdToHtml(f.md):'<p class="muted">No preview available.</p>'}</div>`;
+  }
+  const ob=view.querySelector('[data-open]'); if(ob)ob.addEventListener('click',()=>openDoc(f.path));
+}
+
+// Shared fullscreen doc viewer — usable from the Files page AND work-item deliverable links.
+function openDoc(p){
+  const f=FILE_BY_PATH[p]; if(!f) return;
+  const wrap=document.getElementById('docWrap'), frame=document.getElementById('docFrame'), mdBox=document.getElementById('docMd');
+  document.getElementById('docTitle').textContent=f.name;
+  document.getElementById('docPath').textContent='· '+f.path;
+  if(f.ext==='html'){ mdBox.style.display='none'; frame.style.display='block'; frame.src=f.href; }
+  else { frame.style.display='none'; frame.src='about:blank'; mdBox.style.display='block'; mdBox.innerHTML=f.md!=null?mdToHtml(f.md):'<p class="muted">No content.</p>'; mdBox.scrollTop=0; }
+  wrap.classList.add('show');
+}
+function closeDoc(){
+  const wrap=document.getElementById('docWrap');
+  wrap.classList.remove('show');
+  document.getElementById('docFrame').src='about:blank';
+  document.getElementById('docMd').innerHTML='';
+}
+
+function filesListHtml(files, limit){
+  if(!files||!files.length) return '<p class="muted" style="font-size:13px">No files recorded.</p>';
+  const shown=limit?files.slice(0,limit):files;
+  return `<div class="files-list">${shown.map(f=>{
+    const openable=!!FILE_BY_PATH[f.path];   // is this a previewable .md/.html doc?
+    return `<div class="fitem${openable?' clk':''}"${openable?` data-open-doc="${esc(f.path)}"`:''}>
+      <span class="fa ${f.created?'new':'mod'}">${f.created?'+':'~'}</span>
+      <span class="fp">${esc(f.path)}</span>
+      ${openable?'<span class="fopen">open →</span>':''}
+      <span class="fc">${f.touches>1?f.touches+'×':''} ${f.created?'created':'edited'}</span>
+    </div>`;}).join('')}${limit&&files.length>limit?`<div class="fitem" style="border:none;color:var(--tx3)">…and ${files.length-limit} more</div>`:''}</div>`;
+}
+// Wire any "open document" affordance (files-list rows, deliverable chips) within a container.
+function wireDocOpeners(root){
+  (root||document).querySelectorAll('[data-open-doc]').forEach(el=>{
+    if(el.dataset.wired) return; el.dataset.wired='1';
+    el.addEventListener('click',()=>openDoc(el.dataset.openDoc));
+  });
+}
+// From a work item's touched files, pick the ones that are openable docs → "deliverables".
+function deliverablesHtml(files){
+  const docs=(files||[]).filter(f=>FILE_BY_PATH[f.path]).map(f=>FILE_BY_PATH[f.path]);
+  if(!docs.length) return '';
+  return `<div class="deliv">${docs.map(f=>`
+    <a data-open-doc="${esc(f.path)}"><span class="dx ${f.ext}">${f.ext==='md'?'▤':'◈'}</span> ${esc(f.name)}</a>
+  `).join('')}</div>`;
+}
+// Merge the files lists of several sessions into one aggregated, de-duplicated list.
+function aggregateFiles(sessions){
+  const map=new Map();
+  for(const s of sessions){ for(const f of (s.files||[])){ const c=map.get(f.path)||{path:f.path,touches:0,created:false}; c.touches+=f.touches||1; c.created=c.created||f.created; map.set(f.path,c); } }
+  return [...map.values()].sort((a,b)=>b.touches-a.touches||a.path.localeCompare(b.path));
+}
+
+// ── Two tracks: research rounds + build tasks ──
+function renderTrack(trackId, mountId){
+  const track=(WORK_ITEMS.tracks||{})[trackId];
+  const mount=document.getElementById(mountId); if(!mount) return;
+  if(!track||!(track.items||[]).length){ mount.innerHTML='<p class="muted">No items yet.</p>'; return; }
+  const items=track.items.slice().sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  mount.innerHTML=items.map(it=>{
+    const sess=(it.sessions||[]).map(id=>SESSION_INDEX.find(s=>s.id===id)).filter(Boolean);
+    const nFiles=aggregateFiles(sess).length;
+    return `<div class="sesh" data-track="${esc(trackId)}" data-item="${esc(it.id)}">
+      <div class="sicon">${trackId==='research'?'🔬':'🧱'}</div>
+      <div class="sbody">
+        <p class="stitle">${mdSpans(it.title)}</p>
+        <p class="ssum">${mdSpans(it.outcome||it.overview||'')}</p>
+        <div class="smeta">
+          <span class="badge ${statusBadge[it.status]||'b-warn'}">${esc(it.status||'')}</span>
+          <span>📅 ${esc(fmtDay(it.start))}${it.updated&&it.updated!==it.start?' → '+esc(fmtDay(it.updated)):''}</span>
+          <span><b>${(it.sessions||[]).length}</b> session(s)</span>
+          ${nFiles?`<span><b>${nFiles}</b> file(s)</span>`:''}
+          ${it.researchRef?'<span>📊 research report</span>':''}
+          ${(it.reportRef||it.reportMd)?'<span>📄 report</span>':''}
+        </div>
+      </div>
+      <div class="sarrow">→</div>
+    </div>`;}).join('');
+  mount.querySelectorAll('.sesh').forEach(el=>el.addEventListener('click',()=>openWorkItem(el.dataset.track,el.dataset.item)));
+}
+
+function openWorkItem(trackId,itemId){
+  const track=(WORK_ITEMS.tracks||{})[trackId]||{}; const it=(track.items||[]).find(x=>x.id===itemId); if(!it) return;
+  const pageId=trackId==='research'?'research-rounds':'build-tasks';
+  const page=document.querySelector(`[data-page="${pageId}"]`);
+  const mount=page.querySelector(trackId==='research'?'#researchRoundsView':'#buildTasksView');
+  // Resolve sessions (prefer the index, which carries files even in shared copies).
+  const sess=(it.sessions||[]).map(id=>SESSION_INDEX.find(s=>s.id===id)||SESSIONS[id]||{id}).filter(Boolean);
+  const files=aggregateFiles(sess);
+  mount.innerHTML=`
+    <button class="btn" id="backToTrack" style="margin-bottom:18px">← All ${esc(track.label||'items')}</button>
+    <div class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <span class="badge ${statusBadge[it.status]||'b-warn'}">${esc(it.status||'')}</span>
+        <span class="badge b-info">${trackId==='research'?'Research round':'Build task'}</span>
+      </div>
+      <h3 style="font-size:20px;margin-bottom:8px">${mdSpans(it.title)}</h3>
+      <p class="muted" style="margin:0 0 8px">${mdSpans(it.outcome||'')}</p>
+      <div class="smeta" style="display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--tx3);font-family:var(--mono)">
+        <span>📅 ${esc(fmtDay(it.start))}${it.updated&&it.updated!==it.start?' → '+esc(fmtDay(it.updated)):''}</span>
+        <span><b style="color:var(--teal)">${sess.length}</b> session(s)</span>
+        <span><b style="color:var(--teal)">${files.length}</b> file(s) touched</span>
+      </div>
+    </div>
+    ${it.overview?`<div class="sec-title">Overview</div><div class="report-wrap"><div class="md">${mdToHtml(it.overview)}</div></div>`:''}
+    ${deliverablesHtml(files)?`<div class="sec-title">Deliverables · open report</div>${deliverablesHtml(files)}`:''}
+    ${files.length?`<div class="sec-title">Files created / changed</div>${filesListHtml(files)}`:''}
+    ${it.researchRef?'<div id="wiResearch"></div>':''}
+    ${(it.reportMd||it.reportHtml)?`<div class="sec-title">Report${it.reportRef?` <span class="muted" style="text-transform:none;font-weight:400">· ${esc(it.reportRef)}</span>`:''}</div><div class="report-wrap"><div class="md">${it.reportHtml?it.reportHtml:mdToHtml(it.reportMd)}</div></div>`:''}
+    <div class="sec-title">Sessions for this item</div>
+    <div id="wiSessions"></div>`;
+  // associated sessions → click jumps to agentic detail
+  const ws=mount.querySelector('#wiSessions');
+  ws.innerHTML=sess.length?sess.map(s=>sessionCardHtml(s)).join(''):'<p class="muted">No sessions associated yet.</p>';
+  ws.querySelectorAll('.sesh').forEach(el=>el.addEventListener('click',()=>{show('agentic');openSession(el.dataset.id);}));
+  wireDocOpeners(mount);   // deliverable chips + clickable files-touched rows open the doc viewer
+  mount.querySelector('#backToTrack').addEventListener('click',()=>renderTrack(trackId,trackId==='research'?'researchRoundsView':'buildTasksView'));
+  // inline research report for a round
+  if(it.researchRef && window.RESEARCH){
+    const box=mount.querySelector('#wiResearch');
+    box.innerHTML=`<div class="sec-title">Research findings</div>${DYNAMIC_SHELLS.research}`;
+    loadResearch(window.RESEARCH, box);
+  }
+  window.scrollTo(0,0);
+}
+
+function sessionCardHtml(s){
+  const wi=s.workItem;
+  return `<div class="sesh" data-id="${esc(s.id)}">
+    <div class="sicon">🗣️</div>
+    <div class="sbody">
+      <p class="stitle">${esc(s.title||'Untitled session')}</p>
+      <p class="ssum">${esc(s.summary||s.firstUserPreview||'Summary pending…')}</p>
+      <div class="smeta">
+        <span>📅 ${esc(fmtDay(s.date))}</span>
+        <span><b>${s.turns||0}</b> turns</span>
+        <span><b>${s.toolCalls||0}</b> tool calls</span>
+        ${(s.files&&s.files.length)?`<span><b>${s.files.length}</b> file(s)</span>`:''}
+        ${s.model?`<span>${esc(s.model)}</span>`:''}
+        ${s.branch?`<span>⎇ ${esc(s.branch)}</span>`:''}
+        <span>id ${esc((s.id||'').slice(0,8))}</span>
+      </div>
+    </div>
+    <div class="sarrow">→</div>
+  </div>`;
+}
+
+// ── Agentic history: session list (with filtering) ──
+let _sessFilter={q:'',day:'',item:''};
+function renderSessionList(){
+  const listEl=document.getElementById('sessionList'); if(!listEl) return;
+  const statusEl=document.getElementById('sessionStatus');
+  let idx=SESSION_INDEX.slice();
+  if(!idx.length){ if(statusEl)statusEl.style.display='block'; }
+  // filter bar
+  const fbar=document.getElementById('sessionFilter');
+  if(fbar && !fbar.dataset.built){
+    const items=[]; for(const[tid,t]of Object.entries(WORK_ITEMS.tracks||{}))for(const it of t.items||[])items.push({id:it.id,label:(tid==='research'?'🔬 ':'🧱 ')+it.title});
+    fbar.innerHTML=`
+      <input class="finput" id="sQ" type="search" placeholder="🔎 keyword (title/summary/prompt)" style="min-width:240px;flex:1"/>
+      <input class="finput" id="sDay" type="date"/>
+      <select class="finput" id="sItem"><option value="">all work items</option>${items.map(i=>`<option value="${esc(i.id)}">${esc(i.label.slice(0,48))}</option>`).join('')}</select>
+      <button class="chip" id="sClear">clear</button>`;
+    fbar.dataset.built='1';
+    fbar.querySelector('#sQ').addEventListener('input',e=>{_sessFilter.q=e.target.value.toLowerCase();paintSessions();});
+    fbar.querySelector('#sDay').addEventListener('change',e=>{_sessFilter.day=e.target.value;paintSessions();});
+    fbar.querySelector('#sItem').addEventListener('change',e=>{_sessFilter.item=e.target.value;paintSessions();});
+    fbar.querySelector('#sClear').addEventListener('click',()=>{_sessFilter={q:'',day:'',item:''};fbar.querySelector('#sQ').value='';fbar.querySelector('#sDay').value='';fbar.querySelector('#sItem').value='';paintSessions();});
+  }
+  paintSessions();
+}
+function paintSessions(){
+  const listEl=document.getElementById('sessionList'); if(!listEl) return;
+  let idx=SESSION_INDEX.slice().sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  const f=_sessFilter;
+  if(f.q) idx=idx.filter(s=>((s.title||'')+' '+(s.summary||'')+' '+(s.firstUserPreview||'')).toLowerCase().includes(f.q));
+  if(f.day) idx=idx.filter(s=>dayKey(s.date)===f.day||dayKey(s.updated)===f.day);
+  if(f.item) idx=idx.filter(s=>s.workItem&&s.workItem.itemId===f.item);
+  listEl.innerHTML=idx.map(s=>sessionCardHtml(s)).join('')||'<p class="muted">No sessions match the filter.</p>';
+  listEl.querySelectorAll('.sesh').forEach(el=>el.addEventListener('click',()=>openSession(el.dataset.id)));
+}
+
+// ── Agentic history: single session detail (expandable + filterable timeline) ──
+let _convFilter={mode:'all',q:'',day:''};
+function openSession(id){
+  const idx=SESSION_INDEX.find(s=>s.id===id)||{};
+  const full=SESSIONS[id];
+  document.getElementById('sessionListView').style.display='none';
+  document.getElementById('sessionDetail').style.display='block';
+  const meta=full||idx;
+  const sfiles=(idx.files&&idx.files.length?idx.files:meta.files)||[];
+  document.getElementById('sessionHeader').innerHTML=`
+    <div class="shdr">
+      <span class="kick">Session ${esc((id||'').slice(0,8))}</span>
+      <h3>${mdSpans(idx.title||meta.title||'Untitled session')}</h3>
+      <p class="muted" style="margin:0">${mdSpans(idx.summary||meta.summary||'Summary pending…')}</p>
+      <div class="smeta">
+        <span>📅 ${esc(fmtDate(idx.updated||meta.updated||idx.date))}</span>
+        <span><b>${idx.turns||meta.turns||0}</b> turns</span>
+        <span><b>${idx.toolCalls||meta.toolCalls||0}</b> tool calls</span>
+        ${sfiles.length?`<span><b>${sfiles.length}</b> file(s)</span>`:''}
+        ${meta.model?`<span>🧠 ${esc(meta.model)}</span>`:''}
+        ${meta.branch?`<span>⎇ ${esc(meta.branch)}</span>`:''}
+        ${meta.cwd?`<span title="${esc(meta.cwd)}">📁 ${esc(meta.cwd.split('/').slice(-2).join('/'))}</span>`:''}
+        ${(idx.workItem)?`<span>🔗 ${esc(idx.workItem.itemTitle.slice(0,40))}</span>`:''}
+      </div>
+      ${sfiles.length?`<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:var(--teal)">📂 ${sfiles.length} file(s) created / changed</summary><div style="margin-top:8px">${filesListHtml(sfiles)}</div></details>`:''}
+    </div>`;
+  wireDocOpeners(document.getElementById('sessionHeader'));
+  const cf=document.getElementById('convFilter'), tl=document.getElementById('convTimeline'), note=document.getElementById('convLocalNote');
+  if(!full || !(full.timeline||[]).length){ cf.innerHTML=''; tl.innerHTML=''; note.style.display='block'; window.scrollTo(0,0); return; }
+  note.style.display='none';
+  _convFilter={mode:'all',q:'',day:''};
+  const timeline=full.timeline;
+  const days=[...new Set(timeline.map(t=>dayKey(t.ts)).filter(Boolean))];
+  cf.innerHTML=`
+    ${['all','user','assistant','tools'].map((a,i)=>`<span class="chip ${i===0?'active':''}" data-f="${a}">${a}</span>`).join('')}
+    <input class="finput" id="cQ" type="search" placeholder="🔎 search text / tool args / results" style="min-width:240px;flex:1"/>
+    ${days.length>1?`<select class="finput" id="cDay"><option value="">all days</option>${days.map(d=>`<option value="${d}">${fmtDay(d)}</option>`).join('')}</select>`:''}`;
+  const paint=()=>{
+    const f=_convFilter;
+    tl.innerHTML=timeline.filter(t=>{
+      if(f.mode==='tools'&&!(t.tools||[]).length) return false;
+      if((f.mode==='user'||f.mode==='assistant')&&t.role!==f.mode) return false;
+      if(f.day&&dayKey(t.ts)!==f.day) return false;
+      if(f.q){ const hay=((t.text||'')+' '+(t.tools||[]).map(x=>(x.summary||'')+' '+(x.args||'')+' '+(x.result||'')).join(' ')).toLowerCase(); if(!hay.includes(f.q)) return false; }
+      return true;
+    }).map(turnHtml).join('')||'<p class="muted">No turns match the filter.</p>';
+    wireExpanders(tl);
+  };
+  cf.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{cf.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');_convFilter.mode=c.dataset.f;paint();}));
+  const cq=cf.querySelector('#cQ'); if(cq)cq.addEventListener('input',e=>{_convFilter.q=e.target.value.toLowerCase();paint();});
+  const cd=cf.querySelector('#cDay'); if(cd)cd.addEventListener('change',e=>{_convFilter.day=e.target.value;paint();});
+  paint();
+  window.scrollTo(0,0);
+}
+
+const CLAMP=800;
+function turnHtml(t){
+  const long=(t.text||'').length>CLAMP;
+  const shown=long?esc(t.text.slice(0,CLAMP)):esc(t.text||'');
+  const fullEsc=long?esc(t.text):'';
+  return `<div class="turn ${t.role}">
+    <div class="rhead">${t.role==='user'?'🧑 You':'🤖 Agent'}
+      ${t.ts?`<time>${esc(fmtDate(t.ts))}</time>`:''}
+      ${t.model?`<span class="modelpill">${esc(t.model)}</span>`:''}
+      ${(t.tools||[]).length?`· ${t.tools.length} tool call(s)`:''}</div>
+    ${(t.text)?`<div class="body" data-full="${long?'1':'0'}">${shown}${long?`<span class="more">… </span><button class="btn sm expand" data-full-text="${encodeURIComponent(t.text)}">Show full (${t.len} chars)</button>`:''}</div>`:''}
+    ${(t.tools||[]).length?`<div class="tools">${t.tools.map(toolHtml).join('')}</div>`:''}
+  </div>`;
+}
+function toolHtml(x){
+  const hasArgs=(x.args||'').length>0, hasRes=(x.resultLen||0)>0;
+  return `<details class="tcall ${x.isError?'err':''}">
+    <summary><span class="tname">${esc(x.name)}</span>${x.summary?`<span class="tsum">${esc(x.summary)}</span>`:''}${hasRes?`<span class="muted" style="margin-left:auto">${x.resultLen} chars out</span>`:''}</summary>
+    <div class="tbody">
+      ${hasArgs?`<div class="tlabel">arguments</div><pre>${esc(x.args)}</pre>`:''}
+      ${hasRes?`<div class="tlabel">result${x.isError?' (error)':''}</div><pre>${esc(x.result)}</pre>`:''}
+    </div>
+  </details>`;
+}
+function wireExpanders(root){
+  root.querySelectorAll('button.expand').forEach(b=>b.addEventListener('click',()=>{
+    const body=b.closest('.body'); body.innerHTML=esc(decodeURIComponent(b.dataset.fullText));
+  }));
+}
+
+// ── Versioning: dropdown + iframe overlay (working tree never touched) ──
+function renderVersions(){
+  const bar=document.getElementById('verbar'), sel=document.getElementById('versionPicker');
+  if(!bar||!sel||!VERSIONS.length) return;
+  bar.style.display='flex';
+  sel.innerHTML=`<option value="">Working copy (current)</option>`+VERSIONS.map(v=>{
+    const noPortal=v.hasIndex===false;
+    const tag=noPortal?' (no portal)':(v.hasData?'':' (static only)');
+    return `<option value="${esc(v.hash)}"${noPortal?' disabled':''}>${esc(v.date)} · ${esc(v.hash)} · ${esc((v.subject||'').slice(0,40))}${tag}</option>`;
+  }).join('');
+  sel.addEventListener('change',()=>{
+    const hash=sel.value;
+    const wrap=document.getElementById('verframeWrap');
+    if(!hash){ wrap.classList.remove('show'); document.getElementById('verframe').src='about:blank'; return; }
+    const v=VERSIONS.find(x=>x.hash===hash)||{};
+    document.getElementById('verframeHash').textContent=hash;
+    document.getElementById('verframeSubj').textContent=v.subject?('· '+v.subject):'';
+    document.getElementById('verframe').src=`versions/${hash}/index.html`;
+    wrap.classList.add('show');
+  });
+  document.getElementById('verframeClose').addEventListener('click',()=>{
+    document.getElementById('verframeWrap').classList.remove('show');
+    document.getElementById('verframe').src='about:blank';
+    document.getElementById('versionPicker').value='';
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Navigation
+// ─────────────────────────────────────────────────────────────
+let pages=[], navlinks=[];
+const animated=new Set();
+function runAnimations(pg){
+  if(animated.has(pg))return; animated.add(pg);
+  const root=document.querySelector(`.page[data-page="${pg}"]`); if(!root)return;
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const target=+el.dataset.count, suf=el.dataset.suffix||'', dur=850, t0=performance.now();
+    (function tick(t){const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(target*e)+(p===1?suf:'');if(p<1)requestAnimationFrame(tick);})(t0);
+  });
+}
+function show(pg){
+  pages.forEach(p=>p.classList.toggle('show', p.dataset.page===pg));
+  navlinks.forEach(a=>a.classList.toggle('active', a.dataset.pg===pg));
+  window.scrollTo(0,0); history.replaceState(null,'','#'+pg);
+  document.getElementById('sidebar').classList.remove('open');
+  runAnimations(pg);
+}
+function wireNav(){
+  pages=[...document.querySelectorAll('.page')];
+  navlinks=[...document.querySelectorAll('.nav a[data-pg]')];
+  navlinks.forEach(a=>a.addEventListener('click',()=>show(a.dataset.pg)));
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+  document.getElementById('burger').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+  const back=document.getElementById('backToSessions');
+  if(back) back.addEventListener('click',()=>{document.getElementById('sessionDetail').style.display='none';document.getElementById('sessionListView').style.display='block';window.scrollTo(0,0);});
+}
+
+// ── Boot ──
+renderShell();
+renderPages();
+wireNav();
+loadResearch();
+loadLog();
+loadFiles();
+renderTrack('research','researchRoundsView');
+renderTrack('build','buildTasksView');
+renderSessionList();
+renderVersions();
+document.getElementById('docClose').addEventListener('click',closeDoc);
+// Flat-table header sorting (Files page · all-files mode).
+document.querySelectorAll('.fx-flat th[data-sort]').forEach(th=>th.addEventListener('click',()=>fxHeaderSort(th.dataset.sort)));
+// Collapsible left navigation (desktop). Toggle with the « / ☰ buttons or the "\" key.
+const setNav=collapsed=>{ document.body.classList.toggle('nav-collapsed',collapsed); try{localStorage.setItem('navCollapsed',collapsed?'1':'0');}catch{} };
+document.getElementById('navCollapse').addEventListener('click',()=>setNav(true));
+document.getElementById('navShow').addEventListener('click',()=>setNav(false));
+try{ if(localStorage.getItem('navCollapsed')==='1' && window.innerWidth>900) document.body.classList.add('nav-collapsed'); }catch{}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeDoc(); const vw=document.getElementById('verframeWrap'); if(vw.classList.contains('show')){vw.classList.remove('show');document.getElementById('verframe').src='about:blank';document.getElementById('versionPicker').value='';} }
+  if(e.key==='\\' && !/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||'')) && window.innerWidth>900){ e.preventDefault(); setNav(!document.body.classList.contains('nav-collapsed')); }
+});
+const start=(location.hash||'#home').slice(1);
+show(pages.some(p=>p.dataset.page===start)?start:(PORTAL.pages[0]?.id||'home'));
+</script>
+</body>
+</html>

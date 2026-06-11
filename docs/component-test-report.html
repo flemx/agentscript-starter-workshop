@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Note-Capture Components — Test Report</title>
+<style>
+  :root{--bg:#0a0a14;--card:#15152a;--card2:#1c1c36;--border:#2e2e4a;--text:#f4f4f8;--muted:#a3a3b8;
+    --accent:#7c3aed;--accent2:#a78bfa;--green:#34d399;--amber:#fbbf24;--blue:#38bdf8;--red:#f87171;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(circle at 15% 8%,rgba(124,58,237,.22)0%,transparent 45%),
+    radial-gradient(circle at 85% 92%,rgba(56,189,248,.13)0%,transparent 45%),var(--bg);color:var(--text);line-height:1.6;}
+  .wrap{max-width:1000px;margin:0 auto;padding:46px 24px 90px;}
+  header.hero{border:1px solid var(--border);border-radius:18px;padding:34px 38px;
+    background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(28,28,54,.6));box-shadow:0 12px 40px rgba(0,0,0,.45);}
+  .eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:10px;}
+  h1{font-size:30px;line-height:1.18;margin-bottom:12px;}
+  .hero p{color:var(--muted);font-size:16px;max-width:74ch;}
+  .chips{margin-top:18px;display:flex;flex-wrap:wrap;gap:9px;}
+  .chip{font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:999px;border:1px solid var(--border);
+    background:rgba(255,255,255,.03);color:var(--muted);}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:26px 0 6px;}
+  .stat{border:1px solid var(--border);border-radius:14px;padding:18px;background:var(--card);text-align:center;}
+  .stat .num{font-size:26px;font-weight:800;color:var(--accent2);}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-top:3px;}
+  h2{font-size:21px;margin:46px 0 8px;display:flex;align-items:center;gap:10px;}
+  h2 .bar{width:4px;height:21px;border-radius:2px;background:linear-gradient(var(--accent),var(--accent2));}
+  .sub{color:var(--muted);margin-bottom:16px;font-size:14.5px;}
+  .card{border:1px solid var(--border);border-radius:16px;padding:22px 24px;background:var(--card);margin-bottom:16px;}
+  .card h3{font-size:17px;margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;margin-top:6px;}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top;}
+  th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;}
+  code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;background:var(--card2);
+    border:1px solid var(--border);padding:1.5px 6px;border-radius:5px;color:#d6c8ff;}
+  .s{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap;}
+  .s.ok{background:rgba(52,211,153,.16);color:var(--green);}
+  .s.warn{background:rgba(251,191,36,.16);color:var(--amber);}
+  .shot{margin:14px 0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;}
+  .shot img{display:block;width:100%;}
+  .shot figcaption{background:var(--card2);color:var(--muted);font-size:12.5px;padding:8px 14px;border-top:1px solid var(--border);}
+  ul.clean{list-style:none;} ul.clean li{padding:5px 0 5px 24px;position:relative;}
+  ul.clean li::before{content:"\2713";position:absolute;left:2px;top:5px;color:var(--green);font-weight:800;}
+  .callout{border-left:3px solid var(--amber);border-radius:10px;background:rgba(251,191,36,.08);padding:14px 18px;margin:14px 0;}
+  .callout p{margin:0;color:var(--muted);} .callout strong{color:var(--text);}
+  a{color:var(--accent2);}
+  footer{margin-top:40px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--border);padding-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Agentforce Workshop · Component Test Report</p>
+    <h1>Note-capture, HTML-note &amp; note-viewer components — built &amp; tested</h1>
+    <p>This documents the new components requested: capturing meeting notes (audio + files + text) and sending them to an agent, creating richly-formatted HTML notes, and a read-only note viewer with PDF download. All were deployed to the sandbox and verified in the browser.</p>
+    <div class="chips">
+      <span class="chip">📅 2026-06-11</span>
+      <span class="chip">🧪 hackathon_sandbox</span>
+      <span class="chip">✅ 27/27 Apex tests passing</span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num">4</div><div class="lbl">new components</div></div>
+    <div class="stat"><div class="num">27/27</div><div class="lbl">Apex tests pass</div></div>
+    <div class="stat"><div class="num">live</div><div class="lbl">browser-verified</div></div>
+    <div class="stat"><div class="num">0.1.0.2</div><div class="lbl">core package built</div></div>
+  </div>
+
+  <!-- WHAT WAS BUILT -->
+  <h2><span class="bar"></span>What was built</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Component</th><th>Type</th><th>What it does</th><th>Tests</th></tr></thead>
+      <tbody>
+        <tr><td><code>noteCapture</code></td><td>LWC</td><td>Record audio (with animation) → speech-to-text; drag in multiple files → image/doc-to-text via prompt template (parallel); paste text. Combine + send to a chosen Employee Agent (ACC API).</td><td><span class="s ok">via controllers</span></td></tr>
+        <tr><td><code>NoteCaptureController</code></td><td>Apex</td><td>Saves files as Salesforce Files (ContentVersion), lists Employee Agents to target.</td><td><span class="s ok">4/4</span></td></tr>
+        <tr><td><code>NoteCaptureAI</code></td><td>Apex</td><td>Speech-to-text + multimodal prompt template invocation; degrades gracefully if AI features are off.</td><td><span class="s ok">4/4</span></td></tr>
+        <tr><td><code>HtmlNoteService</code></td><td>Apex + Invocable</td><td>Creates a richly-formatted <code>ContentNote</code> from HTML (sanitized), links it to a record. Callable from LWC, Flow, or the agent.</td><td><span class="s ok">8/8</span></td></tr>
+        <tr><td><code>noteViewer</code> + <code>NoteViewerController</code></td><td>LWC + Apex</td><td>Lists notes, renders the selected note's HTML read-only, Download-PDF (print) button.</td><td><span class="s ok">3/3</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- EVIDENCE -->
+  <h2><span class="bar"></span>Tested in the browser — evidence</h2>
+  <p class="sub">Captured live from the workshop Home page in <code>hackathon_sandbox</code>.</p>
+
+  <figure class="shot"><img src="screenshots/components/02-note-capture.png" alt="Note capture component"/>
+    <figcaption>Capture Meeting Notes — the audio recorder (big record button, "Tap to record. Tap again to stop and transcribe"), plus the numbered file-drop and paste-text steps.</figcaption></figure>
+
+  <figure class="shot"><img src="screenshots/components/04-send-to-agent.png" alt="Send to agent"/>
+    <figcaption>The capture flow: combine audio + files + text, then choose an Employee Agent and send (via the Agentforce client API).</figcaption></figure>
+
+  <figure class="shot"><img src="screenshots/components/03-note-viewer.png" alt="HTML note viewer rendering formatted content"/>
+    <figcaption>The note viewer rendering a real HTML note created by <code>HtmlNoteService</code> — headings, bold labels, bulleted &amp; numbered lists all render. A Download-PDF button is top-right. This proves the full round-trip: create HTML note → read it back → render formatted.</figcaption></figure>
+
+  <figure class="shot"><img src="screenshots/components/01-home-all-components.png" alt="All components on the workshop home"/>
+    <figcaption>All components live together on the workshop Home page.</figcaption></figure>
+
+  <!-- HOW VERIFIED -->
+  <h2><span class="bar"></span>How each was verified</h2>
+  <div class="card">
+    <ul class="clean">
+      <li><strong>HTML note round-trip</strong> — created a formatted "Meeting Notes — Acme Corp" note via Apex; it rendered correctly in the viewer (screenshot above).</li>
+      <li><strong>HtmlNoteService</strong> — 8 Apex tests: create, link-to-record, idempotent link, blank-title rejection, invocable success + failure, HTML sanitization (script/disallowed tags stripped, allowed tags kept).</li>
+      <li><strong>NoteViewerController</strong> — 3 tests: fetch note HTML, list notes, default limit.</li>
+      <li><strong>NoteCaptureController</strong> — 4 tests: file upload, upload+link, blank rejection, agent listing.</li>
+      <li><strong>NoteCaptureAI</strong> — 4 tests via a mock seam (speech-to-text + prompt template), incl. graceful degradation when AI features are off.</li>
+      <li><strong>noteCapture / noteViewer LWCs</strong> — rendered live on the Home page; audio recorder UI, file drop, agent picker, and the formatted note view all display correctly.</li>
+    </ul>
+  </div>
+
+  <!-- NOTES / DECISIONS -->
+  <h2><span class="bar"></span>Key decisions &amp; honest caveats</h2>
+  <div class="card">
+    <div class="callout"><p><strong>Packaging split:</strong> these four components depend on org features (<code>ContentNote</code>, <code>ConnectApi.EinsteinLLM</code>, <code>BotDefinition</code>) that aren't present in the vanilla scratch org the 2GP package build uses — so they don't compile there. They're kept in a separate <code>feature-addons/</code> folder and deployed to the org directly (same pattern as the un-packageable agent). The <strong>core package (0.1.0.2)</strong> still builds &amp; installs cleanly. Deploy the add-ons with <code>sf project deploy start --source-dir feature-addons</code> + assign the <code>Employee_Agent_Notes_Addon</code> perm set. See <code>feature-addons/README.md</code>.</p></div>
+    <div class="callout"><p><strong>Speech-to-text &amp; prompt-template calls:</strong> the actual AI calls (the <code>convertBase64SpeechToText</code> action and the multimodal prompt template) require those features enabled and configured in the org. The Apex compiles and the orchestration is tested; if a feature is off, the component shows a clear "paste the text instead" placeholder rather than failing. Live AI output should be verified once the org's prompt template (<code>Describe_File_Contents</code>) and speech action are confirmed available.</p></div>
+    <div class="callout"><p><strong>Send-to-agent (ACC API):</strong> uses <code>lightning/accApi</code> (<code>open</code> + <code>execute</code>) to open the agent side panel and submit the notes. This works on Lightning desktop with Agentforce; elsewhere it falls back to a bubbling event. Worth a final manual click-through on a record page with an active agent.</p></div>
+  </div>
+
+  <footer>Generated 2026-06-11 · Note-capture component suite · sandbox-verified · core package 0.1.0.2 (04tWt000000GDXZIA4)</footer>
+</div>
+</body>
+</html>

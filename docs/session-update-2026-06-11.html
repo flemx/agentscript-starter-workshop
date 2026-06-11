@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agentforce Hackathon — Build Update (2026-06-11)</title>
+<style>
+  :root {
+    --bg: #0a0a14;
+    --card: #15152a;
+    --card2: #1c1c36;
+    --border: #2e2e4a;
+    --text: #f4f4f8;
+    --muted: #a3a3b8;
+    --accent: #7c3aed;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --blue: #38bdf8;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(124,58,237,0.22) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(56,189,248,0.14) 0%, transparent 45%),
+      var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+  header.hero {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 36px 40px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(28,28,54,0.6));
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin: 0 0 10px;
+  }
+  h1 { font-size: 34px; line-height: 1.2; margin: 0 0 12px; }
+  .hero p { color: var(--muted); font-size: 17px; margin: 0; max-width: 70ch; }
+  .meta-row { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600;
+    padding: 6px 13px; border-radius: 999px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+    color: var(--muted);
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.green { background: var(--green); } .dot.blue { background: var(--blue); }
+  .dot.amber { background: var(--amber); } .dot.purple { background: var(--accent2); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 28px 0 8px; }
+  .stat {
+    border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+    background: var(--card); text-align: center;
+  }
+  .stat .num { font-size: 30px; font-weight: 800; color: var(--accent2); }
+  .stat .lbl { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+  h2 { font-size: 22px; margin: 44px 0 6px; display: flex; align-items: center; gap: 10px; }
+  h2 .bar { width: 4px; height: 22px; border-radius: 2px; background: linear-gradient(var(--accent), var(--accent2)); }
+  .section-sub { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+
+  .card {
+    border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    background: var(--card); margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.28);
+  }
+  .card h3 { margin: 0 0 6px; font-size: 18px; }
+  .card .tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
+  .tag.done { background: rgba(52,211,153,0.16); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
+  .tag.active { background: rgba(56,189,248,0.16); color: var(--blue); border: 1px solid rgba(56,189,248,0.4); }
+  .tag.next { background: rgba(251,191,36,0.14); color: var(--amber); border: 1px solid rgba(251,191,36,0.4); }
+  .card p.lead { color: var(--muted); margin: 0 0 14px; }
+  ul.clean { margin: 0; padding-left: 0; list-style: none; }
+  ul.clean li { padding: 6px 0 6px 26px; position: relative; }
+  ul.clean li::before {
+    content: ""; position: absolute; left: 4px; top: 14px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent2);
+  }
+  ul.clean li.check::before { content: "✓"; color: var(--green); background: none; font-weight: 800; left: 2px; top: 6px; font-size: 14px; }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; background: var(--card2); border: 1px solid var(--border);
+    padding: 1.5px 6px; border-radius: 5px; color: #d6c8ff;
+  }
+  .filelist { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; color: var(--muted); }
+  .filelist .new { color: var(--green); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td .s { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 5px; }
+  .s.ok { background: rgba(52,211,153,0.16); color: var(--green); }
+  .s.no { background: rgba(248,113,113,0.16); color: var(--red); }
+
+  .callout {
+    border-left: 3px solid var(--accent2); border-radius: 10px;
+    background: rgba(124,58,237,0.10); padding: 16px 20px; margin: 16px 0;
+  }
+  .callout.warn { border-left-color: var(--amber); background: rgba(251,191,36,0.08); }
+  .callout strong { color: var(--text); }
+  .callout p { margin: 0; color: var(--muted); }
+
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--border); padding-top: 22px; }
+  a { color: var(--accent2); }
+  @media (max-width: 680px) { .stats { grid-template-columns: repeat(2,1fr); } h1 { font-size: 27px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Agentforce Hackathon · Build Update</p>
+    <h1>Workshop web app re-scripted + the Lightning&nbsp;app launchpad is built</h1>
+    <p>This session advanced both tracks: the self-guided React guide now teaches <strong>our</strong> Employee Agent&nbsp;V1 flow, and the package now has a Lightning app whose custom LWC assigns the attendee's permissions in one click. Everything Salesforce-side was deployed and tested against a live org.</p>
+    <div class="meta-row">
+      <span class="chip"><span class="dot purple"></span>2026-06-11</span>
+      <span class="chip"><span class="dot blue"></span>Track A — SFDX package</span>
+      <span class="chip"><span class="dot green"></span>Track B — Workshop web app</span>
+      <span class="chip"><span class="dot amber"></span>Feasibility research</span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num">13/13</div><div class="lbl">components deployed</div></div>
+    <div class="stat"><div class="num">7/7</div><div class="lbl">Apex tests passing</div></div>
+    <div class="stat"><div class="num">78%</div><div class="lbl">controller coverage</div></div>
+    <div class="stat"><div class="num">24/24</div><div class="lbl">payload validates clean</div></div>
+  </div>
+
+  <!-- TRACK B -->
+  <h2><span class="bar"></span>Track B — Workshop web app, re-scripted</h2>
+  <p class="section-sub">The vendored Vite/React guide (<code>web-app/</code>) now follows our flow instead of the reference workshop's. <code>npm&nbsp;run&nbsp;build</code> passes.</p>
+
+  <div class="card">
+    <h3>Five-section, self-guided flow<span class="tag done">DONE</span></h3>
+    <p class="lead">Part A mirrors the setup-guide doc step-for-step; Part B is the open-ended free exercise.</p>
+    <ul class="clean">
+      <li class="check"><strong>Overview</strong> — the Employee Agent V1 use case + what's already preconfigured</li>
+      <li class="check"><strong>Get Your Org</strong> — your own org first, with <strong>Agentforce Labs kept as the free backup-org path</strong></li>
+      <li class="check"><strong>Install the Package</strong> — driven by a <strong>placeholder install URL</strong> (one constant to set)</li>
+      <li class="check"><strong>Part A — Guided MVP</strong> — basics → reasoning instructions → add Log&nbsp;Note + Summarize → preview → commit → test on a record</li>
+      <li class="check"><strong>Part B — Free exercise</strong> — draft email, adapt the summary, fetch tasks, web search, voice/image, custom actions</li>
+    </ul>
+    <div class="callout">
+      <p>Two values to set before the event, both at the top of <code>web-app/src/components/MainContent.jsx</code>: <code>PACKAGE_INSTALL_URL</code> (the install link) and <code>BACKUP_ORG_URL</code> (currently Agentforce Labs).</p>
+    </div>
+  </div>
+
+  <!-- TRACK A -->
+  <h2><span class="bar"></span>Track A — Lightning app + custom LWC launchpad</h2>
+  <p class="section-sub">The starting point of the workshop: what the package install lands in. Deployed and tested on the <code>bu_hackathon</code> org.</p>
+
+  <div class="card">
+    <h3>The launchpad, end to end<span class="tag active">BUILT &amp; VALIDATED</span></h3>
+    <ul class="clean">
+      <li class="check"><strong>Employee Agent Workshop</strong> Lightning app + Home App-page (FlexiPage) + tab — the launchpad surface</li>
+      <li class="check"><strong>workshopLaunchpad</strong> LWC — welcome hero, an <em>Open the workshop guide</em> link, and a <em>Run Setup</em> button with live per-item status (SLDS, accessible)</li>
+      <li class="check"><strong>WorkshopSetupController</strong> (<code>@AuraEnabled</code>) — idempotently assigns the permission sets / groups to the current user; partial-success DML; setup-object DML only, so no mixed-DML risk</li>
+      <li class="check"><strong>Workshop_Settings__mdt</strong> type (5 fields) — an optional point-and-click override for the guide / install URLs; real defaults live in Apex so a clean install needs no record</li>
+      <li class="check"><strong>Employee_Agent_Workshop</strong> permission set — package-safe (no reference to the not-yet-built agent)</li>
+    </ul>
+  </div>
+
+  <!-- RESEARCH -->
+  <h2><span class="bar"></span>"Can we deploy / configure from the browser?" — investigated</h2>
+  <p class="section-sub">You asked whether we could grab the user's access token and run config/deploys from JavaScript. A source-cited feasibility study settled it.</p>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Capability from the browser</th><th>Verdict</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Assign permission sets to the current user</td>
+          <td><span class="s ok">RELIABLE</span></td>
+          <td><code>@AuraEnabled</code> Apex → <code>PermissionSetAssignment</code> on <code>UserInfo.getUserId()</code>. This is what <em>Run Setup</em> does.</td>
+        </tr>
+        <tr>
+          <td>Deploy / publish the AgentScript agent at runtime</td>
+          <td><span class="s no">NOT VIABLE</span></td>
+          <td>Publishing an <code>AiAuthoringBundle</code> is CLI/Agent-Studio only — no Apex/REST endpoint. The Lightning <code>getSessionId()</code> is deliberately <strong>not</strong> API-enabled, so the "grab the token and call the Metadata API" path is blocked.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <p><strong>Design confirmed:</strong> the LWC assigns permissions; the attendee <strong>builds the agent in Agent Studio</strong> (guided by the web app). That's exactly the decided architecture — the research validated it rather than changing it.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Platform gotcha found &amp; worked around</h3>
+    <p class="lead">Deploying a Custom Metadata <em>record with values</em> via the CLI throws an opaque <code>UNKNOWN_EXCEPTION</code> on these orgs.</p>
+    <ul class="clean">
+      <li>Proven not-our-fault: a value-less skeleton record deploys fine, and the failure reproduces on a brand-new throwaway CMDT type across API versions 60/62/66.</li>
+      <li><strong>Fix:</strong> real defaults live in Apex; the override record was moved out of the deploy path to <code>docs/optional-metadata/</code> — so a full-source deploy / package build never breaks.</li>
+    </ul>
+  </div>
+
+  <!-- FILES -->
+  <h2><span class="bar"></span>New &amp; changed files</h2>
+  <div class="card">
+    <p class="lead"><strong>Salesforce package</strong> (<code>force-app/main/default/</code>) — all new:</p>
+    <p class="filelist">
+      <span class="new">applications/</span>Employee_Agent_Workshop.app-meta.xml<br/>
+      <span class="new">flexipages/</span>Employee_Agent_Workshop_Home.flexipage-meta.xml<br/>
+      <span class="new">tabs/</span>Employee_Agent_Workshop_Home.tab-meta.xml<br/>
+      <span class="new">lwc/workshopLaunchpad/</span>{ .js, .html, .css, .js-meta.xml }<br/>
+      <span class="new">classes/</span>WorkshopSetupController.cls &nbsp;+&nbsp; WorkshopSetupControllerTest.cls<br/>
+      <span class="new">objects/</span>Workshop_Settings__mdt/ &nbsp;(type + 5 fields)<br/>
+      <span class="new">permissionsets/</span>Employee_Agent_Workshop.permissionset-meta.xml
+    </p>
+    <p class="lead" style="margin-top:18px;"><strong>Web app</strong> (<code>web-app/</code>) &amp; <strong>docs</strong>:</p>
+    <p class="filelist">
+      src/components/MainContent.jsx &nbsp;<em>(rewritten)</em><br/>
+      src/components/Sidebar.jsx, index.html, src/index.css &nbsp;<em>(updated)</em><br/>
+      <span class="new">docs/optional-metadata/</span>README.md + the override-record template<br/>
+      PROGRESS.md, command-center/data/work-items.json &nbsp;<em>(portal regenerated)</em>
+    </p>
+  </div>
+
+  <!-- NEXT -->
+  <h2><span class="bar"></span>What's next</h2>
+  <div class="card">
+    <ul class="clean">
+      <li><span class="tag next" style="margin-left:0;">NEXT</span> &nbsp;Build the <strong>action assets</strong> — the Log&nbsp;Note Flow + a Summarize prompt template — in the agent asset library so attendees just <em>add</em> them</li>
+      <li>Finalize the agent starter + simpler (non-coding) reasoning instructions</li>
+      <li>Pick managed vs unlocked package, build it, and set the real install link</li>
+      <li>Wire the deployed guide URL into the launchpad; deploy <code>web-app/</code> to Heroku</li>
+      <li>Provision the free backup org; add the real Agent-Studio screenshots to the guide</li>
+    </ul>
+  </div>
+
+  <footer>
+    Generated 2026-06-11 · Agentforce Hackathon command center · For the live cockpit open <code>command-center/index.html</code>
+  </footer>
+
+</div>
+</body>
+</html>
