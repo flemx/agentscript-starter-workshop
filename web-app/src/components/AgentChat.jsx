@@ -101,44 +101,51 @@ export default function AgentChat() {
     })
   }
 
-  // ── Audio: record → transcribe → send ────────────────────────────────────────────────
-  const toggleRecording = async () => {
+  // ── Audio: talk → transcribe in the BROWSER (Web Speech API) → input ────────────────────
+  // Heroku Managed Inference has no speech-to-text model, so we transcribe client-side. Only the
+  // resulting text is ever sent to Agentforce.
+  const toggleRecording = () => {
     if (recording) {
       mediaRef.current?.stop()
       return
     }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream)
-      chunksRef.current = []
-      mr.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data)
-      mr.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop())
-        setRecording(false)
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        setAttaching(true)
-        setProgress('Transcribing your audio…')
-        try {
-          const fd = new FormData()
-          fd.append('audio', blob, 'recording.webm')
-          const res = await fetch('/api/extract/audio', { method: 'POST', body: fd })
-          const data = await res.json()
-          setAttaching(false)
-          setProgress('')
-          if (!res.ok) throw new Error(data.error || 'Transcription failed')
-          if (data.text) setInput((v) => (v ? v + '\n' : '') + data.text)
-        } catch (e) {
-          setAttaching(false)
-          setProgress('')
-          setError(e.message)
-        }
-      }
-      mediaRef.current = mr
-      mr.start()
-      setRecording(true)
-    } catch {
-      setError('Microphone access was blocked. Allow mic access to talk to the agent.')
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) {
+      setError('Voice input needs the Web Speech API (try Chrome). You can type or paste instead.')
+      return
     }
+    setError('')
+    const rec = new SR()
+    rec.lang = 'en-US'
+    rec.interimResults = true
+    rec.continuous = true
+    let finalText = ''
+    rec.onresult = (e) => {
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript
+        if (e.results[i].isFinal) finalText += t + ' '
+        else interim += t
+      }
+      setInput((v) => {
+        // Replace from the recording marker onward so interim updates don't duplicate.
+        const base = v.split('⁣')[0]
+        return base + '⁣' + (finalText + interim)
+      })
+    }
+    rec.onerror = (e) => {
+      setRecording(false)
+      if (e.error !== 'no-speech' && e.error !== 'aborted')
+        setError(`Voice input error: ${e.error}. You can type or paste instead.`)
+    }
+    rec.onend = () => {
+      setRecording(false)
+      // Strip the invisible marker, keeping the transcribed text.
+      setInput((v) => v.replace('⁣', v.includes('⁣') && !v.startsWith('⁣') ? '\n' : ''))
+    }
+    mediaRef.current = rec
+    rec.start()
+    setRecording(true)
   }
 
   // ── Files: image/PDF → extracted text → input ──────────────────────────────────────────

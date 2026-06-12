@@ -24,6 +24,7 @@ import {
   sttConfigured,
   fileToText,
   audioToText,
+  getBlob,
 } from './multimodal.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -85,6 +86,17 @@ app.post('/api/agent/end', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Temporary image blob (so the Heroku vision proxy can fetch by URL) ───────────────────
+app.get('/api/blob/:id', (req, res) => {
+  const b = getBlob(req.params.id);
+  if (!b) {
+    res.status(404).send('expired');
+    return;
+  }
+  res.setHeader('Content-Type', b.mimeType);
+  res.send(b.buffer);
+});
+
 // ── Multimodal: image / PDF → text ──────────────────────────────────────────────────────
 app.post('/api/extract/file', upload.single('file'), async (req, res) => {
   try {
@@ -93,7 +105,7 @@ app.post('/api/extract/file', upload.single('file'), async (req, res) => {
       return;
     }
     const text = await fileToText({
-      base64: req.file.buffer.toString('base64'),
+      buffer: req.file.buffer,
       mimeType: req.file.mimetype,
       filename: req.file.originalname,
     });
