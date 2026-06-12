@@ -9,7 +9,7 @@ import HeaderAnchor from './HeaderAnchor'
 // ---------------------------------------------------------------------------
 // The AppExchange / install link for the supporting-assets package (perm sets,
 // actions, the Lightning app + LWC launchpad, the Employee Agent V1 starter).
-const PACKAGE_INSTALL_URL = 'https://login.salesforce.com/packaging/installPackage.apexp?p0=04tWt000000GDJ3IAO'
+const PACKAGE_INSTALL_URL = 'https://login.salesforce.com/packaging/installPackage.apexp?p0=04tWt000000GF9ZIAW'
 // The free, pre-configured backup org (Agentforce Labs) — used if a primary org won't cooperate.
 const BACKUP_ORG_URL = 'https://labs.agentforce.com/'
 
