@@ -308,9 +308,10 @@ function InstallPackage() {
       <HeaderAnchor id="install-launchpad">Step 3 — Open the Workshop App</HeaderAnchor>
       <p>
         Open the <strong>App Launcher</strong> and find the <strong>Employee Agent Workshop</strong> app
-        (installed by the package). Its Home page is your launchpad for the day — it links back to this guide and
-        hosts the post-install setup button.
+        (installed by the package). Its Home page is your launchpad for the day — it links back to this guide,
+        runs the post-install setup, and can install the agents for you.
       </p>
+      <ImageViewer src="/guide-shots/launchpad.png" alt="The Employee Agent Workshop launchpad: Run Setup, permission status, and the agent install buttons" />
 
       <hr className="step-divider" />
 
@@ -324,6 +325,11 @@ function InstallPackage() {
         <li>Confirms the action assets are available in the agent's asset library.</li>
         <li>Gets the <strong>Employee Agent V1</strong> starter ready to open in Agent Studio.</li>
       </ul>
+      <p>
+        The launchpad can also <strong>install the agents for you</strong> with one click — the
+        <strong> Employee Agent V1</strong> starter, and optionally the <strong>Use-Case Research Agent</strong> —
+        if you'd rather not build from scratch. (Building it yourself in Agent Studio is the main exercise, though!)
+      </p>
       <div className="scenario-box">
         <p><strong>When it turns green</strong>, you're authorized and ready to build. If it reports an issue,
         re-run it once — it's safe to click again — or ask a facilitator.</p>

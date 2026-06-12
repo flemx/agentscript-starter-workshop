@@ -38,7 +38,8 @@ export default class AgentDeployButton extends LightningElement {
 
     get buttonLabel() {
         if (this.isRunning) return 'Installing agent…';
-        return this.isDone ? 'Re-run install' : 'Install starter agent';
+        if (this.isDone) return 'Re-run install';
+        return `Install ${this.agentLabel || 'agent'}`;
     }
 
     handleForceNewChange(event) {
