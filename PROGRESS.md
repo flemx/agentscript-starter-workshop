@@ -113,6 +113,31 @@
 
 ## Log
 
+### 2026-06-12 — Use-Case Research Agent (fully built, tested end-to-end on sandbox)
+- ✅ **Built a new fully-functional agent** `Use_Case_Research_Agent` (AiAuthoringBundle, Employee Agent)
+  for the workshop debrief: takes a **summarized transcript** (Granola) + an **LLM Lucid-board
+  description**, researches the use cases via **WebSearch** + **Answer Questions with Salesforce
+  Documentation**, then builds a **beautiful HTML report** and saves it as a Note. Uses the 3 actions
+  the user specified (verbatim definitions) plus the report builder.
+- ✅ **New Apex action `WorkshopReportBuilder`** (+ `Employee_Agent_Build_Report` GenAiFunction in the
+  asset library) does the heavy HTML lifting: the agent supplies content slots, the Apex assembles a
+  branded full-CSS report (gradient hero + Agentforce robot mark + constellation art, icon-badged section
+  cards, impact/effort table with colored pills), creates a ContentNote-safe rich-text note via
+  `HtmlNoteService`, and returns the full styled `fullHtml` + the note record. **3/3 tests.**
+- ✅ **Test data** (`docs/test-data/`): a detailed MidOcean Lucid-board description (from the provided
+  `Midocean AI Workshop.pdf` — a promotional-products co.'s impact/effort matrix) + an invented Granola
+  transcript. Analyzed the PDF to ground the solution.
+- ✅ **Validated (0 errors) → published → activated v1** on `hackathon_sandbox`; **tested end-to-end via
+  the preview API** with the test data. The agent researched, built a specific & well-structured report
+  (6-row prioritized table, web benchmarks, concrete Salesforce mappings, phased plan, sources), saved
+  it as a clickable Note, and returned headline recommendations. Iterated the prompt + design.
+- ✅ **Artifacts:** `docs/use-case-research-agent-test-report.html` (test report),
+  `docs/test-data/agent-report-styled.html` (the agent's actual generated report),
+  `docs/screenshots/agent/use-case-report.png` (rendered). **39/39 Apex tests pass.**
+- 🔧 Apex gotcha: `inner` is a reserved word (renamed an `iconWrap` param). The agent bundle is
+  `.forceignore`d (un-packageable) so it's deployed/published via `sf agent publish authoring-bundle`,
+  not `sf project deploy`.
+
 ### 2026-06-12 — "Create Note" agent action in the asset library (GenAiFunction) → v0.1.0.10
 - ✅ **Added "Create Note" to the agent asset library** as a **`GenAiFunction`**
   (`Employee_Agent_Create_Note`) wrapping the Apex invocable: `invocationTargetType=apex`,

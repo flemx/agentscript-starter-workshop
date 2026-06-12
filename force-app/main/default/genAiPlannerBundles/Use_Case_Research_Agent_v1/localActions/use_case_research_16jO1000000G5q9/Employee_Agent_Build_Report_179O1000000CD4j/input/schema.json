@@ -1,0 +1,71 @@
+{
+  "required" : [ "reportTitle" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "reportTitle" : {
+      "title" : "reportTitle",
+      "description" : "The report title / headline, e.g. 'MidOcean — Agentforce Use-Case Research'.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "clientName" : {
+      "title" : "clientName",
+      "description" : "The client or workshop name shown in the report header, e.g. 'MidOcean'.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "executiveSummary" : {
+      "title" : "executiveSummary",
+      "description" : "A short executive summary of the workshop and the opportunity. Plain text or simple HTML.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "useCases" : {
+      "title" : "useCases",
+      "description" : "The prioritized use cases. Strongly prefer an HTML table with columns Use case / Impact / Effort / What it does. Plain text is also accepted.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "webResearch" : {
+      "title" : "webResearch",
+      "description" : "A summary of relevant findings from the web search, as HTML or plain text.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "salesforceGuidance" : {
+      "title" : "salesforceGuidance",
+      "description" : "A summary of relevant Salesforce / Agentforce documentation guidance, as HTML or plain text.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "recommendations" : {
+      "title" : "recommendations",
+      "description" : "Concrete recommended next steps for the client, as an HTML list or newline-separated plain text.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "sources" : {
+      "title" : "sources",
+      "description" : "Sources and links used, ideally as an HTML list of <a> links, or newline-separated URLs.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "recordId" : {
+      "title" : "recordId",
+      "description" : "Optional. The Salesforce record Id to associate the note with. Leave blank for a standalone note.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

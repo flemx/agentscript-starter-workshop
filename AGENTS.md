@@ -78,9 +78,15 @@ A package installs metadata, but three things can only happen *after* install, i
   `ContentDocument` record** (renders as a clickable link in chat). Record type confirmed against the
   devhub's `Store_Notes` flow.
 - ✅ **Notes UI tab** in the workshop app — the `noteCapture` + `noteViewer` LWCs on a "Notes" tab.
+- ✅ **Use-Case Research Agent** (`Use_Case_Research_Agent`) — a second, fully-built agent for the
+  workshop debrief: takes a meeting transcript + Lucid-board description, researches via WebSearch +
+  Salesforce documentation, then builds a beautiful HTML report (via the `WorkshopReportBuilder` Apex
+  action / `Employee_Agent_Build_Report` asset-library function) and saves it as a Note. Published +
+  activated + tested end-to-end on the sandbox. Sample output: `docs/test-data/agent-report-styled.html`;
+  test report: `docs/use-case-research-agent-test-report.html`.
 - ✅ **Workshop guide LIVE on Heroku** — <https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/>
   — with the current install URL.
-- ✅ **36/36 Apex tests pass.**
+- ✅ **39/39 Apex tests pass.**
 
 ### What's left
 - **Action assets (G4):** the **Create Note** action now ships in the asset library (above). Still to add:

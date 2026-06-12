@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Use-Case Research Agent — Build &amp; Test Report</title>
+<style>
+  :root{--ink:#0b1d3a;--muted:#5b7299;--line:#e0e9f6;--accent:#1a4ba0;--accent2:#0aa3e0;--ok:#1b7a45;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -160px,#dfeaff,#eef3fb 60%);color:var(--ink);
+    line-height:1.62;padding:38px 16px}
+  .page{max-width:960px;margin:0 auto}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#061330,#13357f 48%,#0aa3e0);
+    color:#fff;border-radius:24px;padding:40px 44px;box-shadow:0 24px 60px rgba(9,30,70,.32)}
+  .hero .kicker{text-transform:uppercase;letter-spacing:.18em;font-size:11.5px;font-weight:800;color:#bfe0ff}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.4px;margin:8px 0 8px}
+  .hero p{color:#e2edff;max-width:70ch;font-size:15px}
+  .orb{position:absolute;border-radius:50%;filter:blur(2px);opacity:.5}
+  .orb1{width:230px;height:230px;right:-60px;top:-90px;background:radial-gradient(circle,#37c6ff,transparent 70%)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;z-index:2}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;
+    padding:5px 13px;font-size:12px;font-weight:600;color:#eaf3ff}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 32px;margin-top:20px;
+    box-shadow:0 10px 28px rgba(13,40,90,.07)}
+  h2{font-size:20px;color:#10336e;font-weight:800;margin-bottom:12px;padding-bottom:11px;border-bottom:2px solid #eef4fc}
+  h3{font-size:15.5px;color:var(--accent);margin:16px 0 6px}
+  p{margin:0 0 12px}ul,ol{margin:0 0 12px 22px}li{margin:6px 0}
+  code{background:#eef4fc;border-radius:6px;padding:2px 7px;font-size:13px;color:#10336e;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  table{width:100%;border-collapse:separate;border-spacing:0;margin:8px 0 14px;font-size:14px;
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:11px 13px;text-align:left;vertical-align:top;border-bottom:1px solid #eef4fc}
+  th{background:#10336e;color:#fff;font-weight:700;font-size:13px}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#f7faff}
+  .pass{display:inline-block;background:#e3f6ec;color:var(--ok);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 4px;font-size:14px}
+  .step{background:#f3f7fd;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-weight:600;color:#10336e}
+  .arrow{color:var(--accent2);font-weight:800}
+  .shot{display:block;width:100%;border:1px solid var(--line);border-radius:14px;margin-top:10px;
+    box-shadow:0 10px 28px rgba(13,40,90,.10)}
+  .lead{color:var(--muted);font-size:14px}
+  a{color:#0a6ed1;text-decoration:none;font-weight:600}a:hover{text-decoration:underline}
+  .foot{color:var(--muted);font-size:12.5px;text-align:center;margin:26px 8px 0}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="orb orb1"></div>
+    <div class="kicker">Agentforce · Test Report</div>
+    <h1>Use-Case Research Agent — Build &amp; Test</h1>
+    <p>An Agentforce employee agent that turns a design-thinking workshop's output (a meeting transcript
+    + a Lucid-board description) into a researched, beautifully-styled HTML report, saved as a Salesforce
+    Note. Built, deployed, published, and tested end-to-end on the <code>hackathon_sandbox</code> org.</p>
+    <div class="meta">
+      <span class="chip">Agent: Use_Case_Research_Agent</span>
+      <span class="chip">3 actions wired</span>
+      <span class="chip">Published &amp; Active · v1</span>
+      <span class="chip">Tested with MidOcean data</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>What it does</h2>
+    <p>The agent is designed for the workshop debrief: a participant pastes in two inputs (which my
+    colleague's component will capture for real) and the agent does the rest.</p>
+    <div class="flow">
+      <span class="step">Transcript + Lucid board</span><span class="arrow">→</span>
+      <span class="step">Web research</span><span class="arrow">→</span>
+      <span class="step">Salesforce docs research</span><span class="arrow">→</span>
+      <span class="step">Build styled HTML report</span><span class="arrow">→</span>
+      <span class="step">Save as Note (clickable link)</span>
+    </div>
+    <p class="lead">The report is the takeaway artifact; it's stored as a ContentNote so the participant
+    can open it from Salesforce, and the full styled HTML is also returned for display/download.</p>
+  </section>
+
+  <section class="card">
+    <h2>Architecture</h2>
+    <ul>
+      <li><b>Agent</b> — <code>Use_Case_Research_Agent</code> (AiAuthoringBundle, Agentforce Employee
+        Agent). A single research subagent with reasoning instructions that enforce the
+        understand → research-web → research-docs → build-report → respond sequence.</li>
+      <li><b>Action 1 — Search The Web</b> (<code>standardInvocableAction://webSearchStream</code>):
+        real-time external research for industry context, benchmarks, and best practices.</li>
+      <li><b>Action 2 — Answer Questions with Salesforce Documentation</b>
+        (<code>standardInvocableAction://answerQuestionsWithSalesforceDocumentation</code>): maps the
+        use cases to concrete Salesforce/Agentforce features.</li>
+      <li><b>Action 3 — Build Use-Case Research Report</b> (<code>apex://WorkshopReportBuilder</code>,
+        surfaced in the asset library as the <code>Employee_Agent_Build_Report</code> GenAiFunction):
+        the heavy lifting. The agent supplies clean content slots; the Apex owns all presentation.</li>
+    </ul>
+    <h3>Why a dedicated Apex report builder?</h3>
+    <p>The agent shouldn't hand-author CSS (it's inconsistent and burns tokens). Instead it passes
+    content slots — executive summary, prioritized use cases, web research, Salesforce guidance,
+    recommendations, sources — and <code>WorkshopReportBuilder</code> assembles a branded, full-CSS
+    report (gradient hero with an Agentforce mark + constellation art, icon-badged section cards, an
+    impact/effort table with colored pills). It then:</p>
+    <ol>
+      <li>creates a <b>ContentNote</b> with a clean rich-text version (ContentNote strips inline CSS,
+        so the stored note is structured rich text), via <code>HtmlNoteService</code>; and</li>
+      <li>returns the <b>full styled HTML</b> (<code>fullHtml</code>) for display/download, plus the
+        created note record so the agent can give the user a clickable link.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Test results</h2>
+    <table>
+      <thead><tr><th>Test</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Agent Script validation (<code>sf agent validate authoring-bundle</code>)</td><td><span class="pass">0 errors</span></td></tr>
+        <tr><td>Publish &amp; activate on sandbox</td><td><span class="pass">v1 Active</span></td></tr>
+        <tr><td>Apex: <code>WorkshopReportBuilderTest</code></td><td><span class="pass">3/3 pass</span></td></tr>
+        <tr><td>Apex: <code>HtmlNoteServiceTest</code> (note creation)</td><td><span class="pass">9/9 pass</span></td></tr>
+        <tr><td>End-to-end run with MidOcean test data (preview API)</td><td><span class="pass">Report generated + saved</span></td></tr>
+        <tr><td>Output quality — specific, structured, sourced</td><td><span class="pass">Verified</span></td></tr>
+      </tbody>
+    </table>
+    <h3>How it was tested</h3>
+    <p>Started a live preview session (<code>sf agent preview start --use-live-actions</code>) and sent
+    the MidOcean test data (a Granola-style transcript + the Lucid board description). The agent ran its
+    research actions and the report builder, then replied with a confirmation, a clickable link to the
+    saved note, and headline recommendations. Its actual generated content was captured and rendered
+    (below).</p>
+    <h3>Agent's reply (excerpt)</h3>
+    <p class="lead">"I have successfully researched your workshop findings and generated a beautifully
+    formatted, polished HTML report. It is now saved as a Salesforce Note… <b>Headline recommendations:</b>
+    Pilot the Order Status Agent first; implement guardrails &amp; a €1,000 quote gate; combine Einstein
+    Case Classification with Prompt Builder to optimize LLM cost."</p>
+  </section>
+
+  <section class="card">
+    <h2>Generated report (the deliverable)</h2>
+    <p>This is the <b>actual styled HTML the agent produced</b> for the MidOcean workshop, rendered.
+    The full standalone file is at <code>docs/test-data/agent-report-styled.html</code>.</p>
+    <img class="shot" src="screenshots/agent/use-case-report.png" alt="Rendered use-case research report for MidOcean"/>
+    <p class="lead" style="margin-top:12px">Note the content is specific to MidOcean — a 6-row prioritized
+    use-case table (order status, proactive delay notifications, complaint triage, €1,000 quote gate,
+    multilingual classification, KA expansion) with colored impact/effort pills, web benchmarks
+    (40–60% of volume is status requests; ~30% deflection), concrete Salesforce mappings (Einstein Case
+    Classification + Prompt Builder for cost, Omni-Channel for sensitive-order routing), and a phased plan.</p>
+  </section>
+
+  <section class="card">
+    <h2>Files</h2>
+    <ul>
+      <li><code>force-app/main/default/aiAuthoringBundles/Use_Case_Research_Agent/</code> — the agent.</li>
+      <li><code>force-app/main/default/classes/WorkshopReportBuilder.cls</code> — the report builder action.</li>
+      <li><code>force-app/main/default/genAiFunctions/Employee_Agent_Build_Report/</code> — asset-library entry.</li>
+      <li><code>docs/test-data/midocean-granola-transcript.md</code> · <code>midocean-lucid-board-description.md</code> — test inputs.</li>
+      <li><code>docs/test-data/agent-report-styled.html</code> — the agent's generated report (open in a browser).</li>
+    </ul>
+  </section>
+
+  <div class="foot">Use-Case Research Agent · built &amp; tested on hackathon_sandbox · 2026-06-12</div>
+</div>
+</body>
+</html>
