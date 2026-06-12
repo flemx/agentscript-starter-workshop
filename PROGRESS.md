@@ -113,6 +113,34 @@
 
 ## Log
 
+### 2026-06-13 — Hosted demo agent + full-stack portal (Agentforce API chat, multimodal, restyle)
+- ✅ **New hosted demo agent** `Use_Case_Research_Demo` (in `demo-agents/`, NOT the customer
+  `force-app` package): same research flow but **no note storage** — instead it emits the report as
+  **compact JSON wrapped in `<report>…</report>`** so the web app renders it in an artifact canvas.
+  (Switched from full-HTML output after hitting the model's output cap mid-document ~7KB.) Published +
+  activated on `hackathon_sandbox` (Bot `0XxO100000046bVKAQ`).
+- ✅ **web-app is now full-stack** (Express + React, served by one Heroku dyno):
+  - **Agentforce API proxy** — OAuth **client-credentials** (`/services/oauth2/token`, CONSUMER_KEY/SECRET
+    from `.env`/config vars) → create session → **SSE streaming** (`/api/agent/*`). Secrets stay
+    server-side. (Required the connected app's **Run-As user** — the user enabled it.)
+  - **Multimodal** — image/PDF→text via **Heroku Managed Inference** (`claude-4-5-sonnet`, metered).
+    Heroku's vision proxy only FETCHES image URLs (no base64), so the server stashes uploads in a
+    short-lived blob store and hands Heroku a `/api/blob/:id` URL. PDFs parsed via `pdf-parse`. **Audio →
+    text uses the browser Web Speech API** (Heroku has no STT model). Agent only ever sees text.
+  - **Sleek agentic chat page** (`/try-agent`): conversational chat + live tool-call activity chips
+    (Thinking → Searching the web → Searching Salesforce Docs) + streaming caret; right-side **artifact
+    canvas** renders the `<report>` JSON into the styled Agentforce report with **Download-PDF**.
+- ✅ **Portal restyle:** light mode by default; retokenized to the Agentforce palette (navy→blue→cyan);
+  clickable **install button**; "your own sandbox" terminology (meeting-notes adjustment).
+- ✅ **Repackaged** so the **customer research agent is installable from the launchpad** (2nd deploy
+  button; afscript static resource). **Fixed a real packaging bug:** `sf agent publish` had leaked
+  `bots/`+`genAiPlannerBundles/` into force-app, breaking install ("Cannot update record as Agent is
+  Active") — force-ignored + removed. Built **v0.1.0.12** (`04tWt000000GFntIAG`), installs clean on the
+  sandbox AND a clean scratch org.
+- ✅ **Deployed live to Heroku** and verified end-to-end in a browser (session → stream → report render →
+  PDF) on the production site. Captured fresh launchpad + Agentforce Studio screenshots from the sandbox.
+- ⏭️ Open: recapture the remaining Agent-Studio guide screenshots (a few have errors) on a fresh org.
+
 ### 2026-06-12 — Use-Case Research Agent (fully built, tested end-to-end on sandbox)
 - ✅ **Built a new fully-functional agent** `Use_Case_Research_Agent` (AiAuthoringBundle, Employee Agent)
   for the workshop debrief: takes a **summarized transcript** (Granola) + an **LLM Lucid-board
