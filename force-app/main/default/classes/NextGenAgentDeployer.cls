@@ -103,7 +103,10 @@ public with sharing class NextGenAgentDeployer {
             // where the BotDefinition lookup missed (e.g. a half-published bundle); with
             // forceNew it's how we deliberately get `_2`, `_3`, …
             String uniqueApiName = resolveUniqueApiName(session, apiName);
-            String effectiveLabel = String.isBlank(label) ? uniqueApiName : label;
+            // If the name was bumped to avoid a collision (e.g. Note_taking_agent_2), mirror that
+            // suffix in the LABEL too — otherwise every copy shows the same display name and they're
+            // impossible to tell apart in Agent Studio / the Agentforce panel.
+            String effectiveLabel = deriveLabel(label, apiName, uniqueApiName);
 
             // The agent's runtime BotDefinition name comes from `developer_name` INSIDE the
             // afscript, not from the bundle apiName. Rewrite it (and agent_label) to match.
@@ -248,6 +251,30 @@ public with sharing class NextGenAgentDeployer {
             }
         }
         return desired; // give up after 100 — extremely unlikely
+    }
+
+    /**
+     * Builds the display label for the agent. When the api name was bumped to dodge a collision
+     * (`Note_taking_agent` → `Note_taking_agent_N`), append the same `(N)` suffix to the label so
+     * the copy is distinguishable in Agent Studio / the Agentforce panel. If nothing was bumped,
+     * the requested label is used as-is (falling back to the api name when blank).
+     */
+    @TestVisible
+    private static String deriveLabel(String requestedLabel, String requestedApiName, String resolvedApiName) {
+        // No label supplied → the resolved api name (which already carries any _N suffix) is the label.
+        if (String.isBlank(requestedLabel)) {
+            return resolvedApiName;
+        }
+        // Label supplied but the name wasn't bumped → use it verbatim.
+        if (String.isBlank(resolvedApiName) || resolvedApiName.equalsIgnoreCase(requestedApiName)) {
+            return requestedLabel;
+        }
+        // Name was bumped ("<requestedApiName>_<N>") → mirror the suffix on the label.
+        String suffix = resolvedApiName.substringAfterLast('_');
+        if (String.isNotBlank(suffix) && suffix.isNumeric()) {
+            return requestedLabel + ' (' + suffix + ')';
+        }
+        return requestedLabel + ' (' + resolvedApiName + ')';
     }
 
     private static Map<String, Object> createBundleWithVersion(

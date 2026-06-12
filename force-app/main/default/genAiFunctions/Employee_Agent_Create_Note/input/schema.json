@@ -1,0 +1,28 @@
+{
+  "required" : [ "subject", "content" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "subject" : {
+      "title" : "subject",
+      "description" : "The note title / subject — a short headline for the note, e.g. 'Acme — discovery call notes'. The agent should generate a clear, concise subject from the conversation.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "content" : {
+      "title" : "content",
+      "description" : "The note body as HTML. Use tags like <h1>/<h2>, <p>, <b>, <ul>/<li>, and <table> to format it — it is stored and rendered as rich text. Build this from the user's notes, transcript, or summary. Do NOT escape the HTML.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "recordId" : {
+      "title" : "recordId",
+      "description" : "Optional. The Salesforce 18-character Id of the record this note should be associated with (Account, Contact, Opportunity, or any object). If the user is working on a record, pass that record's Id (e.g. $Input.Account.Id). Leave blank to create a standalone note.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

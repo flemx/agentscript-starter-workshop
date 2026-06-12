@@ -23,6 +23,10 @@
         <tab>Employee_Agent_Workshop_Home</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>Employee_Agent_Workshop_Notes</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
     <userPermissions>
         <enabled>true</enabled>
         <name>RunFlow</name>

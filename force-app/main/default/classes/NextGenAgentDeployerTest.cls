@@ -169,6 +169,25 @@ private class NextGenAgentDeployerTest {
     }
 
     @IsTest
+    static void deriveLabelAppendsSuffixOnlyWhenNameBumped() {
+        // No collision → label unchanged.
+        System.assertEquals('Employee Agent V1',
+            NextGenAgentDeployer.deriveLabel('Employee Agent V1', 'Note_taking_agent', 'Note_taking_agent'),
+            'Unbumped name should keep the label as-is');
+        // Collision bumped to _2 → label gets " (2)".
+        System.assertEquals('Employee Agent V1 (2)',
+            NextGenAgentDeployer.deriveLabel('Employee Agent V1', 'Note_taking_agent', 'Note_taking_agent_2'),
+            'Bumped name should append the numeric suffix to the label');
+        System.assertEquals('Employee Agent V1 (3)',
+            NextGenAgentDeployer.deriveLabel('Employee Agent V1', 'Note_taking_agent', 'Note_taking_agent_3'),
+            'Third copy should read (3)');
+        // Blank label falls back to the resolved api name.
+        System.assertEquals('Note_taking_agent_2',
+            NextGenAgentDeployer.deriveLabel('', 'Note_taking_agent', 'Note_taking_agent_2'),
+            'Blank label falls back to the resolved api name');
+    }
+
+    @IsTest
     static void grantAgentAccessIsNullSafe() {
         Test.startTest();
         // Blank perm set / null bot → no grant, no exception.

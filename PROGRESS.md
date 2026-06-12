@@ -10,26 +10,28 @@
 - **Phase:** **Single self-contained package — installs on ANY org, zero post-deploy.** Orgs:
   **`hackathon`** = production demo org = **DevHub**; **`hackathon_sandbox`** = install/test target;
   **`wf_clean_test`** = clean Agentforce scratch org used to prove the from-scratch flow. Unlocked package
-  **`0.1.0.7`** (`04tWt000000GFCnIAO`) installed in BOTH the sandbox and a clean scratch org. **The note
+  **`0.1.0.10`** (`04tWt000000GFO5IAO`) installed in BOTH the sandbox and a clean scratch org. **The note
   suite is now IN the package** (no more `feature-addons/` post-deploy) and the **agent-access grant +
   starter-agent install happen at runtime from the launchpad** (the only things a package genuinely
-  can't carry). **Guide is LIVE on Heroku**
-  (https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/) — **republished (Released v9)** with
-  the new install URL `04tWt000000GFCnIAO`; verified serving live. All 35 Apex tests pass. Next: action
-  assets, remaining guide polish. (2026-06-12)
-- **Key artifacts:** guide → Heroku (above) · package install → `…/installPackage.apexp?p0=04tWt000000GFCnIAO`
+  can't carry). Now also: a **"Create Note" agent action in the asset library** (a `GenAiFunction`
+  wrapping the Apex invocable; returns the full ContentDocument record) and a **Notes UI tab** in the app.
+  **Guide is LIVE on Heroku** (https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/) —
+  republished with the `0.1.0.10` install URL. All 36 Apex tests pass. Next: Summarize prompt template +
+  Part-B action add-ons, remaining guide polish. (2026-06-12)
+- **Key artifacts:** guide → Heroku (above) · package install → `…/installPackage.apexp?p0=04tWt000000GFO5IAO`
   · screenshots → `docs/screenshots/` · report → `docs/colleague-report.html` · walkthrough test →
   `docs/walkthrough-test-report.md` · agentic-loop visual → `docs/agentic-loop-visual.html` · slide deck →
   Google Slides `15Um4HnhYoUyEL6idHi7oaL0RnI5_NGWK4ECPS_qaumI`.
 - **Package:** unlocked, built from the `hackathon` DevHub with **`--skip-validation`** (the build scratch
   org lacks ContentNote/Einstein/Bot, so we skip its compile and let Apex compile at INSTALL time in the
-  target org). **Latest = v0.1.0.7** (`04tWt000000GFCnIAO`), installed in the sandbox AND a clean scratch
-  org. Payload = everything: Apex (workshop setup, agent deployer, note suite), LWCs (launchpad, deploy
-  button, noteCapture, noteViewer), VF page, `Workshop_Settings__mdt`, 2 perm sets, app/tab/FlexiPage,
-  afscript static resource. **`HtmlNoteService` references `ContentNote` DYNAMICALLY** (Schema API) so it
-  compiles even where Notes is absent (scratch/trial orgs) and self-disables via `isAvailable()`.
-  `aiAuthoringBundles` `.forceignore`d (genuinely un-packageable). Reinstall:
-  `sf package install --package 04tWt000000GFCnIAO --target-org <org> --wait 20 --no-prompt`.
+  target org). **Latest = v0.1.0.10** (`04tWt000000GFO5IAO`), installed in the sandbox AND a clean scratch
+  org. Payload = everything: Apex (workshop setup, agent deployer, note suite + the Create Note
+  invocable), LWCs (launchpad, deploy button, noteCapture, noteViewer), VF page, `Workshop_Settings__mdt`,
+  2 perm sets, app + 2 tabs/FlexiPages (Home + Notes), afscript static resource. **`HtmlNoteService`
+  references `ContentNote` DYNAMICALLY** (Schema API) so it compiles even where Notes is absent
+  (scratch/trial orgs) and self-disables via `isAvailable()`. `aiAuthoringBundles` `.forceignore`d
+  (genuinely un-packageable). Reinstall:
+  `sf package install --package 04tWt000000GFO5IAO --target-org <org> --wait 20 --no-prompt`.
 - **Runtime-only operations (what a package can't carry, done from the launchpad):**
   1. **Perm-set ASSIGNMENT** to the running user — `WorkshopSetupController.runSetup()` (a package ships
      perm sets but can't auto-assign on install).
@@ -83,10 +85,10 @@
   override kept in `docs/optional-metadata/`, out of the deploy path.
 
 ### ⏭️ Next steps (READ FIRST)
-1. **Build the action assets** (G4): the **Log/Create Note** Flow (the seeded `First_Agent_Log_Account_Note`)
-   + a **Summarize** Prompt Template, exposed in the agent **asset library** so attendees just *add* them.
-   Then the Part-B add-ons (Query Records, draft email, fetch tasks, Search Web). OOB-first; custom Apex for
-   HTML-note + SOSL search per the planning doc.
+1. **Finish the action assets** (G4): the **Create Note** action now ships in the asset library
+   (`GenAiFunction Employee_Agent_Create_Note` → `apex://HtmlNoteService`). Still to add: a **Summarize**
+   Prompt Template, then the Part-B add-ons (Query Records, draft email, fetch tasks, Search Web).
+   OOB-first; custom Apex for SOSL search per the planning doc.
 2. **Finalize the agent starter** — decide start-with-no-actions vs pre-wired, and the simple (non-coding)
    reasoning-instruction wording (Hanne's doc flags the current example as "too coding-like").
 3. **Remaining guide polish** — keep screenshots in `web-app/public/images/` current with the final flow.
@@ -110,6 +112,41 @@
 ---
 
 ## Log
+
+### 2026-06-12 — "Create Note" agent action in the asset library (GenAiFunction) → v0.1.0.10
+- ✅ **Added "Create Note" to the agent asset library** as a **`GenAiFunction`**
+  (`Employee_Agent_Create_Note`) wrapping the Apex invocable: `invocationTargetType=apex`,
+  `invocationTarget=HtmlNoteService`, with `input/schema.json` + `output/schema.json` whose property
+  names exactly match the `@InvocableVariable` field names (subject/content/recordId → isSuccess/note/
+  noteId/message). Confirmed the GenAiFunction shape by retrieving the devhub's existing
+  `First_Agent_Log_Account_Note` (which wraps a flow). It now **ships in the package** so attendees just
+  *add* it to their agent in Agent Studio — verified present on a clean scratch org purely from install.
+- 🔧 **Returns the FULL `ContentDocument` record, not a URL** (per request). Output schema uses
+  `lightning__recordInfoType` for the `note` property; the Apex re-queries the created ContentDocument
+  (Id, Title, FileType, …) and returns it — the agent renders the record as a clickable link. Dropped the
+  earlier `noteUrl` field. Live-tested: full record returned.
+- ✅ Built **`0.1.0.10`** (`04tWt000000GFO5IAO`), installed on the sandbox AND the clean scratch org;
+  Heroku guide republished with the new install URL. **36/36 Apex tests pass.**
+- ⏭️ Next G4 asset: the **Summarize** Prompt Template, then Part-B add-ons.
+
+### 2026-06-12 — Create Note invocable, Notes UI tab, distinct labels for duplicate agents → v0.1.0.8
+- ✅ **"Create Note" invocable agent action** (`HtmlNoteService.createHtmlNotes`). Confirmed the target
+  record type against the devhub's **`Store_Notes`** flow = standard **`ContentNote`** (`Content` = HTML
+  body Blob, `Title` = subject, then a `ContentDocumentLink` ShareType='V' to the optional record).
+  Reworked the invocable: inputs are **Subject / Content (HTML) / Record Id (optional)** each with an
+  agent-facing `description`; HTML is stored as a Blob so it renders; it **returns the created note
+  record (`ContentDocument`) + `noteId` + a clickable `/lightning/r/ContentDocument/<id>/view` URL** so
+  the agent can give the user a link to click. Live-tested on the sandbox (SNOTE created, URL returned).
+- ✅ **Notes UI tab** added to the workshop Lightning app: new `Employee_Agent_Workshop_Notes` FlexiPage
+  (hosts `noteCapture` + `noteViewer`) + CustomTab, added to the app nav, tab visibility in the perm set.
+  Deployed + verified both tabs exist; Run Setup re-grants visibility.
+- 🔧 **Duplicate agents now get a distinct label.** When a name collision bumps the api name to `_2`/`_3`,
+  `NextGenAgentDeployer.deriveLabel` mirrors the suffix on the label (e.g. "Employee Agent V1 (2)") so
+  copies are tellable apart in Agent Studio / the Agentforce panel. (Blank label → falls back to the
+  resolved api name; no bump → label unchanged.)
+- ✅ Built **`0.1.0.8`** (`04tWt000000GFO5IAO`), installed on the sandbox AND the clean scratch org —
+  installs clean everywhere. **37/37 Apex tests pass.** Install URL bumped in Apex + web app.
+- ✅ **Heroku guide republished** with the `0.1.0.8` install URL; live site verified serving it.
 
 ### 2026-06-12 — One self-contained package (note suite IN), runtime agent-access grant, clean-org proof
 - ✅ **Folded the note suite back INTO the package.** Customer sandboxes can't post-deploy from an SFDX

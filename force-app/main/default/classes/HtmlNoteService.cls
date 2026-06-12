@@ -100,12 +100,13 @@ public with sharing class HtmlNoteService {
     }
 
     /**
-     * Invocable entry point so an Agent / Flow can create a formatted note.
+     * Invocable entry point so an Agent (or Flow) can create a formatted note and get back the
+     * created Note record — so the agent can show the user a clickable link to it in the chat.
      * Accepts a list (bulk-safe) and returns a parallel list of results.
      */
     @InvocableMethod(
-        label='Create HTML Note'
-        description='Creates a richly-formatted Salesforce Note (ContentNote) from HTML and optionally links it to a record.'
+        label='Create Note'
+        description='Creates a richly-formatted Salesforce Note from HTML, optionally linked to a record, and returns the created note so you can give the user a clickable link to it.'
         category='Agent Workshop'
     )
     public static List<Response> createHtmlNotes(List<Request> requests) {
@@ -113,15 +114,32 @@ public with sharing class HtmlNoteService {
         for (Request req : requests) {
             Response res = new Response();
             try {
-                res.contentDocumentId = createHtmlNote(req.title, req.htmlBody, req.linkToId);
+                Id docId = createHtmlNote(req.subject, req.content, req.recordId);
                 res.isSuccess = true;
+                res.noteId = docId;
+                res.note = loadNoteRecord(docId);
+                res.message = 'Note "' + req.subject + '" created.';
             } catch (Exception e) {
                 res.isSuccess = false;
-                res.errorMessage = e.getMessage();
+                res.message = e.getMessage();
             }
             responses.add(res);
         }
         return responses;
+    }
+
+    /**
+     * Loads the created note as a full ContentDocument record (Files — present in every org, so
+     * safe to reference statically) for the agent to return. The agent renders this record as a
+     * clickable link to the note. Returns null if it can't be re-read.
+     */
+    private static ContentDocument loadNoteRecord(Id contentDocumentId) {
+        List<ContentDocument> docs = [
+            SELECT Id, Title, LatestPublishedVersionId, FileType, FileExtension,
+                   ContentSize, OwnerId, CreatedDate, LastModifiedDate
+            FROM ContentDocument WHERE Id = :contentDocumentId WITH USER_MODE LIMIT 1
+        ];
+        return docs.isEmpty() ? null : docs[0];
     }
 
     /**
@@ -152,17 +170,35 @@ public with sharing class HtmlNoteService {
         return out;
     }
 
-    /** Input for the invocable Create HTML Note action. */
+    /** Input for the invocable Create Note action. Descriptions guide the agent on what to pass. */
     public class Request {
-        @InvocableVariable(required=true label='Note Title') public String title;
-        @InvocableVariable(required=true label='HTML Body') public String htmlBody;
-        @InvocableVariable(label='Record Id to link to') public String linkToId;
+        @InvocableVariable(
+            required=true label='Subject'
+            description='The note title / subject — a short headline for the note, e.g. "Acme — discovery call notes".'
+        )
+        public String subject;
+
+        @InvocableVariable(
+            required=true label='Content'
+            description='The note body as HTML. Use tags like <h1>/<h2>, <p>, <b>, <ul>/<li>, <table> to format it; it is stored and rendered as rich text. Do NOT escape the HTML.'
+        )
+        public String content;
+
+        @InvocableVariable(
+            label='Record Id'
+            description='Optional. The Id of the record this note should be associated with (Account, Contact, Opportunity, or any object). Leave blank to create a standalone note. If the user is on a record, pass that record Id here.'
+        )
+        public String recordId;
     }
 
-    /** Output of the invocable Create HTML Note action. */
+    /**
+     * Output of the invocable Create Note action. `note` is the full created ContentDocument
+     * record — surface it to the user so they can open the note (it renders as a clickable link).
+     */
     public class Response {
         @InvocableVariable(label='Success') public Boolean isSuccess;
-        @InvocableVariable(label='Content Document Id') public Id contentDocumentId;
-        @InvocableVariable(label='Error Message') public String errorMessage;
+        @InvocableVariable(label='Note') public ContentDocument note;
+        @InvocableVariable(label='Note Id') public Id noteId;
+        @InvocableVariable(label='Message') public String message;
     }
 }

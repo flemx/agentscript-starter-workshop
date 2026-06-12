@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiFunction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Creates a richly-formatted Salesforce Note (rich text / HTML) from a subject and content, optionally associated with a record, and returns a clickable link to the created note. Use this to save meeting notes, summaries, or follow-ups to Salesforce.</description>
+    <invocationTarget>HtmlNoteService</invocationTarget>
+    <invocationTargetType>apex</invocationTargetType>
+    <isConfirmationRequired>false</isConfirmationRequired>
+    <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+    <masterLabel>Create Note</masterLabel>
+    <progressIndicatorMessage>Creating the note</progressIndicatorMessage>
+</GenAiFunction>

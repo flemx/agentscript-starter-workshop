@@ -81,13 +81,13 @@ private class HtmlNoteServiceTest {
     }
 
     @IsTest
-    static void invocableCreatesNotes() {
+    static void invocableCreatesNotesAndReturnsRecord() {
         if (!HtmlNoteService.isAvailable()) {
             return;
         }
         HtmlNoteService.Request req = new HtmlNoteService.Request();
-        req.title = 'Invocable Note';
-        req.htmlBody = '<p>From an agent</p>';
+        req.subject = 'Invocable Note';
+        req.content = '<p>From an agent</p>';
 
         Test.startTest();
         List<HtmlNoteService.Response> res = HtmlNoteService.createHtmlNotes(
@@ -97,14 +97,17 @@ private class HtmlNoteServiceTest {
 
         System.assertEquals(1, res.size());
         System.assertEquals(true, res[0].isSuccess, 'Invocable should succeed');
-        System.assertNotEquals(null, res[0].contentDocumentId);
+        System.assertNotEquals(null, res[0].noteId, 'Should return the note Id');
+        System.assertNotEquals(null, res[0].note, 'Should return the full created ContentDocument record');
+        System.assertEquals(res[0].noteId, res[0].note.Id, 'Returned record Id should match noteId');
+        System.assertNotEquals(null, res[0].note.Title, 'Returned ContentDocument should carry its fields (Title)');
     }
 
     @IsTest
     static void invocableReportsFailure() {
         HtmlNoteService.Request req = new HtmlNoteService.Request();
-        req.title = ''; // invalid → failure captured, not thrown
-        req.htmlBody = '<p>x</p>';
+        req.subject = ''; // invalid → failure captured, not thrown
+        req.content = '<p>x</p>';
 
         Test.startTest();
         List<HtmlNoteService.Response> res = HtmlNoteService.createHtmlNotes(
@@ -112,8 +115,8 @@ private class HtmlNoteServiceTest {
         );
         Test.stopTest();
 
-        System.assertEquals(false, res[0].isSuccess, 'Blank title should be reported as failure');
-        System.assertNotEquals(null, res[0].errorMessage);
+        System.assertEquals(false, res[0].isSuccess, 'Blank subject should be reported as failure');
+        System.assertNotEquals(null, res[0].message);
     }
 
     @IsTest

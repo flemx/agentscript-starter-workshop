@@ -60,8 +60,8 @@ A package installs metadata, but three things can only happen *after* install, i
 
 **The package is complete and proven end-to-end on a clean org.**
 
-- ✅ **Single self-contained package `0.1.0.7`** (`04tWt000000GFCnIAO`) — installs everywhere with **zero
-  post-deploy**. The note suite is now *in* the package (no separate deploy step). Built with
+- ✅ **Single self-contained package `0.1.0.10`** (`04tWt000000GFO5IAO`) — installs everywhere with **zero
+  post-deploy**. The note suite is *in* the package (no separate deploy step). Built with
   `--skip-validation` so Apex compiles at install time in the target org (the build scratch org lacks the
   Agentforce/Einstein/Notes features).
 - ✅ **Installs on any org type** — verified on the workshop sandbox AND a clean Agentforce **scratch org**.
@@ -70,15 +70,22 @@ A package installs metadata, but three things can only happen *after* install, i
   self-disables there.
 - ✅ **Runtime flow validated on a clean org:** install → Run Setup assigns all 4 perm sets → deploy
   starter agent → activate → access granted → re-run reuses (no duplicate) → force-new makes a distinct
-  agent with its own access row.
+  agent (with a distinct **label**, e.g. "Employee Agent V1 (2)") + its own access row.
+- ✅ **"Create Note" agent action in the asset library** — a `GenAiFunction`
+  (`Employee_Agent_Create_Note`) wrapping the `HtmlNoteService` Apex invocable (`invocationTargetType=apex`).
+  It ships in the package, so attendees just *add* it to their agent in Agent Studio. Inputs: Subject /
+  Content (HTML, stored as a Blob so it renders) / optional Record Id. **Returns the full created
+  `ContentDocument` record** (renders as a clickable link in chat). Record type confirmed against the
+  devhub's `Store_Notes` flow.
+- ✅ **Notes UI tab** in the workshop app — the `noteCapture` + `noteViewer` LWCs on a "Notes" tab.
 - ✅ **Workshop guide LIVE on Heroku** — <https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/>
   — with the current install URL.
-- ✅ **35/35 Apex tests pass.**
+- ✅ **36/36 Apex tests pass.**
 
 ### What's left
-- **Action assets (G4):** the **Log/Create Note** Flow + a **Summarize** Prompt Template, exposed in the
-  agent asset library so attendees just *add* them. Then the Part-B add-ons (Query Records, draft email,
-  Search Web, fetch tasks).
+- **Action assets (G4):** the **Create Note** action now ships in the asset library (above). Still to add:
+  a **Summarize** Prompt Template, then the Part-B add-ons (Query Records, draft email, Search Web,
+  fetch tasks).
 - **Finalize the starter agent** wording (simple, non-coding reasoning instructions) and decide
   start-with-no-actions vs pre-wired.
 - **Remaining guide polish.**
