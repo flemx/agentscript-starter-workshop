@@ -21,6 +21,9 @@ export default class AgentDeployButton extends LightningElement {
     @api agentLabel = 'Employee Agent V1';
     @api staticResourceName = 'Note_taking_agent_afscript';
     @api accessPermSet = 'Employee_Agent_Workshop';
+    @api cardTitle = 'Install the starter agent';
+    @api cardDescription =
+        'Installs your starting point — the Employee Agent V1 template — and grants you access.';
     // When hosted in a Visualforce page, the page passes its API-enabled session id here.
     @api sessionId = '';
 

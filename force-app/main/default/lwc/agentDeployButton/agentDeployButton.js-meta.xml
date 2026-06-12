@@ -3,9 +3,26 @@
     <apiVersion>64.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Agent Deploy Button (Accelerator)</masterLabel>
-    <description>Optional one-click deploy/publish/activate of the starter Agent Script agent.</description>
+    <description>Optional one-click deploy/publish/activate of an Agent Script agent from the asset library.</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>
     </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__HomePage">
+            <property name="agentApiName" type="String" label="Agent API Name" default="Note_taking_agent"
+                description="Developer name of the agent to deploy (matches the afscript static resource)."/>
+            <property name="agentLabel" type="String" label="Agent Label" default="Employee Agent V1"
+                description="Display label for the deployed agent."/>
+            <property name="staticResourceName" type="String" label="Afscript Static Resource" default="Note_taking_agent_afscript"
+                description="Static Resource holding the agent's Agent Script (.agent) source."/>
+            <property name="accessPermSet" type="String" label="Access Permission Set" default="Employee_Agent_Workshop"
+                description="Permission set to grant agent access through (gets a SetupEntityAccess to the deployed bot)."/>
+            <property name="cardTitle" type="String" label="Card Title" default="Install the starter agent"
+                description="Heading shown on the button card."/>
+            <property name="cardDescription" type="String" label="Card Description"
+                default="Installs your starting point — the Employee Agent V1 template — and grants you access."
+                description="Sub-text shown on the button card."/>
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>

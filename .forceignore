@@ -17,3 +17,11 @@ node_modules/
 # The agent is deployed at runtime by the browser accelerator / built in Agent Studio.
 **/aiAuthoringBundles/**
 
+
+# Published-agent runtime metadata (Bot, BotVersion, GenAiPlannerBundle/GenAiPlugin) — these are
+# created at runtime when an agent is published; they must NOT be packaged (agents are deployed by
+# the launchpad at runtime, like AiAuthoringBundle). Exclude from package builds.
+**/bots/**
+**/genAiPlannerBundles/**
+**/genAiPlanners/**
+**/genAiPlugins/**

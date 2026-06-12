@@ -11,6 +11,60 @@
             <componentInstance>
                 <componentName>c:agentDeployButton</componentName>
                 <identifier>agentDeployButton1</identifier>
+                <componentInstanceProperties>
+                    <name>agentApiName</name>
+                    <value>Note_taking_agent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>agentLabel</name>
+                    <value>Employee Agent V1</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>staticResourceName</name>
+                    <value>Note_taking_agent_afscript</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>accessPermSet</name>
+                    <value>Employee_Agent_Workshop</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>cardTitle</name>
+                    <value>Install the starter agent (Employee Agent V1)</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>cardDescription</name>
+                    <value>Installs your starting point — the Employee Agent V1 meeting-note template — and grants you access. You'll add your own instructions and actions to it in Agent Studio during the guide.</value>
+                </componentInstanceProperties>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:agentDeployButton</componentName>
+                <identifier>agentDeployButton2</identifier>
+                <componentInstanceProperties>
+                    <name>agentApiName</name>
+                    <value>Use_Case_Research_Agent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>agentLabel</name>
+                    <value>Use-Case Research Agent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>staticResourceName</name>
+                    <value>Use_Case_Research_Agent_afscript</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>accessPermSet</name>
+                    <value>Employee_Agent_Workshop</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>cardTitle</name>
+                    <value>Install the Use-Case Research Agent (optional)</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>cardDescription</name>
+                    <value>Installs the research agent that turns a workshop transcript + Lucid board into a researched report (web + Salesforce docs) saved as a Note, and grants you access.</value>
+                </componentInstanceProperties>
             </componentInstance>
         </itemInstances>
         <name>main</name>
