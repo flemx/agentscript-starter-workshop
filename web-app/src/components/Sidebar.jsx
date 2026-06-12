@@ -21,6 +21,12 @@ const navigationItems = [
     items: [
       { id: 'part-b', label: 'Free Exercise' },
     ]
+  },
+  {
+    section: 'Live Demo',
+    items: [
+      { id: 'try-agent', label: '✨ Try the Research Agent' },
+    ]
   }
 ]
 

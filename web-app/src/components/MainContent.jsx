@@ -3,6 +3,7 @@ import CodeBlock from './CodeBlock'
 import ImageViewer from './ImageViewer'
 import RightSidebar from './RightSidebar'
 import HeaderAnchor from './HeaderAnchor'
+import AgentChat from './AgentChat'
 
 // ---------------------------------------------------------------------------
 // Workshop-wide placeholders — fill these in before the event.
@@ -13,14 +14,15 @@ const PACKAGE_INSTALL_URL = 'https://login.salesforce.com/packaging/installPacka
 // The free, pre-configured backup org (Agentforce Labs) — used if a primary org won't cooperate.
 const BACKUP_ORG_URL = 'https://labs.agentforce.com/'
 
-const sections = ['overview', 'get-org', 'install-package', 'part-a', 'part-b']
+const sections = ['overview', 'get-org', 'install-package', 'part-a', 'part-b', 'try-agent']
 
 const sectionTitles = {
   'overview': 'Workshop Overview',
   'get-org': 'Get Your Org',
   'install-package': 'Install the Package',
   'part-a': 'Part A — Build the MVP',
-  'part-b': 'Part B — Make It Yours'
+  'part-b': 'Part B — Make It Yours',
+  'try-agent': 'Try the Research Agent'
 }
 
 function MainContent({ activeSection, setActiveSection }) {
@@ -71,6 +73,15 @@ function MainContent({ activeSection, setActiveSection }) {
     ]
   }
 
+  // The agent demo needs a full-bleed two-pane layout, so render it on its own.
+  if (activeSection === 'try-agent') {
+    return (
+      <main className="main-content main-content--full">
+        <TryAgent />
+      </main>
+    )
+  }
+
   return (
     <>
       <main className="main-content">
@@ -103,6 +114,24 @@ function MainContent({ activeSection, setActiveSection }) {
       </main>
       <RightSidebar steps={steps} />
     </>
+  )
+}
+
+function TryAgent() {
+  return (
+    <div className="try-agent">
+      <div className="try-agent-intro">
+        <h1>Try the Use-Case Research Agent</h1>
+        <p>
+          This is a live Agentforce agent, hosted on our sandbox — no setup needed. Give it your
+          design-thinking workshop output (a meeting transcript and your Lucid-board notes), and it
+          researches your use cases on the web and in Salesforce documentation, then builds a polished
+          report you can download as a PDF. You can <strong>talk to it</strong> or <strong>drop in an
+          image or PDF</strong> of your board, too.
+        </p>
+      </div>
+      <AgentChat />
+    </div>
   )
 }
 
