@@ -18,7 +18,7 @@ const sections = ['overview', 'get-org', 'install-package', 'part-a', 'part-b', 
 
 const sectionTitles = {
   'overview': 'Workshop Overview',
-  'get-org': 'Get Your Org',
+  'get-org': 'Get Your Sandbox',
   'install-package': 'Install the Package',
   'part-a': 'Part A — Build the MVP',
   'part-b': 'Part B — Make It Yours',
@@ -41,7 +41,7 @@ function MainContent({ activeSection, setActiveSection }) {
   let steps = []
   if (activeSection === 'get-org') {
     steps = [
-      { id: 'org-primary', label: 'Option 1: Your Own Org' },
+      { id: 'org-primary', label: 'Option 1: Your Own Sandbox' },
       { id: 'org-backup', label: 'Option 2: Backup Lab Org' },
       { id: 'org-verify', label: 'Verify Agentforce Is On' }
     ]
@@ -190,7 +190,7 @@ function Overview({ setActiveSection }) {
       <img src="/diagrams/workshop-flow.svg" alt="Your path: install, set up, build, test, extend" style={{ width: '100%', margin: '8px 0' }} />
       <div className="activity-box">
         <ul>
-          <li><strong>Get your org</strong> and <strong>install the package</strong> (≈15 min)</li>
+          <li><strong>Get your sandbox</strong> and <strong>install the package</strong> (≈15 min)</li>
           <li><strong>Part A — Guided:</strong> set up the MVP of the agent — check the basics, write reasoning
             instructions, add the <em>Log Note</em> + <em>Summarize</em> actions, preview, commit, and test on a
             record (≈45 min)</li>
@@ -211,13 +211,13 @@ function Overview({ setActiveSection }) {
 function GetOrg() {
   return (
     <div className="content-section">
-      <h1>Get Your Org</h1>
+      <h1>Get Your Sandbox</h1>
       <p>
-        You'll build your agent in a Salesforce org with Agentforce enabled. Use your own org if you have one;
+        You'll build your agent in a Salesforce <strong>sandbox</strong> with Agentforce enabled — never in production. Use your own sandbox if you have one;
         otherwise we provide a free, pre-configured backup org so no one is blocked.
       </p>
 
-      <HeaderAnchor id="org-primary">Option 1 — Your Own Org (preferred)</HeaderAnchor>
+      <HeaderAnchor id="org-primary">Option 1 — Your Own Sandbox (preferred)</HeaderAnchor>
       <p>
         If you brought a Salesforce org (a Developer Edition, a sandbox, or a Foundations-enabled org with
         Agentforce turned on), you can use it directly. You'll need <strong>System Administrator</strong> access
@@ -232,7 +232,7 @@ function GetOrg() {
 
       <HeaderAnchor id="org-backup">Option 2 — The Free Backup Org (Agentforce Labs)</HeaderAnchor>
       <p>
-        If your own org won't cooperate — flaky provisioning, Agentforce not enabled, or no admin access — use
+        If your own sandbox won't cooperate — flaky provisioning, Agentforce not enabled, or no admin access — use
         the free, pre-configured lab org. It has every Agentforce feature already switched on.
       </p>
       <ol>
@@ -277,7 +277,7 @@ function InstallPackage() {
       </p>
 
       <div className="scenario-box">
-        <p><strong>Why a package?</strong> It lands cleanly in your org and avoids the browser security warnings
+        <p><strong>Why a package?</strong> It lands cleanly in your sandbox and avoids the browser security warnings
         and login juggling that other deployment methods cause. You install once and you're ready to build.</p>
       </div>
 
@@ -316,7 +316,7 @@ function InstallPackage() {
 
       <HeaderAnchor id="install-setup">Step 4 — Run Post-Install Setup</HeaderAnchor>
       <p>
-        On the app's Home page, click <strong>Run Setup</strong>. This one-click step finishes preparing your org:
+        On the app's Home page, click <strong>Run Setup</strong>. This one-click step finishes preparing your sandbox:
       </p>
       <ul>
         <li>Assigns the required <strong>permission sets</strong> to you (Agentforce User, Prompt Template User,
