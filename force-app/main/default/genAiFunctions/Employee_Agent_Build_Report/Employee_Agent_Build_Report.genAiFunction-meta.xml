@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiFunction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Assembles a polished, branded HTML use-case research report from content slots (executive summary, prioritized use cases, web research, Salesforce guidance, recommendations, sources), saves it as a Salesforce Note, and returns the created note plus the full styled HTML. Use this to produce the final workshop deliverable.</description>
+    <invocationTarget>WorkshopReportBuilder</invocationTarget>
+    <invocationTargetType>apex</invocationTargetType>
+    <isConfirmationRequired>false</isConfirmationRequired>
+    <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+    <masterLabel>Build Use-Case Research Report</masterLabel>
+    <progressIndicatorMessage>Building your report</progressIndicatorMessage>
+</GenAiFunction>
