@@ -1,18 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Mic, Square, Paperclip, Loader2, Bot, User, Sparkles } from 'lucide-react'
+import { Send, Mic, Square, Paperclip, Loader2, Bot, User, Sparkles, Globe, BookOpen, FileText, Check } from 'lucide-react'
 import { createSession, streamMessage, splitReport } from '../lib/agentClient'
 import ReportArtifact from './ReportArtifact'
 
+const SUGGESTIONS = [
+  'Load a sample workshop',
+  'What can you do?',
+]
+
 /**
- * The hosted demo of the Use-Case Research agent: a conversational chat on the left, a live
- * report artifact canvas on the right. Supports talking to it (audio → transcribed text) and
- * dropping images/PDFs (→ extracted text) — only text is ever sent to Agentforce.
+ * Hosted demo of the Use-Case Research agent: a sleek conversational chat on the left, a live
+ * report artifact canvas on the right. Surfaces the agent's tool calls (web / Salesforce-docs
+ * research) as live activity so the long research pause feels alive. Supports talking to it
+ * (browser speech → text) and dropping images/PDFs (→ extracted text); only text reaches Agentforce.
  */
 export default function AgentChat() {
-  const [messages, setMessages] = useState([]) // {role, text}
+  const [messages, setMessages] = useState([]) // {role, text, steps?:[], done?:bool}
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
-  const [progress, setProgress] = useState('')
   const [report, setReport] = useState(null)
   const [reportPending, setReportPending] = useState(false)
   const [sessionId, setSessionId] = useState(null)
@@ -23,12 +28,20 @@ export default function AgentChat() {
   const seqRef = useRef(1)
   const scrollRef = useRef(null)
   const mediaRef = useRef(null)
-  const chunksRef = useRef([])
   const fileInputRef = useRef(null)
+  const taRef = useRef(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, progress])
+  }, [messages])
+
+  // auto-grow the textarea
+  useEffect(() => {
+    const ta = taRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 160) + 'px'
+  }, [input])
 
   const ensureSession = useCallback(async () => {
     if (sessionId) return sessionId
@@ -37,14 +50,28 @@ export default function AgentChat() {
     return id
   }, [sessionId])
 
+  // append a live "step" (tool call / progress) to the in-flight assistant message
+  const pushStep = (label) => {
+    setMessages((m) => {
+      const copy = [...m]
+      const last = copy[copy.length - 1]
+      if (!last || last.role !== 'assistant') return copy
+      const steps = last.steps ? [...last.steps] : []
+      // mark previous step complete, add the new one as active
+      if (steps.length) steps[steps.length - 1] = { ...steps[steps.length - 1], done: true }
+      if (!steps.length || steps[steps.length - 1].label !== label) steps.push({ label, done: false })
+      copy[copy.length - 1] = { ...last, steps }
+      return copy
+    })
+  }
+
   const send = async (text) => {
     const content = (text ?? input).trim()
     if (!content || busy) return
     setError('')
     setInput('')
-    setMessages((m) => [...m, { role: 'user', text: content }, { role: 'assistant', text: '' }])
+    setMessages((m) => [...m, { role: 'user', text: content }, { role: 'assistant', text: '', steps: [{ label: 'Thinking', done: false }] }])
     setBusy(true)
-    setProgress('Thinking…')
 
     let id
     try {
@@ -61,12 +88,13 @@ export default function AgentChat() {
       sessionId: id,
       text: content,
       sequenceId: seq,
-      onProgress: (p) => setProgress(p || 'Working…'),
+      onProgress: (p) => pushStep(p || 'Working'),
       onText: (full) => {
         const { chat, report: rep, reportPending: pending } = splitReport(full)
         setMessages((m) => {
           const copy = [...m]
-          copy[copy.length - 1] = { role: 'assistant', text: chat || '…' }
+          const last = copy[copy.length - 1]
+          copy[copy.length - 1] = { ...last, text: chat }
           return copy
         })
         setReportPending(pending)
@@ -76,21 +104,24 @@ export default function AgentChat() {
         const { chat, report: rep } = splitReport(full)
         setMessages((m) => {
           const copy = [...m]
+          const last = copy[copy.length - 1]
+          const steps = (last.steps || []).map((s) => ({ ...s, done: true }))
           copy[copy.length - 1] = {
-            role: 'assistant',
-            text: chat || 'Your report is ready on the right.',
+            ...last,
+            steps,
+            done: true,
+            text: chat || (rep ? 'Your report is ready on the right →' : 'Done.'),
           }
           return copy
         })
         if (rep) setReport(rep)
         setReportPending(false)
         setBusy(false)
-        setProgress('')
       },
       onError: (msg) => {
         setError(msg)
         setBusy(false)
-        setProgress('')
+        setReportPending(false)
         setMessages((m) => {
           const copy = [...m]
           if (copy.length && copy[copy.length - 1].role === 'assistant' && !copy[copy.length - 1].text)
@@ -101,12 +132,19 @@ export default function AgentChat() {
     })
   }
 
+  const onSuggestion = (s) => {
+    if (s === 'Load a sample workshop') {
+      loadSample()
+      setTimeout(() => taRef.current?.focus(), 50)
+    } else {
+      send(s)
+    }
+  }
+
   // ── Audio: talk → transcribe in the BROWSER (Web Speech API) → input ────────────────────
-  // Heroku Managed Inference has no speech-to-text model, so we transcribe client-side. Only the
-  // resulting text is ever sent to Agentforce.
   const toggleRecording = () => {
     if (recording) {
-      mediaRef.current?.stop()
+      mediaRef.current?.stop?.()
       return
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -119,6 +157,7 @@ export default function AgentChat() {
     rec.lang = 'en-US'
     rec.interimResults = true
     rec.continuous = true
+    const startText = input ? input + ' ' : ''
     let finalText = ''
     rec.onresult = (e) => {
       let interim = ''
@@ -127,22 +166,14 @@ export default function AgentChat() {
         if (e.results[i].isFinal) finalText += t + ' '
         else interim += t
       }
-      setInput((v) => {
-        // Replace from the recording marker onward so interim updates don't duplicate.
-        const base = v.split('⁣')[0]
-        return base + '⁣' + (finalText + interim)
-      })
+      setInput(startText + finalText + interim)
     }
     rec.onerror = (e) => {
       setRecording(false)
       if (e.error !== 'no-speech' && e.error !== 'aborted')
         setError(`Voice input error: ${e.error}. You can type or paste instead.`)
     }
-    rec.onend = () => {
-      setRecording(false)
-      // Strip the invisible marker, keeping the transcribed text.
-      setInput((v) => v.replace('⁣', v.includes('⁣') && !v.startsWith('⁣') ? '\n' : ''))
-    }
+    rec.onend = () => setRecording(false)
     mediaRef.current = rec
     rec.start()
     setRecording(true)
@@ -155,21 +186,19 @@ export default function AgentChat() {
     setAttaching(true)
     setError('')
     for (const file of files) {
-      setProgress(`Reading ${file.name}…`)
       try {
         const fd = new FormData()
         fd.append('file', file)
         const res = await fetch('/api/extract/file', { method: 'POST', body: fd })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Could not read the file')
-        const header = `\n\n=== ${file.name} ===\n`
-        setInput((v) => v + header + (data.text || ''))
+        setInput((v) => v + `\n\n=== ${file.name} ===\n` + (data.text || ''))
       } catch (e) {
         setError(e.message)
       }
     }
     setAttaching(false)
-    setProgress('')
+    taRef.current?.focus()
   }
 
   const onDrop = (e) => {
@@ -191,88 +220,123 @@ export default function AgentChat() {
     )
   }
 
+  const stepIcon = (label) => {
+    const l = (label || '').toLowerCase()
+    if (l.includes('web')) return <Globe size={13} />
+    if (l.includes('document') || l.includes('salesforce')) return <BookOpen size={13} />
+    if (l.includes('report') || l.includes('build')) return <FileText size={13} />
+    return <Sparkles size={13} />
+  }
+
   return (
     <div className="chat-shell">
       <div className="chat-pane">
         <div className="chat-head">
           <div className="chat-head-icon"><Bot size={18} /></div>
-          <div>
+          <div className="chat-head-meta">
             <div className="chat-head-title">Use-Case Research Agent</div>
-            <div className="chat-head-sub">Live demo · hosted on our Agentforce sandbox</div>
+            <div className="chat-head-sub"><span className="live-dot" /> Live · hosted on our Agentforce sandbox</div>
           </div>
         </div>
 
         <div className="chat-log" ref={scrollRef} onDrop={onDrop} onDragOver={(e) => e.preventDefault()}>
           {messages.length === 0 && (
             <div className="chat-welcome">
-              <Sparkles size={26} />
+              <div className="welcome-orb"><Sparkles size={24} /></div>
               <h3>Turn your workshop into a researched report</h3>
               <p>
                 Paste your meeting transcript and Lucid-board notes, <b>talk to it</b> with the mic, or
-                <b> drop in an image / PDF</b>. The agent researches your use cases on the web and in
-                Salesforce docs, then builds a polished report on the right.
+                <b> drop in an image / PDF</b> of your board. I'll research your use cases on the web and in
+                Salesforce docs, then build a polished report on the right.
               </p>
-              <button className="btn-sample" onClick={loadSample}>Load a sample workshop</button>
+              <div className="suggestions">
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} className="suggestion-chip" onClick={() => onSuggestion(s)}>{s}</button>
+                ))}
+              </div>
             </div>
           )}
 
           {messages.map((m, i) => (
             <div key={i} className={`msg msg-${m.role}`}>
               <div className="msg-avatar">{m.role === 'user' ? <User size={15} /> : <Bot size={15} />}</div>
-              <div className="msg-bubble">{m.text || <span className="dots">…</span>}</div>
+              <div className="msg-body">
+                {/* live agent activity (tool calls) */}
+                {m.role === 'assistant' && m.steps && m.steps.length > 0 && (
+                  <div className="agent-steps">
+                    {m.steps.map((s, si) => (
+                      <div key={si} className={`agent-step ${s.done ? 'done' : 'active'}`}>
+                        <span className="step-ico">
+                          {s.done ? <Check size={12} /> : <Loader2 size={12} className="spin" />}
+                        </span>
+                        <span className="step-ico-kind">{stepIcon(s.label)}</span>
+                        <span className="step-label">{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {m.text && (
+                  <div className="msg-bubble">
+                    {m.text}
+                    {m.role === 'assistant' && !m.done && busy && <span className="caret" />}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
-
-          {busy && progress && (
-            <div className="msg msg-assistant">
-              <div className="msg-avatar"><Bot size={15} /></div>
-              <div className="msg-progress"><Loader2 size={14} className="spin" /> {progress}</div>
-            </div>
-          )}
         </div>
 
-        {error && <div className="chat-error">{error}</div>}
+        {error && (
+          <div className="chat-error">
+            {error}
+            <button className="retry-link" onClick={() => setError('')}>Dismiss</button>
+          </div>
+        )}
 
-        <div className="chat-input">
-          <button
-            className={`icon-btn ${recording ? 'rec' : ''}`}
-            onClick={toggleRecording}
-            disabled={busy || attaching}
-            title={recording ? 'Stop recording' : 'Talk to the agent'}
-          >
-            {recording ? <Square size={18} /> : <Mic size={18} />}
-          </button>
-          <button
-            className="icon-btn"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={busy || attaching}
-            title="Attach an image or PDF"
-          >
-            {attaching ? <Loader2 size={18} className="spin" /> : <Paperclip size={18} />}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,application/pdf"
-            multiple
-            hidden
-            onChange={(e) => onFiles(e.target.files)}
-          />
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                send()
-              }
-            }}
-            placeholder={recording ? 'Listening… tap stop when done' : 'Paste your transcript & board notes, or talk / drop a file…'}
-            rows={1}
-          />
-          <button className="send-btn" onClick={() => send()} disabled={busy || !input.trim()}>
-            {busy ? <Loader2 size={18} className="spin" /> : <Send size={18} />}
-          </button>
+        <div className="chat-input-wrap">
+          <div className="chat-input">
+            <button
+              className={`icon-btn ${recording ? 'rec' : ''}`}
+              onClick={toggleRecording}
+              disabled={busy || attaching}
+              title={recording ? 'Stop recording' : 'Talk to the agent'}
+            >
+              {recording ? <Square size={17} /> : <Mic size={17} />}
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={busy || attaching}
+              title="Attach an image or PDF"
+            >
+              {attaching ? <Loader2 size={17} className="spin" /> : <Paperclip size={17} />}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              hidden
+              onChange={(e) => onFiles(e.target.files)}
+            />
+            <textarea
+              ref={taRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  send()
+                }
+              }}
+              placeholder={recording ? 'Listening… tap stop when done' : 'Message the research agent…'}
+              rows={1}
+            />
+            <button className="send-btn" onClick={() => send()} disabled={busy || !input.trim()} title="Send">
+              {busy ? <Loader2 size={17} className="spin" /> : <Send size={17} />}
+            </button>
+          </div>
+          <div className="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
         </div>
       </div>
 
