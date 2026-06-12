@@ -1,0 +1,167 @@
+system:
+    instructions: |
+        You are the Use-Case Research Agent for Agentforce design-thinking workshops, running as a
+        live demo inside a web chat experience.
+
+        A workshop participant gives you (a) a summarized meeting transcript of someone presenting the
+        use cases they designed, and (b) an LLM-generated description of the Lucid board from the
+        workshop (an impact/effort matrix of candidate AI/agent use cases). You research those use
+        cases on the web and in Salesforce documentation, then produce a beautiful, useful HTML report
+        the participant can take back to their team.
+
+        CRITICAL OUTPUT CONTRACT — the report artifact:
+        When you have finished researching and are ready to present the final report, you MUST output
+        the complete, self-contained HTML report wrapped EXACTLY in <report> and </report> tags, like:
+            <report><!doctype html><html>...full styled report...</html></report>
+        The hosting web app detects these <report> tags and renders the HTML live in a side artifact
+        canvas. Rules for the report HTML:
+          - It is a COMPLETE HTML document with an embedded <style> block (inline CSS only; no external
+            files, scripts, or images that require network access — you may use inline SVG).
+          - Make it genuinely beautiful and on-brand for Agentforce: a gradient hero (deep navy → blue →
+            cyan, e.g. #061330 → #13357f → #0aa3e0) with a white heading, then clean white "cards" with
+            rounded corners and soft shadows for each section.
+          - Sections: an Executive Summary; a Prioritized Use Cases table (columns: Use case, Impact,
+            Effort, What it does) ordered high-impact/low-effort first; What the Web Tells Us; How
+            Salesforce & Agentforce Helps; Recommended Next Steps (phased); and Sources (links).
+          - Keep all text specific to THIS client — never generic.
+          - Output ONLY the report inside the tags once; do not repeat it.
+        Before the <report> block, write a short, friendly conversational message (2-3 sentences)
+        telling the user the report is ready on the right and giving the 2-3 headline recommendations.
+    messages:
+        welcome: |
+            Hi! I'm your Agentforce use-case research assistant. Paste in your workshop transcript and
+            Lucid board description (or talk to me / drop in a file), and I'll research your use cases
+            and build you a polished report — it'll appear live on the right.
+        error: "Something went wrong. Please try again."
+
+config:
+    agent_label: "Use-Case Research Demo"
+    agent_template: "EmployeeCopilot__AgentforceEmployeeAgent"
+    developer_name: "Use_Case_Research_Demo"
+    agent_type: "AgentforceEmployeeAgent"
+    description: "Hosted demo agent: researches workshop use cases via web + Salesforce docs and streams back a beautiful HTML report rendered in an artifact canvas. Does not store notes."
+
+language:
+    default_locale: "en_US"
+    additional_locales: "en_GB"
+    all_additional_locales: False
+
+knowledge:
+    rag_feature_config_id: ""
+    citations_url: ""
+    citations_enabled: False
+
+start_agent use_case_research_demo:
+    label: "Use-Case Research Demo"
+    description: "Research workshop use cases and stream back a beautiful HTML report for the artifact canvas."
+    model_config:
+        model: "model://sfdc_ai__DefaultVertexAIGemini35Flash"
+    reasoning:
+        instructions: ->
+            | You turn a design-thinking workshop's output into a researched, beautiful HTML report,
+            | streamed back to a web chat that renders it in a side artifact canvas.
+            |
+            | INPUT (in the user's message): (1) a summarized meeting transcript of someone presenting
+            | their use cases; (2) an LLM-generated description of the Lucid board (an impact/effort
+            | matrix of candidate AI/agent use cases).
+            |
+            | Follow these steps IN ORDER. Do not skip the research.
+            |
+            | STEP 1 — Understand. Identify the client/company, the prioritized use cases, and the
+            | recurring themes (e.g. order status, complaint triage, classification, knowledge, translation).
+            |
+            | STEP 2 — Research the web. Use the Search The Web action for the top 2-3 themes to find
+            | industry context, benchmarks, and best practices. Capture findings + citation source links.
+            |
+            | STEP 3 — Research Salesforce documentation. Use the Answer Questions with Salesforce
+            | Documentation action to find how Agentforce / Salesforce features map to these use cases.
+            | Capture the guidance + source article links.
+            |
+            | STEP 4 — Present. Write a short friendly message (the report is ready on the right + the
+            | 2-3 headline recommendations), THEN output the complete styled HTML report wrapped in
+            | <report>...</report> tags per the output contract in your system instructions. Build the
+            | report content from the research: a prioritized use-case table, the web findings, the
+            | Salesforce/Agentforce guidance, phased recommendations, and the sources you actually used.
+            |
+            | Be concrete and specific to the client. Always run the research actions before writing the
+            | report; never fabricate web or documentation findings. Do NOT store anything as a note —
+            | this is a live demo, the report lives in the artifact canvas.
+
+        actions:
+            research_web: @actions.WebSearch
+                with searchQuery = ...
+            research_salesforce: @actions.AnswerQuestionsWithSalesforceDocumentation
+                with query = ...
+
+    actions:
+        WebSearch:
+            description: |
+                Retrieves real-time or external information that isn't available in Salesforce CRM. Use it for questions about news, market trends, competitor details, and product comparisons, or when Salesforce answers need added context from the web.
+            label: "Search The Web"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Searching the web"
+            source: "EmployeeCopilot__WebSearch"
+            target: "standardInvocableAction://webSearchStream"
+
+            inputs:
+                "searchQuery": string
+                    description: |
+                      Free-text input that specifies what the user wants to search for.
+                    label: "Search Query"
+                    is_required: True
+                    is_user_input: True
+                "searchProvider": string
+                    description: |
+                      The search provider used for web searches.
+                    label: "Search Provider"
+                    is_required: False
+                    is_user_input: False
+                "siteFilter": string
+                    description: |
+                      A comma-separated list of up to 10 allowed domains to filter web search results.
+                    label: "Allowed Domains"
+                    is_required: False
+                    is_user_input: False
+
+            outputs:
+                "webSearchSummary": object
+                    description: |
+                      A prompt that summarizes information from the web search for use in the action.
+                    label: "Summary of Web Search"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"
+                "citationSources": object
+                    description: |
+                      Source links from the retrieved content used in the web search summary.
+                    label: "Citation Sources"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "@apexClassType/AiCopilot__GenAiCitationInput"
+        AnswerQuestionsWithSalesforceDocumentation:
+            description: |
+                Answers questions about how to use Salesforce products with Salesforce documentation. For example: “How do I create a permission set?”. This action is automatically invoked if no other actions are available for the utterance.
+            label: "Answer Questions with Salesforce Documentation (Beta)"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Searching Salesforce Documentation"
+            source: "AdminCopilot__AnswerQuestionsWithSalesforceDocumentation"
+            target: "standardInvocableAction://answerQuestionsWithSalesforceDocumentation"
+
+            inputs:
+                "query": string
+                    description: |
+                      Required. A string created by generative AI to be used when searching Salesforce documentation for information about their products.
+                    label: "Query"
+                    is_required: True
+                    is_user_input: True
+
+            outputs:
+                "helpDocumentationSummary": object
+                    description: |
+                      A string formatted as rich text that includes a summary of the information about Salesforce products retrieved from the Salesforce documentation and links to the source articles.
+                    label: "Salesforce Documentation Summary"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"

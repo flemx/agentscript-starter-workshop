@@ -7,6 +7,9 @@
       "default": true,
       "package": "Employee Agent Workshop",
       "versionDescription": ""
+    },
+    {
+      "path": "demo-agents"
     }
   ],
   "name": "inspireai_hackathon",
