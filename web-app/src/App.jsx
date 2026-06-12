@@ -9,14 +9,14 @@ function App() {
   const [activeSection, setActiveSection] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'dark'
+    if (typeof window === 'undefined') return 'light'
     try {
       const stored = window.localStorage.getItem(THEME_KEY)
       if (stored === 'light' || stored === 'dark') return stored
     } catch {
       // ignore
     }
-    return 'dark'
+    return 'light' // light mode by default — Agentforce look & feel
   })
 
   useEffect(() => {

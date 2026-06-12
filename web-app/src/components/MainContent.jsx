@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import CodeBlock from './CodeBlock'
 import ImageViewer from './ImageViewer'
 import RightSidebar from './RightSidebar'
@@ -282,12 +282,16 @@ function InstallPackage() {
       </div>
 
       <HeaderAnchor id="install-link">Step 1 — Open the Install Link</HeaderAnchor>
-      <p>Open the package install link (make sure you're logged into the right org first):</p>
-      <CodeBlock code={PACKAGE_INSTALL_URL} language="text" />
-      <p style={{ color: 'var(--muted-foreground)' }}>
-        Your facilitator will share the live link and a short URL on screen. If you're on the backup org, use the
-        same link — it installs there too.
+      <p>Make sure you're logged into <strong>your own sandbox</strong> first, then click to install the package:</p>
+      <p>
+        <a className="install-button" href={PACKAGE_INSTALL_URL} target="_blank" rel="noopener noreferrer">
+          <Download size={18} /> Install the Workshop Package
+        </a>
       </p>
+      <p style={{ color: 'var(--muted-foreground)' }}>
+        The same link installs in the backup lab sandbox too. If you'd rather paste it manually:
+      </p>
+      <CodeBlock code={PACKAGE_INSTALL_URL} language="text" />
 
       <hr className="step-divider" />
 

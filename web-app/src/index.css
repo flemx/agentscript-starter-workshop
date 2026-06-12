@@ -65,47 +65,50 @@ html {
 }
 
 [data-theme='light'] {
-  --background: #ffffff;
-  --background-mesh: none;
-  --foreground: #0f0f0f;
+  /* Agentforce look & feel — light, deep-navy → blue → cyan accents (salesforce.com/agentforce) */
+  --background: #f4f7fc;
+  --background-mesh: radial-gradient(circle at 15% -10%, rgba(10, 163, 218, 0.10) 0%, transparent 45%),
+                     radial-gradient(circle at 90% 0%, rgba(19, 53, 127, 0.08) 0%, transparent 45%);
+  --foreground: #0b1d3a;
   --card: #ffffff;
   --card-elevated: #ffffff;
-  --secondary: #f8f8fb;
-  --muted: #f0f0f5;
-  --muted-foreground: #666673;
-  --accent: #7c3aed;
-  --accent-soft: #a78bfa;
-  --border: #e5e5ea;
-  --border-strong: #d1d1d6;
-  --input: #f0f0f5;
-  --ring: #7c3aed;
+  --secondary: #eef3fb;
+  --muted: #eef3fb;
+  --muted-foreground: #5b7299;
+  --accent: #0a6ed1;
+  --accent-soft: #0aa3e0;
+  --border: #dbe6f5;
+  --border-strong: #c3d5ee;
+  --input: #f4f7fc;
+  --ring: #0aa3e0;
 
-  /* Purple accent theme */
-  --purple: #7c3aed;
-  --purple-light: #8b5cf6;
-  --purple-soft: rgba(124, 58, 237, 0.08);
-  --purple-glow: rgba(124, 58, 237, 0.15);
+  /* Agentforce accent (was purple) */
+  --purple: #13357f;
+  --purple-light: #0aa3e0;
+  --purple-soft: rgba(10, 163, 218, 0.10);
+  --purple-glow: rgba(10, 163, 218, 0.18);
 
-  /* Pronto brand (orange accent) */
-  --brand: #ff6a00;
-  --brand-strong: #e25c00;
-  --brand-soft: rgba(255, 106, 0, 0.08);
-  --brand-glow: rgba(255, 106, 0, 0.15);
+  /* Agentforce gradient + brand */
+  --af-grad: linear-gradient(135deg, #061330, #13357f 48%, #0aa3e0);
+  --brand: #0a6ed1;
+  --brand-strong: #0958a8;
+  --brand-soft: rgba(10, 110, 209, 0.10);
+  --brand-glow: rgba(10, 110, 209, 0.18);
   --brand-on: #ffffff;
 
   /* Semantic */
   --text-primary: var(--foreground);
   --text-secondary: var(--muted-foreground);
-  --link: #7c3aed;
-  --link-hover: #6d28d9;
-  --code-bg: #1a1a1a;
-  --code-inline-bg: #f0f0f5;
-  --code-inline-color: #1a1a1a;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
-  --scenario-bg: #fafafa;
+  --link: #0a6ed1;
+  --link-hover: #0958a8;
+  --code-bg: #0b1d3a;
+  --code-inline-bg: #eef3fb;
+  --code-inline-color: #10336e;
+  --shadow: 0 1px 3px rgba(13, 40, 90, 0.08), 0 1px 2px rgba(13, 40, 90, 0.06);
+  --shadow-lg: 0 14px 44px rgba(13, 40, 90, 0.14);
+  --scenario-bg: #eef3fb;
   --scenario-border: var(--border);
-  --table-header-bg: #f8f8fb;
+  --table-header-bg: #10336e;
   --logo-invert: 0;
 }
 
@@ -1082,3 +1085,13 @@ code {
 .btn-pdf:hover { filter: brightness(1.08); }
 .artifact-frame { flex: 1; width: 100%; border: none; background: #eef3fb; min-height: 0; }
 .spin { animation: spin 1s linear infinite; }
+
+/* Prominent install button (Agentforce gradient) */
+.install-button {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--af-grad, linear-gradient(135deg, #061330, #13357f 48%, #0aa3e0));
+  color: #fff !important; text-decoration: none !important;
+  border-radius: 12px; padding: 13px 24px; font-weight: 700; font-size: 15px;
+  box-shadow: 0 10px 26px rgba(10, 110, 209, 0.28); transition: transform .12s, filter .12s;
+}
+.install-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
