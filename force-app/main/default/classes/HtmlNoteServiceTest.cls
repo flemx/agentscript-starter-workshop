@@ -1,11 +1,19 @@
 /**
  * Tests for HtmlNoteService — HTML ContentNote creation, record linking, the invocable
  * entry point, and HTML sanitization.
+ *
+ * Portability: ContentNote isn't present in every org (scratch/trial orgs lack it), so the
+ * Notes-dependent tests early-return when HtmlNoteService.isAvailable() is false, and any
+ * ContentNote SOQL is dynamic (Database.query) so this class compiles everywhere. The
+ * sanitize / validation tests run unconditionally.
  */
 @IsTest
 private class HtmlNoteServiceTest {
     @IsTest
     static void createsHtmlNote() {
+        if (!HtmlNoteService.isAvailable()) {
+            return; // org without ContentNote — covered by availabilityReportsCorrectly
+        }
         String html = '<h1>Meeting</h1><p><b>Decisions</b></p><ul><li>Ship Friday</li></ul>';
 
         Test.startTest();
@@ -13,12 +21,17 @@ private class HtmlNoteServiceTest {
         Test.stopTest();
 
         System.assertNotEquals(null, docId, 'Should return a ContentDocumentId');
-        List<ContentNote> notes = [SELECT Id, Title FROM ContentNote WHERE LatestPublishedVersionId != null];
+        List<SObject> notes = Database.query(
+            'SELECT Id, Title FROM ContentNote WHERE LatestPublishedVersionId != null'
+        );
         System.assert(!notes.isEmpty(), 'A ContentNote should exist');
     }
 
     @IsTest
     static void createsAndLinksToRecord() {
+        if (!HtmlNoteService.isAvailable()) {
+            return;
+        }
         Account acc = new Account(Name = 'Acme Test');
         insert acc;
 
@@ -35,6 +48,9 @@ private class HtmlNoteServiceTest {
 
     @IsTest
     static void linkIsIdempotent() {
+        if (!HtmlNoteService.isAvailable()) {
+            return;
+        }
         Account acc = new Account(Name = 'Acme Test 2');
         insert acc;
         Id docId = HtmlNoteService.createHtmlNote('Note', '<p>x</p>', null);
@@ -66,6 +82,9 @@ private class HtmlNoteServiceTest {
 
     @IsTest
     static void invocableCreatesNotes() {
+        if (!HtmlNoteService.isAvailable()) {
+            return;
+        }
         HtmlNoteService.Request req = new HtmlNoteService.Request();
         req.title = 'Invocable Note';
         req.htmlBody = '<p>From an agent</p>';
@@ -95,6 +114,17 @@ private class HtmlNoteServiceTest {
 
         System.assertEquals(false, res[0].isSuccess, 'Blank title should be reported as failure');
         System.assertNotEquals(null, res[0].errorMessage);
+    }
+
+    @IsTest
+    static void availabilityReportsCorrectly() {
+        // Always callable; returns a Boolean reflecting org support for ContentNote.
+        Boolean available = HtmlNoteService.isAvailable();
+        System.assertEquals(
+            Schema.getGlobalDescribe().containsKey('ContentNote'),
+            available,
+            'isAvailable should reflect ContentNote presence in this org'
+        );
     }
 
     @IsTest

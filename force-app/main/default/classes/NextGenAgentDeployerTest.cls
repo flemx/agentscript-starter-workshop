@@ -2,6 +2,11 @@
  * Tests for NextGenAgentDeployer. The Next-Gen Authoring callouts are mocked; a session
  * id is passed in directly so the test never renders the Visualforce page. The static
  * resource (Note_taking_agent_afscript) ships with the package, so reading it is real.
+ *
+ * Note on the deploy path: tests can't create a BotDefinition, so after a mocked
+ * publish+activate the post-deploy BotDefinition lookup finds nothing and the access grant
+ * is skipped — that branch is exercised directly via grantAgentAccess() against a real
+ * permission set + (any) SetupEntity below.
  */
 @IsTest
 private class NextGenAgentDeployerTest {
@@ -58,18 +63,43 @@ private class NextGenAgentDeployerTest {
         Test.setMock(HttpCalloutMock.class, new NgaMock(false));
 
         Test.startTest();
+        // A developer_name unlikely to exist as a BotDefinition in the org → takes the
+        // deploy path (create/publish/activate), not the reuse path.
         NextGenAgentDeployer.Result result = NextGenAgentDeployer.deployAgent(
-            'Note_taking_agent',
+            'Workshop_Test_Agent_ZZZ',
             'Employee Agent V1',
             RESOURCE,
             'Employee_Agent_Workshop',
+            false,
             FAKE_SESSION
         );
         Test.stopTest();
 
         System.assertEquals(true, result.success, 'Should report success');
+        System.assertEquals(false, result.alreadyExisted, 'Should be a fresh deploy, not a reuse');
         System.assertEquals('1bZTESTVERSION', result.bundleVersionId, 'Bundle version id captured');
         System.assertEquals('0XxTESTBOT', result.publishedBotId, 'Published bot id captured');
+        System.assertEquals(true, result.activated, 'Should be activated');
+    }
+
+    @IsTest
+    static void forceNewDeploysFreshCopy() {
+        Test.setMock(HttpCalloutMock.class, new NgaMock(false));
+
+        Test.startTest();
+        // forceNew=true skips the reuse check entirely and always takes the deploy path.
+        NextGenAgentDeployer.Result result = NextGenAgentDeployer.deployAgent(
+            'Note_taking_agent',
+            'Employee Agent V1',
+            RESOURCE,
+            'Employee_Agent_Workshop',
+            true,
+            FAKE_SESSION
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, result.success, 'forceNew should still succeed');
+        System.assertEquals(false, result.alreadyExisted, 'forceNew never reports already-existed');
         System.assertEquals(true, result.activated, 'Should be activated');
     }
 
@@ -81,7 +111,7 @@ private class NextGenAgentDeployerTest {
         Boolean threw = false;
         try {
             NextGenAgentDeployer.deployAgent(
-                'Note_taking_agent', 'Employee Agent V1', RESOURCE, null, FAKE_SESSION
+                'Workshop_Test_Agent_ZZZ', 'Employee Agent V1', RESOURCE, null, false, FAKE_SESSION
             );
         } catch (AuraHandledException e) {
             threw = true;
@@ -96,7 +126,7 @@ private class NextGenAgentDeployerTest {
         Test.startTest();
         Boolean threw = false;
         try {
-            NextGenAgentDeployer.deployAgent(null, 'x', RESOURCE, null, FAKE_SESSION);
+            NextGenAgentDeployer.deployAgent(null, 'x', RESOURCE, null, false, FAKE_SESSION);
         } catch (AuraHandledException e) {
             threw = true;
         }
@@ -129,12 +159,25 @@ private class NextGenAgentDeployerTest {
         Boolean threw = false;
         try {
             NextGenAgentDeployer.deployAgent(
-                'Some_Agent', 'Some Agent', 'No_Such_Resource_XYZ', null, FAKE_SESSION
+                'Workshop_Test_Agent_ZZZ', 'Some Agent', 'No_Such_Resource_XYZ', null, false, FAKE_SESSION
             );
         } catch (AuraHandledException e) {
             threw = true;
         }
         Test.stopTest();
         System.assertEquals(true, threw, 'Missing static resource should throw');
+    }
+
+    @IsTest
+    static void grantAgentAccessIsNullSafe() {
+        Test.startTest();
+        // Blank perm set / null bot → no grant, no exception.
+        System.assertEquals(false, NextGenAgentDeployer.grantAgentAccess('', null),
+            'Blank inputs should return false');
+        // Unknown permission set name → false (not found), no exception.
+        System.assertEquals(false,
+            NextGenAgentDeployer.grantAgentAccess('No_Such_Perm_Set_XYZ', UserInfo.getUserId()),
+            'Unknown perm set should return false');
+        Test.stopTest();
     }
 }

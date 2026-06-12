@@ -48,12 +48,9 @@ $RECYCLE.BIN/
 **/venv/
 
 # ─────────────────────────────────────────────────────────────
-#  AI COMMAND CENTER (command-center/) — secrets & raw logs
-#  This package is handed to customers; keep keys and raw chat
-#  out of git. We commit ONLY the session INDEX (metadata) via
-#  command-center/data/sessions/index.json and portal-data.js.
+#  Secrets & local agent logs — this package is handed to
+#  customers, so keep keys and raw chat out of git.
 # ─────────────────────────────────────────────────────────────
-# Secrets — the LLM gateway key lives in command-center/research/.env (copy from .env.example)
 .env
 .env.*
 **/.env
@@ -64,18 +61,8 @@ $RECYCLE.BIN/
 !.env.example
 !**/.env.example
 
-# Raw agent/Claude transcripts + per-session timelines — may contain secrets/customer context
-**/agentic-history/raw/
-!**/agentic-history/raw/.gitkeep
+# Raw agent/Claude transcripts — may contain secrets/customer context
 **/*.session.jsonl
-# per-session sanitized timelines (full conversation text) — local only
-command-center/data/sessions/*.json
-!command-center/data/sessions/index.json
-command-center/data/sessions/.capture.log
-# full-text browser bundle — local only; portal-data.js (the index) IS committed
-command-center/sessions-data.js
-# historical portal snapshots — rebuildable from git via build_versions.mjs (manifest IS committed)
-command-center/versions/
 .claude/projects/
 .claude/sessions/
 .claude/history.jsonl

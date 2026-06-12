@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>Employee Agent Notes Add-on</label>
-    <description>Access to the note-capture / HTML-note / note-viewer add-on components. Deploy these separately from the core package (they need ContentNote, Einstein, and Bot features).</description>
+    <description>Access to the note-capture / HTML-note / note-viewer components (ContentNote, Einstein prompt templates, Bot listing). Shipped in the package; assigned by the launchpad Run Setup.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
         <apexClass>HtmlNoteService</apexClass>

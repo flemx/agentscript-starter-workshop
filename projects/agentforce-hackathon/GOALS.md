@@ -1,9 +1,7 @@
 # Project Goals — Agentforce Hackathon
 
-> This is the **project-specific** context file imported by the root `AGENTS.md`.
-> It is the single source of truth for *what this project is and why*. The portal's home-page
-> "Goals" section is generated from this file. To reuse the Command Center for a different
-> project, replace this file.
+> This is the single source of truth for *what this project is and why* — goals, hard constraints,
+> and success criteria. Imported by `AGENTS.md`.
 
 **Project:** Agentforce Hackathon — a deployable Salesforce Agent package + a self-guided workshop web app
 **Owner:** Daniel (Salesforce)
@@ -94,7 +92,7 @@ Two tracks run in parallel and reinforce each other:
   re-scripted for our flow): the self-guided, step-by-step experience + org acquisition / backup path.
 
 > Cadence: lock the package's assets + perms → write the matching guide step → test the seam end-to-end
-> as a non-expert would → repeat. The Command Center (this harness) tracks both.
+> as a non-expert would → repeat.
 
 ### The workshop flow (decided)
 **Part A — guided (build the MVP):** check the agent basics → write **reasoning instructions** → add the
@@ -105,15 +103,17 @@ with **no actions** and build up.
 
 ---
 
-## Today's definition of done (prep milestones)
+## Definition of done (prep milestones)
 
-1. Command Center harness stood up and reusable for this project (done).
-2. The **package's supporting assets** install cleanly into a fresh org (perm sets + the Note/Summarize
-   actions in the asset library + the Lightning app + the Employee Agent V1 starter).
-3. **Permission sets assigned** so the attendee is authorized without manual Setup.
-4. The **Employee Agent V1 template** (`Note_taking_agent`) + its actions are in `force-app/` and documented.
-5. The **web app re-scripted** to the Part-A/Part-B flow (cloned `vibe-code-agenforce-claude`, new content).
-6. A **free backup org** is provisioned and documented.
+1. ✅ The **package** installs cleanly into a fresh org (perm sets + Lightning app + Employee Agent V1
+   starter), proven on a clean Agentforce scratch org.
+2. ✅ **Permission sets assigned** at runtime from the launchpad, so the attendee is authorized without
+   manual Setup.
+3. ✅ The **Employee Agent V1 template** (`Note_taking_agent`) is in `force-app/` and deployed at runtime
+   via the launchpad, with agent access granted automatically.
+4. ✅ The **web app re-scripted** to the Part-A/Part-B flow and live on Heroku.
+5. ⏳ The **action assets** (Log Note Flow + Summarize Prompt Template) in the agent asset library (G4).
+6. ✅ A **free backup org** (Agentforce Labs) is identified and documented in the guide.
 
 ---
 

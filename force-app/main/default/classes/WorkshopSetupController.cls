@@ -33,10 +33,11 @@ public with sharing class WorkshopSetupController {
     private static final String DEFAULT_GUIDE_URL =
         'https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/';
     private static final String DEFAULT_INSTALL_URL =
-        'https://login.salesforce.com/packaging/installPackage.apexp?p0=04tWt000000GDJ3IAO';
+        'https://login.salesforce.com/packaging/installPackage.apexp?p0=04tWt000000GFCnIAO';
     private static final String DEFAULT_AGENT_API_NAME = 'Note_taking_agent';
     private static final String DEFAULT_PERMISSION_SETS =
         'Employee_Agent_Workshop,' +              // our package perms (Apex/VF/app/tab)
+        'Employee_Agent_Notes_Addon,' +           // note-capture / HTML-note / viewer Apex
         'force__EinsteinGPTPromptTemplateUser,' + // Prompt Template User (for Summarize)
         'force__CopilotSalesforceUser';           // Access Agentforce Default Agent
     private static final String DEFAULT_PERMISSION_SET_GROUPS = '';

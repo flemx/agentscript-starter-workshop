@@ -1,27 +1,38 @@
 /**
- * OPTIONAL WORKSHOP ACCELERATOR — deploy + publish + activate an Agent Script agent
- * from the browser, end to end.
+ * WORKSHOP STARTER-AGENT INSTALLER — deploy + publish + activate the starter Agent Script
+ * agent from the browser, end to end, then grant the running user access to it.
  *
- * This is a convenience / backup path, NOT the customer happy-path. The decided design
- * is that the attendee builds the agent in Agent Studio (that's the learning). This
- * accelerator exists so a facilitator (or a stuck attendee / the backup org) can get a
- * working agent in one click — e.g. to reset or to skip ahead.
- *
- * How it works: it calls the org's Next-Gen Authoring Connect API
- * (`/services/data/vXX.0/nextgen-authoring/...`) over an authenticated self-callout to
- * the org's own My Domain, using the running user's session. The Agent Script source is
- * read from a Static Resource so the package can ship a starter agent without packaging
- * an AiAuthoringBundle (which isn't packageable).
+ * The workshop ships a STARTER TEMPLATE agent (Employee Agent V1). The attendee installs
+ * it from the launchpad as their starting point, then ADDS instructions and actions to it
+ * in Agent Studio during the guide. The agent itself can't be packaged (`AiAuthoringBundle`
+ * isn't packageable), so we ship its Agent Script source as a Static Resource and create it
+ * at runtime via the org's Next-Gen Authoring Connect API over an authenticated self-callout.
  *
  *   create  → POST /nextgen-authoring/bundles                  (returns bundleVersionId)
- *   publish → POST /nextgen-authoring/bundle-versions/{id}/publish
+ *   publish → POST /nextgen-authoring/bundle-versions/{id}/publish   (creates Bot + BotVersion)
  *   activate→ POST /nextgen-authoring/bundle-versions/{id}/activate
  *
- * IMPORTANT — session context: a self-callout needs an API-enabled session. Apex obtains
- * it from `Page.NextGenAgentDeployerSession` (a Visualforce page) via getContent(), NOT
- * from a bare `UserInfo.getSessionId()` in an Aura/LWC request (that session is not always
- * API-enabled). The hosting LWC therefore runs inside a Visualforce page. If a usable
- * session id is passed in, that is used directly (e.g. from a VF-hosted caller).
+ * AGENT ACCESS — the hard part, solved at runtime.
+ *   A permission set grants agent access via an `agentAccesses` entry that references the
+ *   agent by `developer_name`. The package CANNOT carry that reference: at package-build
+ *   time the agent doesn't exist, and the deployed agent's final name isn't known (it may be
+ *   renamed on collision). So instead of baking a static `agentName` into the perm set, we
+ *   grant access AT RUNTIME by inserting a `SetupEntityAccess` row that points the workshop
+ *   permission set at the ACTUAL `BotDefinition` Id we just created/found. The reference is
+ *   therefore always correct, regardless of the agent's name. (SetupEntityAccess is a setup
+ *   object, so the insert is safe alongside PermissionSetAssignment — no mixed-DML.)
+ *
+ * RE-RUN BEHAVIOUR — safe and predictable.
+ *   Default (forceNew=false): if an agent with the requested developer_name already exists,
+ *   we DON'T create a duplicate. We report it as already-deployed, make sure it's active, and
+ *   (re)grant access to it. Pass forceNew=true to deliberately deploy a fresh copy under the
+ *   next free name (`<apiName>_2`, `_3`, …) and grant access to THAT new agent instead.
+ *
+ * SESSION CONTEXT: a self-callout needs an API-enabled session. Apex obtains it from
+ * `Page.NextGenAgentDeployerSession` (a Visualforce page) via getContent(), NOT from a bare
+ * `UserInfo.getSessionId()` in an Aura/LWC request (that session is not always API-enabled).
+ * The hosting LWC therefore runs inside a Visualforce page. If a usable session id is passed
+ * in, that is used directly.
  */
 public with sharing class NextGenAgentDeployer {
     private static final String API_VERSION = 'v64.0';
@@ -30,16 +41,17 @@ public with sharing class NextGenAgentDeployer {
     public class DeployException extends Exception {}
 
     /**
-     * Deploys, publishes, and activates the agent whose Agent Script lives in the named
-     * Static Resource, then assigns the supplied agent-access permission set to the
-     * running user so the agent is immediately usable.
+     * Installs the starter template agent for the running user, end to end:
+     * resolves whether it already exists, deploys+publishes+activates it if not, then grants
+     * the user access by pointing the workshop permission set at the resulting BotDefinition.
      *
-     * @param apiName             developer name for the bundle / agent (e.g. Note_taking_agent)
+     * @param apiName             desired developer name for the agent (e.g. Note_taking_agent)
      * @param label               human-readable label
      * @param staticResourceName  Static Resource holding the .agent (afscript) source
-     * @param accessPermSetName   optional permission set API name to assign after publish (may be blank)
+     * @param accessPermSetName    permission set API name to grant agent access through (e.g. Employee_Agent_Workshop)
+     * @param forceNew            when true, always deploy a fresh copy under the next free name
      * @param sessionId           optional API-enabled session id (from a VF page); if blank, Apex fetches one
-     * @return a Result describing what was created
+     * @return a Result describing what happened
      */
     @AuraEnabled
     public static Result deployAgent(
@@ -47,12 +59,38 @@ public with sharing class NextGenAgentDeployer {
         String label,
         String staticResourceName,
         String accessPermSetName,
+        Boolean forceNew,
         String sessionId
     ) {
         try {
             if (String.isBlank(apiName) || String.isBlank(staticResourceName)) {
                 throw new DeployException('apiName and staticResourceName are required.');
             }
+            Boolean force = forceNew == true;
+            Result result = new Result();
+
+            // ── Reuse path: agent already exists and we're not forcing a new one ──────────
+            if (!force) {
+                BotDefinition existing = findBotDefinition(apiName);
+                if (existing != null) {
+                    result.resolvedApiName = apiName;
+                    result.botDefinitionId = existing.Id;
+                    result.alreadyExisted = true;
+                    // Make sure it's active so it shows up; if not active yet we still report
+                    // success (the attendee can activate from Studio), but try a best-effort.
+                    result.activated = isAnyVersionActive(apiName);
+                    if (String.isNotBlank(accessPermSetName)) {
+                        result.accessGranted = grantAgentAccess(accessPermSetName, existing.Id);
+                    }
+                    result.success = true;
+                    result.message = result.activated
+                        ? 'This agent is already deployed. Granted you access — open it from the Agentforce panel.'
+                        : 'This agent is already deployed but not active yet. Granted you access; activate it in Agent Studio.';
+                    return result;
+                }
+            }
+
+            // ── Deploy path: create → publish → activate a fresh agent ────────────────────
             String afscript = readStaticResource(staticResourceName);
             String session = String.isNotBlank(sessionId) ? sessionId : getApiEnabledSession();
             if (String.isBlank(session)) {
@@ -61,27 +99,21 @@ public with sharing class NextGenAgentDeployer {
                 );
             }
 
-            // Avoid BotDefinition name collisions: if an agent with this apiName already
-            // exists (a published bundle of the same name → DUPLICATE_VALUE on publish),
-            // pick the next free "<apiName>_N". This makes the accelerator safe to re-run
-            // and safe in orgs that already carry a same-named agent.
+            // Pick a non-colliding name. Without forceNew this only matters in the rare race
+            // where the BotDefinition lookup missed (e.g. a half-published bundle); with
+            // forceNew it's how we deliberately get `_2`, `_3`, …
             String uniqueApiName = resolveUniqueApiName(session, apiName);
             String effectiveLabel = String.isBlank(label) ? uniqueApiName : label;
 
             // The agent's runtime BotDefinition name comes from `developer_name` INSIDE the
-            // afscript, not from the bundle apiName. Rewrite it (and agent_label) to match
-            // the chosen unique apiName.
+            // afscript, not from the bundle apiName. Rewrite it (and agent_label) to match.
             afscript = alignAgentIdentity(afscript, uniqueApiName, effectiveLabel);
-            apiName = uniqueApiName;
-            label = effectiveLabel;
-
-            Result result = new Result();
 
             // 1) Create the bundle + DRAFT version carrying the afscript.
-            Map<String, Object> created = createBundleWithVersion(session, apiName, label, afscript);
+            Map<String, Object> created = createBundleWithVersion(session, uniqueApiName, effectiveLabel, afscript);
             result.bundleVersionId = (String) created.get('id');
             result.bundleId = (String) created.get('bundleId');
-            result.resolvedApiName = (String) created.get('apiName');
+            result.resolvedApiName = uniqueApiName;
             if (String.isBlank(result.bundleVersionId)) {
                 throw new DeployException('Create succeeded but no bundle version id was returned.');
             }
@@ -95,14 +127,20 @@ public with sharing class NextGenAgentDeployer {
             activateBundleVersion(session, result.bundleVersionId);
             result.activated = true;
 
-            // 4) Assign the agent-access permission set to the running user (idempotent,
-            //    setup-object DML only → no mixed-DML).
-            if (String.isNotBlank(accessPermSetName)) {
-                result.permSetAssigned = assignPermissionSet(accessPermSetName);
+            // 4) Resolve the BotDefinition we just created (the access grant needs its Id,
+            //    not the bundle/Bot id) and grant agent access through the permission set.
+            BotDefinition deployed = findBotDefinition(uniqueApiName);
+            if (deployed != null) {
+                result.botDefinitionId = deployed.Id;
+                if (String.isNotBlank(accessPermSetName)) {
+                    result.accessGranted = grantAgentAccess(accessPermSetName, deployed.Id);
+                }
             }
 
             result.success = true;
-            result.message = 'Agent published and activated.';
+            result.message = result.accessGranted
+                ? 'Agent published, activated, and you now have access — open it from the Agentforce panel.'
+                : 'Agent published and activated.';
             return result;
         } catch (DeployException de) {
             throw new AuraHandledException(de.getMessage());
@@ -111,7 +149,69 @@ public with sharing class NextGenAgentDeployer {
         }
     }
 
-    // ── Connect API calls ────────────────────────────────────────────────────────────
+    // ── Agent existence / status (BotDefinition) ───────────────────────────────────────
+
+    /** Returns the BotDefinition with this developer_name, or null if none exists. */
+    private static BotDefinition findBotDefinition(String developerName) {
+        List<BotDefinition> bots = [
+            SELECT Id, DeveloperName, MasterLabel
+            FROM BotDefinition
+            WHERE DeveloperName = :developerName
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        return bots.isEmpty() ? null : bots[0];
+    }
+
+    /** True if any BotVersion of this agent is Active. */
+    private static Boolean isAnyVersionActive(String developerName) {
+        return [
+            SELECT COUNT()
+            FROM BotVersion
+            WHERE BotDefinition.DeveloperName = :developerName AND Status = 'Active'
+            WITH USER_MODE
+        ] > 0;
+    }
+
+    // ── Runtime agent-access grant (the rename-proof part) ─────────────────────────────
+
+    /**
+     * Grants agent access by adding the BotDefinition to the named permission set as a
+     * SetupEntityAccess row — the data-layer form of an `agentAccesses` entry. Pointing at
+     * the BotDefinition Id (not a name) means the grant always references the real agent,
+     * even if it was renamed on a collision. Idempotent; setup-object DML (no mixed-DML).
+     *
+     * @return true if access is in place (granted now or already present).
+     */
+    @TestVisible
+    private static Boolean grantAgentAccess(String permSetName, Id botDefinitionId) {
+        if (String.isBlank(permSetName) || botDefinitionId == null) {
+            return false;
+        }
+        List<PermissionSet> sets = [
+            SELECT Id FROM PermissionSet WHERE Name = :permSetName WITH USER_MODE LIMIT 1
+        ];
+        if (sets.isEmpty()) {
+            return false;
+        }
+        Id psId = sets[0].Id;
+        List<SetupEntityAccess> existing = [
+            SELECT Id FROM SetupEntityAccess
+            WHERE ParentId = :psId AND SetupEntityId = :botDefinitionId
+            WITH SYSTEM_MODE LIMIT 1
+        ];
+        if (!existing.isEmpty()) {
+            return true; // already granted
+        }
+        // SetupEntityType is auto-derived from SetupEntityId and is not writeable.
+        Database.SaveResult sr = Database.insert(
+            new SetupEntityAccess(ParentId = psId, SetupEntityId = botDefinitionId),
+            false
+        );
+        return sr.isSuccess();
+    }
+
+    // ── Connect API calls ──────────────────────────────────────────────────────────────
 
     /**
      * Returns an agent apiName not already in use. If `desired` is free it is returned
@@ -264,33 +364,9 @@ public with sharing class NextGenAgentDeployer {
         return resources[0].Body.toString();
     }
 
-    /** Idempotently assigns a permission set (by API name) to the running user. */
-    private static Boolean assignPermissionSet(String permSetName) {
-        List<PermissionSet> sets = [
-            SELECT Id FROM PermissionSet WHERE Name = :permSetName WITH USER_MODE LIMIT 1
-        ];
-        if (sets.isEmpty()) {
-            return false;
-        }
-        Id psId = sets[0].Id;
-        Id userId = UserInfo.getUserId();
-        List<PermissionSetAssignment> existing = [
-            SELECT Id FROM PermissionSetAssignment
-            WHERE AssigneeId = :userId AND PermissionSetId = :psId WITH USER_MODE LIMIT 1
-        ];
-        if (!existing.isEmpty()) {
-            return true; // already assigned
-        }
-        Database.SaveResult sr = Database.insert(
-            new PermissionSetAssignment(AssigneeId = userId, PermissionSetId = psId),
-            false
-        );
-        return sr.isSuccess();
-    }
-
     // ── DTOs ───────────────────────────────────────────────────────────────────────
 
-    /** The outcome of a deploy → publish → activate run. */
+    /** The outcome of an install / deploy → publish → activate run. */
     public class Result {
         @AuraEnabled public Boolean success = false;
         @AuraEnabled public String message;
@@ -299,7 +375,9 @@ public with sharing class NextGenAgentDeployer {
         @AuraEnabled public String bundleVersionId;
         @AuraEnabled public String publishedBotId;
         @AuraEnabled public String publishedBotVersionId;
+        @AuraEnabled public Id botDefinitionId;
         @AuraEnabled public Boolean activated = false;
-        @AuraEnabled public Boolean permSetAssigned = false;
+        @AuraEnabled public Boolean alreadyExisted = false;
+        @AuraEnabled public Boolean accessGranted = false;
     }
 }

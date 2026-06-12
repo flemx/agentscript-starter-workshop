@@ -1,67 +1,135 @@
-# AGENTS.md — how to work in this workspace (lean)
+# AGENTS.md — Agentforce Hackathon
 
-This is a **Salesforce DX (Agentforce) project** wrapped in an **AI Command Center**: a self-evolving,
-shareable cockpit that *supports* the real build. Two faces: the **HTML portal**
-(`command-center/index.html`) is for humans; **`PROGRESS.md`** is the running log for agents. The
-harness lives entirely under `command-center/`; the active project lives under
-`projects/agentforce-hackathon/` and the deployable Salesforce source under `force-app/`. Keep both
-faces current; never put secrets or raw chat logs in either.
-
-> **Full mechanics** (portal data-flow, the session-capture pipeline, every script, reuse,
-> versioning) are in **`command-center/HARNESS.md`** — read it on demand when working *on the harness*.
-
-## Salesforce work → use the pre-installed skills
-For the actual Agentforce build (Agent Script `.agent` bundles, LWC components, permission sets,
-Apex, metadata deploy, agent testing), **prefer the skills under `.agents/skills/`** — e.g.
-`developing-agentforce`, `deploying-metadata`, `generating-lwc-components`,
-`generating-permission-set`, `generating-apex`, `testing-agentforce`. They encode current Agentforce
-DX conventions; don't reinvent them from memory.
-
-## Orient (start of every session)
-1. **`projects/agentforce-hackathon/GOALS.md`** — mission, goals, constraints. Single source of truth
-   (imported below, so it's already in context). If it disagrees with the portal, **GOALS.md wins** —
-   fix the portal.
-2. **`PROGRESS.md`** — what's done, open questions, next steps.
-
-## Keep the project state current (per unit of work — same cadence as commits)
-The hook *renders* the portal automatically but **cannot invent facts**. When you finish a meaningful
-unit of work, before you commit, update the **source** so the portal reflects it. This is a checklist,
-not optional:
-1. **`PROGRESS.md`** — add a `## Log` entry (newest at top, absolute dates) + overwrite **Current State**:
-   ```markdown
-   ## YYYY-MM-DD — <title>
-   - ✅ <done> — <why/outcome>   🔧 <decision> — <rationale>   ❓ <open question>   ⏭️ <next step>
-   ```
-2. **`command-center/data/work-items.json`** — if the work is a new/changed task or research round,
-   **add or update its item** (status, dates, `outcome`, `overview`). The hook auto-associates sessions
-   to *existing* items but never creates them. If the unit produced a doc (runbook, spec, plan), link it
-   via `reportRef` (repo-relative `.md`) so the portal renders it inline.
-3. **`GOALS.md` / `research.json`** — update if goals shifted or a finding was verified.
-
-Skipping step 2 is why work can vanish from the cockpit even though the hook ran. Treat "update
-PROGRESS + work-items" as part of the same ritual as the commit.
-
-## The portal maintains itself — don't fight it
-A `Stop` hook regenerates the portal + agentic history **every turn** (deterministically, non-blocking)
-from the source files above. **Never hand-edit `command-center/portal-data.js` or `sessions-data.js`** —
-they're auto-generated. To change portal content, edit the source, then (if needed)
-`node command-center/scripts/build_portal_data.mjs`.
-
-## Security & secrets (NON-NEGOTIABLE)
-- **Never commit secrets.** `.env`/keys/tokens are gitignored; the gateway key is in
-  `command-center/research/.env` (copy from `.env.example`). Never paste a key into any committed
-  file, PROGRESS.md, or the portal. **This package is handed to customers** — keep it clean.
-- **Never commit raw chat logs.** Raw transcripts + full session timelines are gitignored; only
-  sanitized metadata (`command-center/data/sessions/index.json`) + `portal-data.js` (no full text) are committed.
-- A PreToolUse hook scans staged diffs for keys. If it blocks a commit, **fix it** — never `--no-verify`.
-
-## Git hygiene
-Commit meaningful units with clear messages (the user wants regular commits). End commit messages with
-the workspace's Co-Authored-By trailer. Keep "clone and open" working for the portal — no build steps /
-external deps that break the single-file portal. (The SFDX project keeps its own tooling: `sf`, prettier.)
+This file is the single source of truth for **what we're building, why, and where it stands.**
+Read it first. Detailed goals live in `projects/agentforce-hackathon/GOALS.md` (imported at the end);
+the dated running log lives in `PROGRESS.md`.
 
 ---
 
-> Project-specific context is imported below — **read it; it defines the actual mission.**
+## Purpose
+
+We're running a **two-hour, hands-on workshop** where customers who are **new to Agentforce** build
+their **own** AI agent — with no code and no Salesforce internals knowledge. They walk away with a
+working agent they made themselves.
+
+There are **two deliverables, kept in sync**:
+
+1. **The Salesforce package** (`force-app/`) — a single **unlocked package** the attendee installs into
+   their own sandbox. It carries everything that *can* be packaged: permission sets, supporting Apex,
+   LWCs (a launchpad + a note-capture/viewer suite), a Lightning app + Home page, and the **starter
+   agent's Agent Script source** (shipped as a Static Resource). Install is a single link — no CLI, no
+   Setup spelunking.
+
+2. **The workshop web app** (`web-app/`) — a self-guided, step-by-step React guide (Vite) that walks a
+   non-expert from zero to a working agent: get an org → install the package → build the agent in Agent
+   Studio → add actions → preview → test. **Live on Heroku.**
+
+### The use case — Employee Agent V1 (a meeting-note agent)
+A conversational agent that takes notes or a meeting transcript and turns them into action: **logs the
+notes** to a record, **summarizes** them, **creates follow-up tasks**, and **drafts a follow-up email**.
+It's the simplest way for a newcomer to grasp the mechanics — **agent · instructions · actions** — before
+tackling more complex use cases. It's the `Note_taking_agent` whose Agent Script lives in `force-app/`.
+
+### The workshop flow
+- **Part A — guided build:** write reasoning instructions → add the Note + Summarize actions from the
+  asset library → preview → commit a version → test on a record.
+- **Part B — free exercise:** extend it (draft email, Query Records, Search Web, fetch tasks, voice/image
+  capture) — start simple and build up.
+
+---
+
+## What a package CAN'T carry (handled at runtime from the launchpad)
+
+A package installs metadata, but three things can only happen *after* install, in the running org. The
+**`workshopLaunchpad` LWC** + Apex do these on a button click — no CLI:
+
+1. **Permission-set assignment** to the running user — `WorkshopSetupController.runSetup()`. (A package
+   ships perm sets but can't auto-assign them on install.)
+2. **Starter-agent install** — `NextGenAgentDeployer.deployAgent()` creates → publishes → **activates**
+   the agent via the internal Next-Gen Authoring (NGA) Connect API self-callout. (`AiAuthoringBundle` —
+   the agent itself — is the one metadata type that genuinely can't be packaged.) **Reuse-first:** if the
+   agent already exists it is *not* duplicated; `forceNew=true` deploys a fresh `_2`/`_3` copy instead.
+3. **Agent-access grant** — inserts a `SetupEntityAccess` row pointing the workshop permission set at the
+   **actual deployed `BotDefinition`**. This is why the packaged perm set carries **no static
+   `agentAccesses`** (impossible — the agent doesn't exist at build time) and why the reference stays
+   correct even when the agent is renamed.
+
+---
+
+## Current status (2026-06-12)
+
+**The package is complete and proven end-to-end on a clean org.**
+
+- ✅ **Single self-contained package `0.1.0.7`** (`04tWt000000GFCnIAO`) — installs everywhere with **zero
+  post-deploy**. The note suite is now *in* the package (no separate deploy step). Built with
+  `--skip-validation` so Apex compiles at install time in the target org (the build scratch org lacks the
+  Agentforce/Einstein/Notes features).
+- ✅ **Installs on any org type** — verified on the workshop sandbox AND a clean Agentforce **scratch org**.
+  `HtmlNoteService` references `ContentNote` dynamically (Schema API + an `isAvailable()` guard) so it
+  compiles even where Notes is absent (scratch / trial / the Agentforce Labs **backup org**) and
+  self-disables there.
+- ✅ **Runtime flow validated on a clean org:** install → Run Setup assigns all 4 perm sets → deploy
+  starter agent → activate → access granted → re-run reuses (no duplicate) → force-new makes a distinct
+  agent with its own access row.
+- ✅ **Workshop guide LIVE on Heroku** — <https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/>
+  — with the current install URL.
+- ✅ **35/35 Apex tests pass.**
+
+### What's left
+- **Action assets (G4):** the **Log/Create Note** Flow + a **Summarize** Prompt Template, exposed in the
+  agent asset library so attendees just *add* them. Then the Part-B add-ons (Query Records, draft email,
+  Search Web, fetch tasks).
+- **Finalize the starter agent** wording (simple, non-coding reasoning instructions) and decide
+  start-with-no-actions vs pre-wired.
+- **Remaining guide polish.**
+
+> See `PROGRESS.md` for the full dated log and `GOALS.md` (below) for goals G1–G8 and success criteria.
+
+---
+
+## Where things live
+
+| Path | What |
+|---|---|
+| `force-app/main/default/` | **The package payload** — Apex (`classes/`), LWCs (`lwc/`), VF page, perm sets, app/tab/FlexiPage, the `Note_taking_agent` Agent Script + its `_afscript` Static Resource, `Workshop_Settings__mdt`. |
+| `web-app/` | **The workshop guide** — Vite/React; content in `src/components/MainContent.jsx`; deploys to Heroku (see `web-app/CLAUDE.md`). |
+| `.agents/skills/` | **Pre-installed Agentforce build skills** — `developing-agentforce`, `deploying-metadata`, `generating-lwc-components`, `generating-permission-set`, `generating-apex`, `testing-agentforce`, etc. **Use these for the real Salesforce work.** |
+| `projects/agentforce-hackathon/GOALS.md` | Detailed goals, hard constraints, success criteria (imported below). |
+| `PROGRESS.md` | Dated running log — what's done, decisions, next steps. |
+| `docs/` | Reports, screenshots, slide decks, the NGA API reference, optional-metadata. |
+| `config/`, `manifest/`, `sfdx-project.json` | Standard SFDX project config. `config/project-scratch-def.json` is the Agentforce-enabled scratch-org def. |
+| `scripts/secret_guard.mjs` | Commit-time secret scanner (wired as a PreToolUse hook). |
+
+### Orgs
+- **`hackathon`** — production demo org, also the **DevHub** (builds packages).
+- **`hackathon_sandbox`** — primary install/test target.
+- **`wf_clean_test`** — a clean Agentforce scratch org used to prove the from-scratch flow.
+- **`my-agentforce-org`** — Agentforce Labs trial = the workshop **backup org** (note: it lacks
+  ContentNote, which the dynamic note code tolerates).
+
+---
+
+## How to work here
+
+- **For Salesforce metadata / agent / LWC / Apex work, prefer the `.agents/skills/` skills** over guessing
+  — they encode current Agentforce DX conventions.
+- **Build the package:** `sf package version create --package "Employee Agent Workshop"
+  --installation-key-bypass --skip-validation --wait 30 --target-dev-hub hackathon`
+  (`--skip-validation` is required — the build org lacks the runtime features).
+- **Install:** `sf package install --package <04t...> --target-org <org> --wait 20 --no-prompt`.
+- **Keep the two deliverables in sync** — when the package's perms/actions change, update the matching
+  guide step.
+- **Honor the hard constraints in `GOALS.md`** — runtime agent deploy, non-expert self-service, a working
+  backup-org path.
+- **Log meaningful work** in `PROGRESS.md` (newest first, absolute dates).
+
+## Security & secrets (non-negotiable)
+- **Never commit secrets.** `.env` / keys / tokens are gitignored. Never paste a key into any committed
+  file (including `PROGRESS.md`). **This package is handed to customers — keep it clean.** A PreToolUse
+  hook (`scripts/secret_guard.mjs`) scans staged diffs and blocks commits containing keys; if it fires,
+  **fix it** — never `--no-verify`.
+- Use least-privilege permission sets; everything installable into a customer org without manual Setup.
+
+---
 
 @projects/agentforce-hackathon/AGENTS.md

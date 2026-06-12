@@ -11,9 +11,27 @@
  *
  * Why HTML matters here: it unlocks nicely-formatted meeting summaries and a polished
  * "workshop report" deliverable straight out of the agent.
+ *
+ * PORTABILITY — why ContentNote is referenced dynamically.
+ *   `ContentNote` is a standard object, but it is NOT present in every org type: real
+ *   customer sandboxes (production copies) have it, but scratch orgs and some trial orgs
+ *   (e.g. the Agentforce Labs backup org used in the workshop) do not surface it. A STATIC
+ *   `new ContentNote()` reference would fail to COMPILE on install in those orgs, which would
+ *   block the whole package. To keep this in a single package that installs EVERYWHERE with
+ *   no post-deploy step, we touch ContentNote only via the dynamic Schema API
+ *   (`Schema.getGlobalDescribe()` + `SObject.put`). Where Notes isn't available the class
+ *   still compiles and `isAvailable()` reports false, so callers degrade gracefully.
  */
 public with sharing class HtmlNoteService {
     public class HtmlNoteException extends Exception {}
+
+    private static final String CONTENT_NOTE = 'ContentNote';
+
+    /** True when this org supports ContentNote (real sandboxes do; scratch/trial may not). */
+    @AuraEnabled(cacheable=true)
+    public static Boolean isAvailable() {
+        return Schema.getGlobalDescribe().containsKey(CONTENT_NOTE);
+    }
 
     // ContentNote only persists a restricted set of HTML tags; everything else is stripped
     // on insert. We pre-sanitize to that whitelist so callers get predictable output and we
@@ -37,11 +55,17 @@ public with sharing class HtmlNoteService {
         if (String.isBlank(title)) {
             throw new HtmlNoteException('A note title is required.');
         }
+        if (!isAvailable()) {
+            throw new AuraHandledException(
+                'Salesforce Notes (ContentNote) isn\'t available in this org, so an HTML note can\'t be created here.'
+            );
+        }
         try {
-            ContentNote note = new ContentNote();
-            note.Title = title.left(255);
+            // Dynamic ContentNote creation (see class header on portability).
+            SObject note = Schema.getGlobalDescribe().get(CONTENT_NOTE).newSObject();
+            note.put('Title', title.left(255));
             // ContentNote.Content is HTML stored as a Blob — supply HTML directly, do NOT escape.
-            note.Content = Blob.valueOf(sanitize(String.isBlank(htmlBody) ? '<p></p>' : htmlBody));
+            note.put('Content', Blob.valueOf(sanitize(String.isBlank(htmlBody) ? '<p></p>' : htmlBody)));
             insert note;
 
             if (String.isNotBlank(linkToId)) {

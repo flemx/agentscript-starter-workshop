@@ -1,22 +1,29 @@
 {
-  "orgName": "dfleminks company",
+  "orgName": "Agentforce Scratch Org",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi", "Einstein1AIPlatform"],
+  "hasSampleData": true,
+  "features": [
+    "EnableSetPasswordInApi",
+    "Einstein1AIPlatform",
+    "Chatbot"
+  ],
   "settings": {
-    "notesSettings": {
-      "enableNotes": true
-    },
     "lightningExperienceSettings": {
-      "enableS1DesktopEnabled": true
+      "enableS1DesktopEnabled": true,
+      "enableUsersAreLightningOnly": true,
+      "enableLexEndUsersNoSwitching": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
     },
+    "einsteinGptSettings": {
+      "enableEinsteinGptPlatform": true
+    },
     "agentPlatformSettings": {
       "enableAgentPlatform": true
     },
-    "einsteinGptSettings": {
-      "enableEinsteinGptPlatform": true
+    "botSettings": {
+      "enableBots": true
     }
   }
 }

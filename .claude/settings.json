@@ -1,5 +1,5 @@
 {
-  "$comment": "Project-level settings for the Agentforce Hackathon / AI Command Center workspace. These MERGE with the user's global ~/.claude/settings.json (telemetry hooks etc. still run). The secret-guard PreToolUse hook blocks any git commit whose staged diff contains an API key/token — enforcing AGENTS.md security rules (this package is handed to customers). Harness scripts live under command-center/scripts/. See command-center/HARNESS.md.",
+  "$comment": "Project settings for the Agentforce Hackathon workspace. Merges with the user's global ~/.claude/settings.json. The secret-guard PreToolUse hook blocks any git commit whose staged diff contains an API key/token — this package is handed to customers, so it must never contain secrets.",
   "hooks": {
     "PreToolUse": [
       {
@@ -7,20 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/command-center/scripts/secret_guard.mjs\""
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/command-center/scripts/capture_session.mjs\"",
-            "async": true,
-            "timeout": 120
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/secret_guard.mjs\""
           }
         ]
       }
@@ -28,14 +15,6 @@
   },
   "permissions": {
     "allow": [
-      "Bash(node command-center/scripts/gateway.mjs:*)",
-      "Bash(node command-center/scripts/update_progress.mjs:*)",
-      "Bash(node command-center/scripts/capture_session.mjs:*)",
-      "Bash(node command-center/scripts/build_portal_data.mjs:*)",
-      "Bash(node command-center/scripts/summarize_session.mjs:*)",
-      "Bash(node command-center/scripts/classify_session.mjs:*)",
-      "Bash(node command-center/scripts/parse_goals.mjs:*)",
-      "Bash(node command-center/scripts/build_versions.mjs:*)",
       "Bash(git add:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
@@ -43,8 +22,13 @@
       "Bash(git commit:*)",
       "Bash(sf project deploy:*)",
       "Bash(sf project retrieve:*)",
+      "Bash(sf package version create:*)",
+      "Bash(sf package install:*)",
+      "Bash(sf package installed list:*)",
       "Bash(sf org list:*)",
       "Bash(sf org display:*)",
+      "Bash(sf org open:*)",
+      "Bash(sf org create scratch:*)",
       "Bash(sf apex run:*)",
       "Bash(sf data query:*)"
     ]
