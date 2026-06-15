@@ -140,7 +140,7 @@ public with sharing class NoteCaptureAI {
         input.isPreview = false;
         input.inputParams = valueMap;
         input.additionalConfig = new ConnectApi.EinsteinLlmAdditionalConfigInput();
-        input.additionalConfig.applicationName = 'PromptTemplateGenerations';
+        input.additionalConfig.applicationName = 'PromptBuilderPreview';
 
         ConnectApi.EinsteinPromptTemplateGenerationsRepresentation result =
             ConnectApi.EinsteinLLM.generateMessagesForPromptTemplate(PROMPT_TEMPLATE, input);
