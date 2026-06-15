@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Employee Agent Workshop — Fresh-Org Test Report</title>
+<style>
+  :root {
+    --navy: #032d60; --blue: #0176d3; --cyan: #0aa3e0; --ink: #181818; --muted: #5b7299;
+    --line: #e0e9f6; --bg: #f4f7fc; --ok: #2e844a; --warn: #b3700a; --warnbg: #fff5ea; --okbg: #ebf7ee;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Salesforce Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    color: var(--ink); background: radial-gradient(900px 480px at 50% -140px, #dfeaff, var(--bg) 60%); line-height: 1.6; padding: 28px 18px 70px; }
+  .page { max-width: 960px; margin: 0 auto; }
+  .hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #061330, #13357f 48%, #0aa3e0);
+    color: #fff; border-radius: 22px; padding: 34px 38px; box-shadow: 0 20px 50px rgba(9,30,70,.3); }
+  .hero .kicker { text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 800; color: #bfe0ff; }
+  .hero h1 { font-size: 28px; font-weight: 800; letter-spacing: -.4px; margin: 8px 0 8px; }
+  .hero p { color: #e2edff; font-size: 14.5px; max-width: 70ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .meta span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 999px;
+    padding: 5px 13px; font-size: 12.5px; font-weight: 600; }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; box-shadow: 0 10px 26px rgba(13,40,90,.07); }
+  .stat .n { font-size: 26px; font-weight: 800; color: var(--navy); }
+  .stat .l { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 26px; margin-top: 18px; box-shadow: 0 10px 26px rgba(13,40,90,.07); }
+  .card h2 { font-size: 19px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .card h2 .num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--navy);
+    color: #fff; font-size: 13px; margin-right: 10px; vertical-align: middle; }
+  .card > p.lead { color: var(--muted); margin-bottom: 14px; font-size: 14px; }
+  .pill { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; vertical-align: middle; }
+  .pass { background: var(--okbg); color: var(--ok); }
+  .partial { background: var(--warnbg); color: var(--warn); }
+  figure { margin: 14px 0 4px; }
+  figure img { width: 100%; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 22px rgba(13,40,90,.10); display: block; }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 7px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  ul.checks { list-style: none; margin: 8px 0 0; }
+  ul.checks li { padding: 7px 0 7px 28px; position: relative; font-size: 14px; border-bottom: 1px solid #f0f4fa; }
+  ul.checks li:last-child { border-bottom: none; }
+  ul.checks li::before { content: '✓'; position: absolute; left: 0; top: 7px; color: var(--ok); font-weight: 800; }
+  ul.checks li.warn::before { content: '!'; color: var(--warn); }
+  .note { border-left: 4px solid var(--blue); background: #eef4fc; border-radius: 8px; padding: 14px 16px; margin: 14px 0; font-size: 13.5px; }
+  .note.amber { border-left-color: var(--warn); background: var(--warnbg); }
+  code { font-family: ui-monospace, Menlo, monospace; background: #eef3fb; color: var(--navy); padding: 1px 6px; border-radius: 5px; font-size: 12.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-size: 12.5px; }
+  tr:nth-child(even) td { background: #f7faff; }
+  .foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 26px; }
+  @media (max-width: 720px) { .summary, .grid2 { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="kicker">Agentforce · Employee Agent Workshop</div>
+    <h1>Fresh-Org Test Report</h1>
+    <p>End-to-end verification of the workshop package and self-guided web app: a brand-new
+       Agentforce scratch org, the package installed from the link, and the guide followed step by step —
+       Run Setup → install the agent → build &amp; preview → log a rich Note.</p>
+    <div class="meta">
+      <span>Date: 15 June 2026</span>
+      <span>Org: wf_demo (fresh scratch)</span>
+      <span>Package: 04tWt000000GHOHIA4</span>
+      <span>Apex tests: 20/20 pass</span>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="stat"><div class="n">36/36</div><div class="l">Components deployed</div></div>
+    <div class="stat"><div class="n">20/20</div><div class="l">Apex tests passing</div></div>
+    <div class="stat"><div class="n">9</div><div class="l">Guide steps verified</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">Manual step (Notes)</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Result at a glance</h2>
+    <ul class="checks">
+      <li><b>Package installs on a fresh org</b> — the new version installed cleanly into a brand-new Agentforce scratch org.</li>
+      <li><b>App tabs</b> — Workshop Home · Agentforce Studio · <b>Enhanced Notes</b> all present (tab renamed as requested).</li>
+      <li><b>Run Setup</b> — assigned all 4 permission sets; a clear "Setup Complete!" modal points to the next step.</li>
+      <li><b>Install the starter agent</b> — one click deployed, published &amp; activated <b>Employee Agent V1</b> via the NGA API and granted access.</li>
+      <li><b>Agent appears in Agentforce Studio</b> — Employee Agent V1, Version 1 (Active).</li>
+      <li><b>Preview / Live Test Mode</b> — the agent summarized the meeting notes correctly.</li>
+      <li><b>Create Note action + Enhanced Notes viewer</b> — a rich HTML note rendered faithfully and opened directly via <code>?id=</code>.</li>
+      <li class="warn"><b>Notes must be enabled once (UI only)</b> — scratch/trial orgs need Setup → Notes Settings → Enable Notes; the guide now covers this.</li>
+      <li class="warn"><b>Starter agent confirmation loop</b> — the v1 instructions wait for a confirmation form before logging; the guide's richer instructions (Part A, step 5) resolve this.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">1</span>Workshop launchpad on a fresh org <span class="pill pass">PASS</span></h2>
+    <p class="lead">App Launcher → Employee Agent Workshop. The Home page shows the three-step launchpad and the new app tabs.</p>
+    <figure><img src="01-workshop-home.png" alt="Workshop Home" /><figcaption>Workshop Home — note the new <b>Agentforce Studio</b> and <b>Enhanced Notes</b> tabs.</figcaption></figure>
+    <figure><img src="02-launchpad-scrolled.png" alt="Permissions + agent install card" /><figcaption>All four permission sets start "Not yet assigned"; the "Install the starter agent (Employee Agent V1)" card is a clear third step.</figcaption></figure>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2</span>Run post-install setup <span class="pill pass">PASS</span></h2>
+    <p class="lead">One click assigns the permission sets, then a modal guides the attendee to the next step.</p>
+    <div class="grid2">
+      <figure><img src="03-run-setup.png" alt="Setup complete modal" /><figcaption>The "Setup Complete!" modal — points to Step 3 and offers "Open Agentforce Studio".</figcaption></figure>
+      <figure><img src="04-agent-installed.png" alt="Permissions assigned" /><figcaption>All four permission sets now show green "Assigned to you".</figcaption></figure>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3</span>Install the starter agent <span class="pill pass">PASS</span></h2>
+    <p class="lead">The launchpad deploys, publishes and activates the Agent Script agent at runtime (no CLI), then grants access.</p>
+    <figure><img src="06-agent-install-progress.png" alt="Agent published and activated" /><figcaption>✅ "Agent published, activated, and you now have access." (Re-running is safe — it won't duplicate.)</figcaption></figure>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">4</span>Agent appears in Agentforce Studio <span class="pill pass">PASS</span></h2>
+    <p class="lead">Opening the real Agentforce Studio app shows the agent in the list and the full builder.</p>
+    <div class="grid2">
+      <figure><img src="08-studio-real.png" alt="Agents list" /><figcaption>Employee Agent V1 in the Agents list.</figcaption></figure>
+      <figure><img src="09-agent-builder.png" alt="Agent Builder" /><figcaption>Agent Builder — Version 1 (Active), with the Notes Agent subagent.</figcaption></figure>
+    </div>
+    <div class="note amber">
+      <b>Finding:</b> The standard <code>standard-AgentforceStudio</code> tab embedded inside a custom app shows an
+      "Oops! Wrong spot" panel and a "Take Me There" button that opens the dedicated Agentforce Studio app. The tab is a
+      convenient shortcut, but Agents only render in their own app — worth a one-line note in the guide.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">5</span>Preview — Live Test Mode <span class="pill pass">PASS</span></h2>
+    <p class="lead">Talking to the agent in the centre panel; it summarized the meeting notes, with the reasoning trace on the right.</p>
+    <div class="grid2">
+      <figure><img src="10-preview-open.png" alt="Live Test Mode" /><figcaption>Live Test Mode open (centre panel).</figcaption></figure>
+      <figure><img src="11-preview-response.png" alt="Agent summary" /><figcaption>The agent's summary + the green reasoning trace in the Interaction Summary.</figcaption></figure>
+    </div>
+    <div class="note amber">
+      <b>Finding:</b> The <b>v1 starter instructions</b> ask the agent to wait for a confirmation form before logging, so a plain
+      "yes" loops. This is expected for the bare starter — Part A step 5 of the guide upgrades the instructions (richer HTML
+      summary + "create a standalone note, don't ask") which resolves it.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">6</span>Create Note action + Enhanced Notes viewer <span class="pill pass">PASS</span></h2>
+    <p class="lead">The Apex Create Note action returns a <code>noteUrl</code>; opening it lands directly on that note in the Enhanced
+       Notes viewer, with the rich inline-styled HTML rendered faithfully (the previous viewer stripped these styles).</p>
+    <figure><img src="14-enhanced-notes-viewer.png" alt="Enhanced Notes viewer" /><figcaption>Enhanced Notes — opened straight to one note via <code>?id=…</code>; the gradient header band and accent-bordered Executive Summary render correctly. Download PDF top-right.</figcaption></figure>
+    <figure><img src="15-note-rendered-full.png" alt="Full rendered note" /><figcaption>Executive Summary, Highlights and Action Items. (ContentNote's sanitizer drops list bullets and pill backgrounds — a known platform limit — but headings, the callout and structure survive.)</figcaption></figure>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">7</span>Enabling Notes (the one manual step) <span class="pill partial">1 CLICK</span></h2>
+    <p class="lead">Salesforce Notes can't be enabled by a package or API — it's a UI-only org preference. On a fresh scratch org the
+       Create Note action correctly reports a clean message until Notes is turned on.</p>
+    <figure><img src="13-notes-enabled.png" alt="Enable Notes" /><figcaption>Setup → Notes Settings → Enable Notes → Save. After this, <code>HtmlNoteService.isAvailable()</code> returns true and notes are created. (Most real sandboxes already have this on.)</figcaption></figure>
+    <div class="note">
+      Verified via Apex: before — <code>CONTENTNOTE_AVAILABLE=false</code>, clean message returned (no crash);
+      after enabling — <code>CONTENTNOTE_AVAILABLE=true</code>, <code>Note "…" created</code>.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Environment &amp; build</h2>
+    <table>
+      <tr><th>Item</th><th>Value</th></tr>
+      <tr><td>Test org</td><td>wf_demo — fresh Agentforce scratch org (00Ddh000007tSu5)</td></tr>
+      <tr><td>Package version</td><td><code>04tWt000000GHOHIA4</code> (beta — installs on any org via the link)</td></tr>
+      <tr><td>Sandbox deploy</td><td>hackathon_sandbox — 36/36 components, Succeeded</td></tr>
+      <tr><td>Apex tests</td><td>HtmlNoteServiceTest, NoteViewerControllerTest, NextGenAgentDeployerTest — 20/20 pass</td></tr>
+      <tr><td>Production promote</td><td>Blocked — a released version needs a validated build with coverage, but the
+        Einstein-dependent classes can't compile in a feature-less build org (hence the long-standing <code>--skip-validation</code>).
+        The beta version still installs everywhere.</td></tr>
+    </table>
+  </div>
+
+  <div class="foot">Generated from an automated browser run · Agentforce Employee Agent Workshop · 15 June 2026</div>
+</div>
+</body>
+</html>

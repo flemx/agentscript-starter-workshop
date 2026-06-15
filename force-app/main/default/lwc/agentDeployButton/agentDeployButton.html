@@ -39,8 +39,8 @@
                     <template if:true={result.alreadyExisted}>ℹ️ </template>
                     <template if:false={result.alreadyExisted}>✅ </template>
                     {result.message}
-                    <template if:true={result.resolvedApiName}>
-                        <br/>Agent: <code>{result.resolvedApiName}</code>.
+                    <template if:true={agentLabel}>
+                        <br/>Agent: <strong>{agentLabel}</strong>.
                     </template>
                 </p>
             </div>
