@@ -18,16 +18,18 @@ private class NoteCaptureAITest {
     }
 
     @IsTest
-    static void processFilesReturnsMockCombined() {
-        NoteCaptureAI.mockResult = 'file text';
+    static void processFilesReturnsMock() {
+        NoteCaptureAI.mockResult = 'combined file description';
         ContentVersion a = makeFile('a.png', 'img-a');
         ContentVersion b = makeFile('b.png', 'img-b');
+        ContentVersion c = makeFile('c.png', 'img-c');
 
         Test.startTest();
-        String text = NoteCaptureAI.processFiles(new List<Id>{ a.Id, b.Id });
+        String text = NoteCaptureAI.processFiles(new List<Id>{ a.Id, b.Id, c.Id });
         Test.stopTest();
 
-        System.assertEquals('file text', text, 'Mock file text should be returned');
+        // All files go in one call — mock short-circuits before the template and returns as-is.
+        System.assertEquals('combined file description', text, 'Mock result should be returned directly');
     }
 
     @IsTest
@@ -36,6 +38,25 @@ private class NoteCaptureAITest {
         String text = NoteCaptureAI.processFiles(new List<Id>());
         Test.stopTest();
         System.assertEquals('', text, 'No files yields empty string');
+    }
+
+    @IsTest
+    static void processFilesRejectsMoreThanMax() {
+        ContentVersion a = makeFile('a.png', 'img-a');
+        ContentVersion b = makeFile('b.png', 'img-b');
+        ContentVersion c = makeFile('c.png', 'img-c');
+        ContentVersion d = makeFile('d.png', 'img-d');
+
+        Test.startTest();
+        Boolean threw = false;
+        try {
+            NoteCaptureAI.processFiles(new List<Id>{ a.Id, b.Id, c.Id, d.Id });
+        } catch (Exception e) {
+            threw = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(true, threw, 'More than ' + NoteCaptureAI.MAX_FILES + ' files should throw');
     }
 
     @IsTest

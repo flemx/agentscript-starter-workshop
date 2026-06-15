@@ -1,123 +1,145 @@
 <template>
-    <lightning-card title="Capture Meeting Notes" icon-name="standard:voice_call" class="capture-card">
-        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+    <div class="nc-root">
+        <!-- Header -->
+        <div class="nc-header">
+            <span class="nc-logo">
+                <lightning-icon icon-name="utility:einstein" variant="inverse" size="small"></lightning-icon>
+            </span>
+            <div class="nc-heading">
+                <h2 class="nc-title">Capture Meeting Notes</h2>
+                <p class="nc-subtitle">Attach files, record audio, or paste notes — then send to your agent</p>
+            </div>
+        </div>
 
-            <!-- 1. Audio recorder -->
-            <span class="section-label">1 &nbsp;Record audio (optional)</span>
-            <div class="recorder">
-                <button
-                    class={micButtonClass}
-                    onclick={toggleRecording}
-                    title="Record audio"
-                    aria-label="Record audio">
-                    <lightning-icon
-                        icon-name={micIcon}
-                        variant="inverse"
-                        size="medium">
-                    </lightning-icon>
-                </button>
+        <!-- Composer -->
+        <div
+            class={composerClass}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}>
 
-                <template if:true={isRecording}>
+            <!-- Attachment tray -->
+            <template if:true={hasAttachments}>
+                <div class="nc-tray">
+                    <template for:each={attachments} for:item="a">
+                        <div key={a.key} class="nc-chip">
+                            <template if:true={a.isImage}>
+                                <img src={a.thumbnailUrl} alt={a.name} class="nc-thumb" />
+                            </template>
+                            <template if:true={a.isFile}>
+                                <span class="nc-chip-icon">
+                                    <lightning-icon icon-name={a.iconName} size="small"></lightning-icon>
+                                </span>
+                            </template>
+                            <span class="nc-chip-meta">
+                                <span class="nc-chip-name">{a.name}</span>
+                            </span>
+                            <button
+                                class="nc-chip-x"
+                                data-key={a.key}
+                                onclick={removeFile}
+                                title="Remove"
+                                aria-label="Remove attachment">
+                                <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Live recording state -->
+            <template if:true={isRecording}>
+                <div class="nc-recording">
                     <div class="waveform">
                         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
                         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
                         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
                         <span class="bar"></span>
                     </div>
-                    <div class="timer">{timerDisplay}</div>
-                </template>
+                    <span class="nc-recording-label">Recording…</span>
+                    <span class="timer">{timerDisplay}</span>
+                </div>
+            </template>
 
-                <template if:false={isRecording}>
-                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_small">
-                        {recorderHint}
-                    </p>
-                </template>
+            <!-- File processing status -->
+            <template if:true={isProcessingFiles}>
+                <div class="nc-status">
+                    <lightning-spinner alternative-text="Reading files" size="small"></lightning-spinner>
+                    <span>Reading attached files…</span>
+                </div>
+            </template>
 
-                <template if:true={isTranscribing}>
-                    <div class="slds-m-top_small">
-                        <lightning-spinner alternative-text="Transcribing" size="small"></lightning-spinner>
-                        <span class="slds-text-body_small slds-m-left_small">Transcribing…</span>
-                    </div>
-                </template>
-            </div>
-
-            <!-- 2. File drop -->
-            <span class="section-label">2 &nbsp;Add files (images, docs — optional)</span>
-            <div
-                class={dropzoneClass}
-                ondragover={handleDragOver}
-                ondragleave={handleDragLeave}
-                ondrop={handleDrop}>
-                <lightning-icon icon-name="utility:upload" size="small"></lightning-icon>
-                <p class="slds-m-top_x-small">Drag &amp; drop files here, or
-                    <label class="slds-text-link" style="cursor:pointer">
-                        browse
-                        <input type="file" multiple onchange={handleFilePick} style="display:none" />
-                    </label>
-                </p>
-                <template if:true={hasFiles}>
-                    <div class="slds-m-top_small">
-                        <template for:each={files} for:item="f">
-                            <span key={f.key} class="file-chip">
-                                <lightning-icon icon-name="doctype:image" size="xx-small"></lightning-icon>
-                                {f.name}
-                            </span>
-                        </template>
-                    </div>
-                </template>
-                <template if:true={isProcessingFiles}>
-                    <div class="slds-m-top_small">
-                        <lightning-spinner alternative-text="Processing files" size="small"></lightning-spinner>
-                        <span class="slds-text-body_small slds-m-left_small">Reading {fileCount} file(s) in parallel…</span>
-                    </div>
-                </template>
-            </div>
-
-            <!-- 3. Pasted text -->
-            <span class="section-label">3 &nbsp;Or paste notes</span>
-            <lightning-textarea
-                name="pasted"
+            <!-- Text input -->
+            <textarea
+                class="nc-textarea"
                 value={pastedText}
                 onchange={handleTextChange}
-                placeholder="Paste or type meeting notes here…">
-            </lightning-textarea>
+                oninput={handleInput}
+                onkeydown={handleKeyDown}
+                placeholder="Paste or type meeting notes here…  (Enter to send · Shift+Enter for a new line)"></textarea>
 
-            <!-- Combined transcript preview -->
-            <template if:true={hasTranscript}>
-                <span class="section-label">Combined transcript</span>
-                <div class="slds-box slds-box_x-small slds-text-body_small" style="white-space:pre-wrap;max-height:160px;overflow:auto">
-                    {combinedTranscript}
-                </div>
+            <!-- Live speech caption — shows interim words while recording -->
+            <template if:true={interimText}>
+                <p class="nc-interim">{interimText}</p>
             </template>
 
-            <!-- 4. Send to agent -->
-            <span class="section-label">4 &nbsp;Send to an Employee Agent</span>
-            <div class="slds-grid slds-gutters slds-grid_vertical-align-end">
-                <div class="slds-col slds-size_2-of-3">
-                    <lightning-combobox
-                        name="agent"
-                        label="Agent"
-                        value={selectedAgent}
-                        options={agentOptions}
-                        onchange={handleAgentChange}
-                        placeholder="Choose an agent…">
-                    </lightning-combobox>
+            <!-- Action bar -->
+            <div class="nc-actions">
+                <div class="nc-actions-left">
+                    <button
+                        class="icon-btn"
+                        onclick={openFilePicker}
+                        disabled={attachDisabled}
+                        title="Attach files"
+                        aria-label="Attach files">
+                        <lightning-icon icon-name="utility:attach" size="small"></lightning-icon>
+                    </button>
+                    <input
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf,.doc,.docx,.txt"
+                        onchange={handleFilePick}
+                        style="display:none" />
+                    <button
+                        class={micButtonClass}
+                        onclick={toggleRecording}
+                        title={micTitle}
+                        aria-label={micTitle}>
+                        <lightning-icon icon-name={micIcon} size="small"></lightning-icon>
+                    </button>
+                    <button
+                        class="icon-btn"
+                        onclick={insertSample}
+                        title="Insert a sample meeting transcript"
+                        aria-label="Insert a sample meeting transcript">
+                        <lightning-icon icon-name="utility:file" size="small"></lightning-icon>
+                    </button>
                 </div>
-                <div class="slds-col slds-size_1-of-3">
-                    <lightning-button
-                        label="Send to agent"
-                        variant="brand"
-                        icon-name="utility:send"
+                <div class="nc-actions-right">
+                    <div class="nc-agent">
+                        <lightning-combobox
+                            name="agent"
+                            variant="label-hidden"
+                            value={selectedAgent}
+                            options={agentOptions}
+                            onchange={handleAgentChange}
+                            placeholder="Choose an agent…">
+                        </lightning-combobox>
+                    </div>
+                    <button
+                        class="send-btn"
                         disabled={sendDisabled}
                         onclick={handleSend}
-                        class="slds-m-bottom_xx-small">
-                    </lightning-button>
+                        title="Send to agent"
+                        aria-label="Send to agent">
+                        <lightning-icon icon-name="utility:send" variant="inverse" size="small"></lightning-icon>
+                    </button>
                 </div>
             </div>
-
-            <template if:true={error}>
-                <div class="slds-box slds-theme_error slds-m-top_small" role="alert">{error}</div>
-            </template>
         </div>
-    </lightning-card>
+
+        <template if:true={error}>
+            <div class="nc-error" role="alert">{error}</div>
+        </template>
+    </div>
 </template>
