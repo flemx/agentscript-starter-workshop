@@ -61,14 +61,17 @@ export default class NoteCapture extends LightningElement {
     }
 
     renderedCallback() {
-        // After we programmatically change the notes (e.g. inserting an audio transcript),
-        // grow the textarea to fit the new content.
+        // After a programmatic notes update (audio transcript, etc.) we must explicitly
+        // sync el.value because LWC's value={pastedText} binding won't override a textarea
+        // the user has already typed into (the browser owns the live DOM value).
         if (this._needsResize) {
             this._needsResize = false;
             const el = this.template.querySelector('.nc-textarea');
             if (el) {
+                el.value = this.pastedText;
                 el.style.height = 'auto';
                 el.style.height = `${el.scrollHeight}px`;
+                el.focus();
             }
         }
     }
