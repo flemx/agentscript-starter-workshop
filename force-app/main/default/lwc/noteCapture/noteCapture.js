@@ -3,6 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import uploadFile from '@salesforce/apex/NoteCaptureController.uploadFile';
 import listEmployeeAgents from '@salesforce/apex/NoteCaptureController.listEmployeeAgents';
 import processFiles from '@salesforce/apex/NoteCaptureAI.processFiles';
+import transcribeAudio from '@salesforce/apex/NoteCaptureAI.transcribeAudio';
 // Agentforce client (ACC) API — opens the agent side panel and submits an utterance.
 // Imported statically (LWC disallows dynamic import); calls are guarded at runtime so the
 // component still works where the panel isn't available (it then falls back to an event).
@@ -212,32 +213,39 @@ export default class NoteCapture extends LightningElement {
     async _handleMediaStop(stream) {
         try {
             stream.getTracks().forEach((t) => t.stop());
-            const blob = new Blob(this._audioChunks, { type: 'audio/mp4' });
+            const mimeType = this._mediaRecorder.mimeType || 'audio/mp4';
+            const ext = mimeType.includes('webm') ? 'webm' : 'm4a';
+            const blob = new Blob(this._audioChunks, { type: mimeType });
             const base64 = await this.blobToBase64(blob);
             this.isProcessingFiles = true;
-            const fileName = `voice-note-${Date.now()}.m4a`;
+            const fileName = `voice-note-${Date.now()}.${ext}`;
             const saved = await uploadFile({
                 fileName,
                 base64,
                 linkToId: this.recordId || ''
             });
-            // Treat exactly like a file attachment — runs through processFiles (prompt template).
-            const kind = 'audio';
-            this.files = [
-                ...this.files,
-                {
-                    key: saved.contentDocumentId,
-                    name: fileName,
-                    kind,
-                    isImage: false,
-                    iconName: 'doctype:audio',
-                    thumbnailUrl: null,
-                    contentVersionId: saved.contentVersionId,
-                    contentDocumentId: saved.contentDocumentId
-                }
-            ];
-            await this.recomputeFileTranscript();
-            this.toast('Voice note processed', 'Audio uploaded and read into the transcript.', 'success');
+            // Transcribe via the platform voiceToText standard action.
+            const transcript = await transcribeAudio({ contentVersionId: saved.contentVersionId });
+            if (transcript && !transcript.startsWith('[')) {
+                this.insertIntoNotes(transcript);
+                this.toast('Voice note transcribed', 'Transcript added to notes — edit before sending.', 'success');
+            } else {
+                // Transcription unavailable — keep audio as a chip so it's not lost.
+                this.files = [
+                    ...this.files,
+                    {
+                        key: saved.contentDocumentId,
+                        name: fileName,
+                        kind: 'audio',
+                        isImage: false,
+                        iconName: 'doctype:audio',
+                        thumbnailUrl: null,
+                        contentVersionId: saved.contentVersionId,
+                        contentDocumentId: saved.contentDocumentId
+                    }
+                ];
+                this.toast('Voice note saved', 'Audio saved as attachment — transcription unavailable.', 'info');
+            }
         } catch (e) {
             this.error = this.reduceError(e);
         } finally {

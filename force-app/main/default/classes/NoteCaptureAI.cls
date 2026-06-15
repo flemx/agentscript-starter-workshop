@@ -22,7 +22,7 @@
  */
 public with sharing class NoteCaptureAI {
     @TestVisible
-    private static final String SPEECH_ACTION = 'convertBase64SpeechToText';
+    private static final String SPEECH_ACTION = 'voiceToText';
     @TestVisible
     private static final String PROMPT_TEMPLATE = 'Describe_File_Contents';
     @TestVisible
@@ -58,12 +58,11 @@ public with sharing class NoteCaptureAI {
             String base64Audio = EncodingUtil.base64Encode(cv.VersionData);
 
             Invocable.Action action = Invocable.Action.createStandardAction(SPEECH_ACTION);
-            action.setInvocationParameter('base64Data', base64Audio);
-            action.setInvocationParameter('mimeType', mimeForExtension(cv.FileExtension));
+            action.setInvocationParameter('base64Audio', base64Audio);
             List<Invocable.Action.Result> results = action.invoke();
 
             if (!results.isEmpty() && results[0].isSuccess()) {
-                Object text = results[0].getOutputParameters().get('transcript');
+                Object text = results[0].getOutputParameters().get('convertedText');
                 return text != null ? String.valueOf(text) : '';
             }
             return placeholder('audio transcription');
