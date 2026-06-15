@@ -89,7 +89,7 @@ export default function AgentChat() {
     }
 
     const seq = seqRef.current++
-    streamMessage({
+    abortRef.current = streamMessage({
       sessionId: id,
       text: content,
       sequenceId: seq,
@@ -135,6 +135,25 @@ export default function AgentChat() {
         })
       },
     })
+  }
+
+  // Refresh: abort any in-flight stream, end the Agentforce session, and reset to a clean slate.
+  // The next message will start a brand-new session.
+  const resetSession = () => {
+    abortRef.current?.abort?.()
+    abortRef.current = null
+    mediaRef.current?.stop?.()
+    endSession(sessionId)
+    setSessionId(null)
+    setMessages([])
+    setReport(null)
+    setReportPending(false)
+    setInput('')
+    setError('')
+    setBusy(false)
+    setRecording(false)
+    seqRef.current = 1
+    setTimeout(() => taRef.current?.focus(), 50)
   }
 
   const onSuggestion = (s) => {
@@ -327,6 +346,14 @@ export default function AgentChat() {
                 <div className="chat-head-title">Use-Case Research Agent</div>
                 <div className="chat-head-sub"><span className="live-dot" /> Live · hosted on our Agentforce sandbox</div>
               </div>
+              <button
+                className="chat-refresh"
+                onClick={resetSession}
+                title="Start a fresh session — clears the conversation and the report"
+              >
+                <RefreshCw size={15} />
+                <span>Refresh session</span>
+              </button>
             </div>
 
             <div className="chat-log" ref={scrollRef}>
