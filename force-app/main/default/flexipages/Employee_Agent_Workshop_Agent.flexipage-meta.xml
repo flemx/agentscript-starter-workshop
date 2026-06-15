@@ -3,14 +3,14 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>c:noteViewer</componentName>
-                <identifier>noteViewer1</identifier>
+                <componentName>c:noteCapture</componentName>
+                <identifier>noteCapture1</identifier>
             </componentInstance>
         </itemInstances>
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
-    <masterLabel>Employee Agent Workshop Notes</masterLabel>
+    <masterLabel>Employee Agent Workshop Agent</masterLabel>
     <template>
         <name>flexipage:defaultAppHomeTemplate</name>
     </template>

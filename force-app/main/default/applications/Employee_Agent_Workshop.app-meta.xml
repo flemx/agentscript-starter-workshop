@@ -13,6 +13,7 @@
     <label>Employee Agent Workshop</label>
     <navType>Standard</navType>
     <tabs>Employee_Agent_Workshop_Home</tabs>
+    <tabs>Employee_Agent_Workshop_Agent</tabs>
     <tabs>Employee_Agent_Workshop_Notes</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>
