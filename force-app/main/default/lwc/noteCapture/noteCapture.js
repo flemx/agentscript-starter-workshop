@@ -38,9 +38,12 @@ export default class NoteCapture extends LightningElement {
     _dragover = false;
     _needsResize = false;
 
-    // recording internals (Web Speech API)
-    _recognition;
-    _finalBuffer = ''; // accumulates confirmed words during this recording session
+    // recording internals
+    _recognition;        // Web Speech API instance (preferred path)
+    _finalBuffer = '';   // confirmed words from SpeechRecognition
+    _mediaRecorder;      // fallback: MediaRecorder when Speech API unavailable in iframe
+    _audioChunks = [];
+    _usingSpeechApi = false;
     timerId;
     seconds = 0;
     @track timerDisplay = '00:00';
@@ -51,9 +54,8 @@ export default class NoteCapture extends LightningElement {
 
     disconnectedCallback() {
         this.files.forEach((f) => f.thumbnailUrl && URL.revokeObjectURL(f.thumbnailUrl));
-        if (this._recognition) {
-            this._recognition.abort();
-        }
+        if (this._recognition) this._recognition.abort();
+        if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') this._mediaRecorder.stop();
         this._stopTimer();
     }
 
@@ -130,10 +132,17 @@ export default class NoteCapture extends LightningElement {
         this.error = undefined;
         // eslint-disable-next-line no-undef
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR) {
-            this.error = 'Speech recognition is not supported in this browser. Try Chrome or Edge, or type/paste notes instead.';
-            return;
+        if (SR) {
+            this._startSpeechApi(SR);
+        } else {
+            this._startMediaRecorder();
         }
+        this._startTimer();
+    }
+
+    // ── Path A: browser Web Speech API (live transcript into notes) ──────────
+    _startSpeechApi(SR) {
+        this._usingSpeechApi = true;
         this._finalBuffer = '';
         this._recognition = new SR();
         this._recognition.continuous = true;
@@ -153,24 +162,100 @@ export default class NoteCapture extends LightningElement {
         };
 
         this._recognition.onerror = (event) => {
-            if (event.error !== 'no-speech') {
+            if (event.error === 'network' || event.error === 'service-not-allowed') {
+                // Speech API unavailable in this iframe context — restart with MediaRecorder.
+                this._recognition.abort();
+                this._usingSpeechApi = false;
+                this.interimText = '';
+                this._startMediaRecorder();
+            } else if (event.error !== 'no-speech') {
                 this.error = `Microphone error: ${event.error}. Try again or type notes instead.`;
+                this.isRecording = false;
+                this._stopTimer();
             }
         };
 
-        // When the browser ends the session (stop() called or timeout), flush to notes.
         this._recognition.onend = () => {
+            if (!this._usingSpeechApi) return; // already switched to MediaRecorder
             this.interimText = '';
             this._stopTimer();
             if (this._finalBuffer.trim()) {
                 this.insertIntoNotes(this._finalBuffer.trim());
-                this.toast('Voice note added', 'Transcript added to your notes — edit it before sending.', 'success');
+                this.toast('Voice note added', 'Transcript added to notes — edit before sending.', 'success');
             }
             this.isRecording = false;
         };
 
         this._recognition.start();
         this.isRecording = true;
+    }
+
+    // ── Path B: MediaRecorder → upload → processFiles (same as image pipeline) ──
+    async _startMediaRecorder() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this._audioChunks = [];
+            this._mediaRecorder = new MediaRecorder(stream);
+            this._mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) this._audioChunks.push(e.data);
+            };
+            this._mediaRecorder.onstop = () => this._handleMediaStop(stream);
+            this._mediaRecorder.start();
+            this.isRecording = true;
+        } catch (e) {
+            this.error = 'Microphone access was blocked. Allow mic access or type notes instead.';
+            this.isRecording = false;
+            this._stopTimer();
+        }
+    }
+
+    async _handleMediaStop(stream) {
+        try {
+            stream.getTracks().forEach((t) => t.stop());
+            const blob = new Blob(this._audioChunks, { type: 'audio/mp4' });
+            const base64 = await this.blobToBase64(blob);
+            this.isProcessingFiles = true;
+            const fileName = `voice-note-${Date.now()}.m4a`;
+            const saved = await uploadFile({
+                fileName,
+                base64,
+                linkToId: this.recordId || ''
+            });
+            // Treat exactly like a file attachment — runs through processFiles (prompt template).
+            const kind = 'audio';
+            this.files = [
+                ...this.files,
+                {
+                    key: saved.contentDocumentId,
+                    name: fileName,
+                    kind,
+                    isImage: false,
+                    iconName: 'doctype:audio',
+                    thumbnailUrl: null,
+                    contentVersionId: saved.contentVersionId,
+                    contentDocumentId: saved.contentDocumentId
+                }
+            ];
+            await this.recomputeFileTranscript();
+            this.toast('Voice note processed', 'Audio uploaded and read into the transcript.', 'success');
+        } catch (e) {
+            this.error = this.reduceError(e);
+        } finally {
+            this.isProcessingFiles = false;
+        }
+    }
+
+    stopRecording() {
+        this._stopTimer();
+        if (this._usingSpeechApi && this._recognition) {
+            this._recognition.stop();
+        } else if (this._mediaRecorder && this._mediaRecorder.state !== 'inactive') {
+            this.isRecording = false;
+            this._mediaRecorder.stop();
+        }
+    }
+
+    _startTimer() {
         this.seconds = 0;
         this.timerDisplay = '00:00';
         this.timerId = setInterval(() => {
@@ -179,13 +264,6 @@ export default class NoteCapture extends LightningElement {
             const s = String(this.seconds % 60).padStart(2, '0');
             this.timerDisplay = `${m}:${s}`;
         }, 1000);
-    }
-
-    stopRecording() {
-        this._stopTimer();
-        if (this._recognition) {
-            this._recognition.stop(); // triggers onend which flushes to notes
-        }
     }
 
     _stopTimer() {
