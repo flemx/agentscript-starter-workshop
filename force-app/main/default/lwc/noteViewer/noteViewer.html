@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Notes" icon-name="standard:note">
+    <lightning-card title="Enhanced Notes" icon-name="standard:note">
         <template if:true={selected}>
             <lightning-button
                 slot="actions"
@@ -50,7 +50,12 @@
                 </template>
                 <template if:true={selected}>
                     <h2 class="slds-text-heading_medium slds-m-bottom_small">{selected.title}</h2>
-                    <lightning-formatted-rich-text value={selected.html}></lightning-formatted-rich-text>
+                    <template if:true={selected.linkedRecordName}>
+                        <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                            Associated with: <a href={selected.linkedRecordUrl} target="_blank">{selected.linkedRecordName}</a>
+                        </div>
+                    </template>
+                    <div class="note-html-container" lwc:dom="manual"></div>
                 </template>
                 <template if:false={selected}>
                     <div class="slds-text-color_weak">Select a note to view it here.</div>

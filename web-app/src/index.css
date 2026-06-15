@@ -1,8 +1,56 @@
 /* =========================================================
-   Pronto x Agentforce Workshop Guide
-   Modern purple-themed dark mode inspired by labs.agentforce.com
-   Clean white light mode with purple & orange accents
+   Agentforce Employee Agent Workshop Guide
+   Light-mode-first, Salesforce look & feel (salesforce.com/agentforce)
+   Salesforce Sans (body) + ITC Avant Garde (display headings)
    ========================================================= */
+
+/* ---------- Salesforce brand webfonts (match developer.salesforce.com) ---------- */
+@font-face {
+  font-family: 'Salesforce Sans';
+  src: url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Regular.woff2) format('woff2'),
+       url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Regular.woff) format('woff');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Salesforce Sans';
+  src: url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Italic.woff2) format('woff2'),
+       url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Italic.woff) format('woff');
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Salesforce Sans';
+  src: url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Semibold.woff2) format('woff2'),
+       url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Semibold.woff) format('woff');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Salesforce Sans';
+  src: url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Bold.woff2) format('woff2'),
+       url(https://a.sfdcstatic.com/shared/fonts/salesforce-sans/SalesforceSans-Bold.woff) format('woff');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'ITC Avant Garde';
+  src: url(https://a.sfdcstatic.com/shared/fonts/avant-garde/AvantGardeForSalesforceW05-Dm.woff2) format('woff2'),
+       url(https://a.sfdcstatic.com/shared/fonts/avant-garde/AvantGardeForSalesforceW05-Dm.woff) format('woff');
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  /* One sans for everything (the user wants a single Salesforce font, no Inter/SF Pro) */
+  --font-sans: 'Salesforce Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-display: 'ITC Avant Garde', 'Salesforce Sans', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+}
 
 * {
   margin: 0;
@@ -51,6 +99,7 @@ html {
   /* Semantic */
   --text-primary: var(--foreground);
   --text-secondary: var(--muted-foreground);
+  --heading: #eaf0ff;
   --link: var(--purple-light);
   --link-hover: #c4b5fd;
   --code-bg: #0d0d1a;
@@ -99,6 +148,7 @@ html {
   /* Semantic */
   --text-primary: var(--foreground);
   --text-secondary: var(--muted-foreground);
+  --heading: #032d60; /* Salesforce deep navy — requested for all headers */
   --link: #0a6ed1;
   --link-hover: #0958a8;
   --code-bg: #0b1d3a;
@@ -113,8 +163,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-sans);
   color: var(--text-primary);
   background-color: var(--background);
   background-image: var(--background-mesh);
@@ -146,8 +195,7 @@ a:hover {
 }
 
 code {
-  font-family: 'JetBrains Mono', 'SF Mono', SFMono-Regular, ui-monospace, Menlo,
-    Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family: var(--font-mono);
   background-color: var(--code-inline-bg);
   color: var(--code-inline-color);
   padding: 2px 6px;
@@ -237,7 +285,7 @@ code {
   font-size: 12px;
   color: var(--muted-foreground);
   margin: 0;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
   letter-spacing: 0;
 }
 
@@ -257,7 +305,7 @@ code {
   text-transform: uppercase;
   color: var(--muted-foreground);
   letter-spacing: 0.08em;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 .nav-item {
@@ -343,9 +391,9 @@ code {
 .content-section h1,
 .content-section h2,
 .content-section h3 {
-  font-family: inherit;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  color: var(--heading);
+  letter-spacing: -0.01em;
   scroll-margin-top: 24px;
 }
 
@@ -477,7 +525,7 @@ code {
   color: var(--purple-light);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 .scenario-box p,
@@ -515,6 +563,63 @@ code {
   box-shadow: var(--shadow-lg);
 }
 
+/* ---------- Install buttons ---------- */
+
+.install-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--af-grad, linear-gradient(135deg, #13357f, #0aa3e0));
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(10, 110, 209, 0.26);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.install-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  border-bottom-color: transparent;
+}
+
+.install-button--ghost {
+  background: transparent;
+  color: var(--link);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
+}
+
+.install-button--ghost:hover {
+  background: var(--purple-soft);
+  border-color: var(--accent);
+  filter: none;
+}
+
+/* ---------- Two-up image grid ---------- */
+
+.image-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+@media (max-width: 720px) {
+  .image-grid-2 { grid-template-columns: 1fr; }
+}
+
 /* ---------- Code blocks ---------- */
 
 .code-block-wrapper {
@@ -536,19 +641,21 @@ code {
   border-bottom: 1px solid var(--border);
 }
 
+/* The code box is always dark (navy --code-bg), so its header text uses fixed light
+   colors for good contrast in BOTH themes — not the theme's muted-foreground. */
 .code-block-language {
-  color: var(--muted-foreground);
+  color: #9ec5ff;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 .copy-button {
-  background-color: transparent;
-  border: 1px solid var(--border-strong);
-  color: #d8d8d8;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(158, 197, 255, 0.35);
+  color: #e6f0ff;
   padding: 5px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -562,21 +669,21 @@ code {
 }
 
 .copy-button:hover {
-  background-color: var(--purple-soft);
-  border-color: var(--purple);
-  color: var(--purple-light);
+  background-color: rgba(10, 163, 224, 0.22);
+  border-color: #0aa3e0;
+  color: #ffffff;
 }
 
 .copy-button.copied {
-  background-color: var(--purple);
-  border-color: var(--purple);
+  background-color: #0aa3e0;
+  border-color: #0aa3e0;
   color: #ffffff;
 }
 
 .code-block-content {
   background-color: var(--code-bg);
   overflow-x: auto;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  font-family: var(--font-mono) !important;
 }
 
 .code-block-content pre {
@@ -584,14 +691,14 @@ code {
   padding: 18px !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  font-family: var(--font-mono) !important;
 }
 
 .code-block-content pre code {
   background: transparent !important;
   padding: 0 !important;
   border: none !important;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  font-family: var(--font-mono) !important;
   font-size: 13px !important;
 }
 
@@ -935,7 +1042,7 @@ code {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 .nav-button-title {
@@ -967,7 +1074,7 @@ code {
   color: var(--muted-foreground);
   letter-spacing: 0.08em;
   margin-bottom: 14px;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 .right-sidebar-nav {
@@ -1009,21 +1116,117 @@ code {
   }
 }
 
+/* ---------- Astro hero (flying, slow bounce) ---------- */
+.astro-hero {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 26px;
+  pointer-events: none;
+}
+.astro-hero img {
+  width: 220px;
+  max-width: 60%;
+  height: auto;
+  filter: drop-shadow(0 22px 34px rgba(13, 40, 90, 0.28));
+  animation: astro-fly 4.5s ease-in-out infinite;
+}
+@keyframes astro-fly {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-16px) rotate(1.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .astro-hero img { animation: none; }
+}
+
+/* ---------- agent_astro inline icon ---------- */
+.agent-astro-icon {
+  display: inline-block;
+  vertical-align: middle;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+/* ---------- doc-content-callout (Salesforce docs style) ---------- */
+.doc-callout {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 20px 0;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border-left: 4px solid var(--doc-callout-accent, #0176d3);
+  background: var(--doc-callout-bg, #eef4fc);
+  color: var(--text-primary);
+}
+.doc-callout-icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--doc-callout-accent, #0176d3);
+  color: #fff;
+  margin-top: 1px;
+}
+.doc-callout-body { flex: 1; min-width: 0; }
+.doc-callout-title {
+  font-weight: 700;
+  color: var(--doc-callout-accent, #0176d3);
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.doc-callout-body p { margin: 0 0 8px; }
+.doc-callout-body p:last-child,
+.doc-callout-body ul:last-child { margin-bottom: 0; }
+.doc-callout-body ul { margin: 4px 0 0 18px; }
+.doc-callout-body li { margin: 4px 0; }
+/* variants */
+.doc-callout-note { --doc-callout-accent: #0176d3; --doc-callout-bg: #eef4fc; }
+.doc-callout-tip { --doc-callout-accent: #2e844a; --doc-callout-bg: #ebf7ee; }
+.doc-callout-warning { --doc-callout-accent: #fe9339; --doc-callout-bg: #fff5ea; }
+[data-theme='dark'] .doc-callout { background: rgba(255, 255, 255, 0.04); }
+[data-theme='dark'] .doc-callout-note { --doc-callout-bg: rgba(1, 118, 211, 0.12); }
+[data-theme='dark'] .doc-callout-tip { --doc-callout-bg: rgba(46, 132, 74, 0.14); }
+[data-theme='dark'] .doc-callout-warning { --doc-callout-bg: rgba(254, 147, 57, 0.14); }
+
 
 /* ════════════════════════════════════════════════════════════════════
    Agent demo — sleek, modern agentic chat + report artifact canvas
    ════════════════════════════════════════════════════════════════════ */
-.main-content--full { max-width: none; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.try-agent { display: flex; flex-direction: column; height: 100vh; }
-.try-agent-intro { padding: 20px 28px 14px; border-bottom: 1px solid var(--border); background: var(--card); }
-.try-agent-intro h1 { font-size: 22px; font-weight: 800; margin: 0 0 5px; letter-spacing: -.3px; }
-.try-agent-intro p { color: var(--text-secondary); font-size: 13.5px; max-width: 90ch; margin: 0; line-height: 1.55; }
+.main-content--full { max-width: none; margin-right: 0; padding: 0; height: 100vh;
+  display: flex; flex-direction: column; overflow: hidden; }
+.try-agent { display: flex; flex-direction: column; height: 100vh; min-height: 0; }
 
-.chat-shell { flex: 1; display: grid; grid-template-columns: minmax(380px, 1fr) minmax(440px, 1.2fr); min-height: 0; }
-@media (max-width: 1000px) { .chat-shell { grid-template-columns: 1fr; } .artifact-pane { display: none; } }
+/* The shell is one column until a report exists, then a two-column split (chat | canvas). */
+.chat-shell { flex: 1; display: grid; min-height: 0; transition: grid-template-columns .5s cubic-bezier(.22,.61,.36,1); }
+.chat-shell.solo { grid-template-columns: 1fr; }
+.chat-shell.with-artifact { grid-template-columns: minmax(360px, 0.85fr) minmax(440px, 1.15fr); }
+@media (max-width: 1000px) {
+  .chat-shell.with-artifact { grid-template-columns: 1fr; }
+  .chat-shell.with-artifact .chat-pane { display: none; }
+}
 
 /* left: conversation */
-.chat-pane { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border); background: var(--background); }
+.chat-pane { display: flex; flex-direction: column; min-height: 0; background: var(--background); }
+.with-artifact .chat-pane { border-right: 1px solid var(--border); }
+
+/* ── Centered hero prompt (initial state) ─────────────────────────────────────── */
+.chat-hero { margin: auto; width: 100%; max-width: 680px; padding: 32px 28px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; }
+.chat-hero-orb { width: 76px; height: 76px; border-radius: 22px; display: grid; place-items: center; margin-bottom: 22px;
+  background: linear-gradient(135deg, #eaf2ff, #f4f8ff); border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(10,110,209,.18); animation: floaty 4.5s ease-in-out infinite; }
+.chat-hero-title { font-family: var(--font-display); font-size: 30px; font-weight: 600; color: var(--heading);
+  letter-spacing: -.5px; margin-bottom: 12px; line-height: 1.12; }
+.chat-hero-sub { color: var(--text-secondary); font-size: 14.5px; line-height: 1.6; max-width: 56ch; margin: 0 auto 26px; }
+.chat-hero-composer { width: 100%; max-width: 620px; }
+.chat-hero-composer .chat-input { background: var(--card); border-radius: 18px; padding: 9px 10px;
+  box-shadow: 0 18px 50px rgba(13,40,90,.12); }
+.chat-hero .suggestions { margin-top: 20px; }
+
+@keyframes slidein-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+.artifact-pane { animation: slidein-right .5s cubic-bezier(.22,.61,.36,1); }
 .chat-head { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--border); background: var(--card); }
 .chat-head-icon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; color: #fff;
   background: var(--af-grad, linear-gradient(135deg,#13357f,#0aa3e0)); box-shadow: 0 6px 16px rgba(10,110,209,.3); }

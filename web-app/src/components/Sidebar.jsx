@@ -6,7 +6,7 @@ const navigationItems = [
     section: 'Getting Started',
     items: [
       { id: 'overview', label: 'Workshop Overview' },
-      { id: 'get-org', label: 'Get Your Org' },
+      { id: 'get-org', label: 'Get Your Sandbox' },
       { id: 'install-package', label: 'Install the Package' },
     ]
   },

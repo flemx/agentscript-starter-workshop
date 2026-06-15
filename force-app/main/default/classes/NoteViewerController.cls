@@ -19,6 +19,9 @@ public with sharing class NoteViewerController {
         @AuraEnabled public Id contentDocumentId;
         @AuraEnabled public String title;
         @AuraEnabled public String html;
+        @AuraEnabled public String linkedRecordName;
+        @AuraEnabled public Id linkedRecordId;
+        @AuraEnabled public String linkedRecordUrl;
     }
 
     /**
@@ -72,6 +75,26 @@ public with sharing class NoteViewerController {
             nc.title = cv.Title;
             // For a ContentNote (SNOTE), VersionData holds the note's HTML body as a Blob.
             nc.html = cv.VersionData != null ? cv.VersionData.toString() : '';
+
+            // Find the associated record (the ContentDocumentLink where LinkedEntityId is NOT a User)
+            // Note: We can't filter by LinkedEntity.Type directly, so we fetch all links and filter in Apex
+            List<ContentDocumentLink> links = [
+                SELECT LinkedEntityId, LinkedEntity.Name
+                FROM ContentDocumentLink
+                WHERE ContentDocumentId = :contentDocumentId
+                WITH USER_MODE
+            ];
+            for (ContentDocumentLink link : links) {
+                String entityId = String.valueOf(link.LinkedEntityId);
+                // User IDs start with '005', filter those out
+                if (!entityId.startsWith('005')) {
+                    nc.linkedRecordId = link.LinkedEntityId;
+                    nc.linkedRecordName = link.LinkedEntity.Name;
+                    nc.linkedRecordUrl = '/lightning/r/' + nc.linkedRecordId + '/view';
+                    break;
+                }
+            }
+
             return nc;
         } catch (AuraHandledException e) {
             throw e;

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Mic, Square, Paperclip, Loader2, Bot, User, Sparkles, Globe, BookOpen, FileText, Check } from 'lucide-react'
+import { Send, Mic, Square, Paperclip, Loader2, User, Sparkles, Globe, BookOpen, FileText, Check } from 'lucide-react'
 import { createSession, streamMessage, splitReport } from '../lib/agentClient'
 import ReportArtifact from './ReportArtifact'
+import AgentAstro from './AgentAstro'
 
 const SUGGESTIONS = [
   'Load a sample workshop',
@@ -9,10 +10,11 @@ const SUGGESTIONS = [
 ]
 
 /**
- * Hosted demo of the Use-Case Research agent: a sleek conversational chat on the left, a live
- * report artifact canvas on the right. Surfaces the agent's tool calls (web / Salesforce-docs
- * research) as live activity so the long research pause feels alive. Supports talking to it
- * (browser speech → text) and dropping images/PDFs (→ extracted text); only text reaches Agentforce.
+ * Hosted demo of the Use-Case Research agent. Starts as a clean, centered Agentforce prompt
+ * ("What use cases should we research?"). When the agent begins streaming a <report>, the
+ * artifact canvas slides in from the right and the chat shifts left — the report renders live
+ * as it streams. Supports talking to it (browser speech → text) and dropping images/PDFs
+ * (→ extracted text); only text ever reaches Agentforce.
  */
 export default function AgentChat() {
   const [messages, setMessages] = useState([]) // {role, text, steps?:[], done?:bool}
@@ -30,6 +32,9 @@ export default function AgentChat() {
   const mediaRef = useRef(null)
   const fileInputRef = useRef(null)
   const taRef = useRef(null)
+
+  const started = messages.length > 0
+  const hasArtifact = !!report || reportPending
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -57,7 +62,6 @@ export default function AgentChat() {
       const last = copy[copy.length - 1]
       if (!last || last.role !== 'assistant') return copy
       const steps = last.steps ? [...last.steps] : []
-      // mark previous step complete, add the new one as active
       if (steps.length) steps[steps.length - 1] = { ...steps[steps.length - 1], done: true }
       if (!steps.length || steps[steps.length - 1].label !== label) steps.push({ label, done: false })
       copy[copy.length - 1] = { ...last, steps }
@@ -206,17 +210,23 @@ export default function AgentChat() {
     onFiles(e.dataTransfer.files)
   }
 
+  // A richer, FICTIONAL sample (no real customer) — a design-thinking workshop output.
   const loadSample = () => {
     setInput(
-      'Here is our MidOcean Agentforce workshop.\n\n' +
-        'TRANSCRIPT: The biggest pain for the customer-service team is order-status chasing — ' +
-        'customers constantly ask "where is my order / tracking?", and for high-value or sensitive ' +
-        'orders (e.g. funeral orders) someone babysits status all day. Complaints arrive incomplete ' +
-        '(missing photos and order numbers). Email threads drift from order-status to other topics and ' +
-        'need classification + translation. Pricing: auto-handle quotes under €1,000, route larger to a human.\n\n' +
-        'LUCID BOARD: impact/effort matrix. Top-right (high impact / low effort): order status & ' +
-        'track-and-trace, proactive delay notifications. High impact / medium effort: complaint triage, ' +
-        'complaint photo analysis. Enablers: case classification, knowledge-article expansion, FAQ tone-of-voice.'
+      'Here is the output of our design-thinking workshop with Lumina Outdoor (a fictional outdoor-gear retailer).\n\n' +
+        '### TRANSCRIPT — Discovery & Use-Case Workshop\n' +
+        'Participants: Priya (Salesforce architect), Tom (VP Customer Care), Dana (Head of E-commerce), Raj (Field Service lead).\n\n' +
+        'Tom: Our #1 driver of contacts is "where is my order" and "where is my refund" — agents copy-paste tracking numbers all day, and for backordered seasonal gear the volume explodes before peak season.\n' +
+        'Dana: On the storefront, product questions are huge — sizing, waterproof ratings, compatibility ("does this tent fit this footprint?"). Shoppers bounce when they can\'t get a quick answer, and our return rate is high because of wrong sizing.\n' +
+        'Tom: Complaints come in by email and are always incomplete — no order number, no photo of the damaged item — so it\'s three or four emails just to open a case. We also see a lot of non-English contacts now.\n' +
+        'Raj: Field service is manual — scheduling repair visits for tents and stoves, and techs arrive without the right parts because the case notes are thin.\n' +
+        'Dana: For B2B, bulk-order quotes under €2,000 are standard and could be auto-generated; anything larger or custom should go to a human rep.\n' +
+        'Priya: Great — let me map these to Agentforce capabilities and prioritize them.\n\n' +
+        '### LUCID BOARD — Impact / Effort matrix\n' +
+        'High impact / low effort: order-status & track-and-trace self-service; proactive shipping-delay notifications.\n' +
+        'High impact / medium effort: product-advisor (sizing/compatibility) on the storefront; complaint intake that extracts order # + asks for a photo; auto-quote for B2B orders under €2,000.\n' +
+        'Medium impact / medium effort: case classification & multilingual triage; knowledge-article expansion.\n' +
+        'Higher effort / later: field-service scheduling with parts prediction.'
     )
   }
 
@@ -228,121 +238,146 @@ export default function AgentChat() {
     return <Sparkles size={13} />
   }
 
+  // The composer (mic + attach + textarea + send) — shared by the centered hero and chat states.
+  const composer = (placeholder) => (
+    <div className="chat-input">
+      <button
+        className={`icon-btn ${recording ? 'rec' : ''}`}
+        onClick={toggleRecording}
+        disabled={busy || attaching}
+        title={recording ? 'Stop recording' : 'Talk to the agent'}
+      >
+        {recording ? <Square size={17} /> : <Mic size={17} />}
+      </button>
+      <button
+        className="icon-btn"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={busy || attaching}
+        title="Attach an image or PDF"
+      >
+        {attaching ? <Loader2 size={17} className="spin" /> : <Paperclip size={17} />}
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        multiple
+        hidden
+        onChange={(e) => onFiles(e.target.files)}
+      />
+      <textarea
+        ref={taRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            send()
+          }
+        }}
+        placeholder={recording ? 'Listening… tap stop when done' : placeholder}
+        rows={1}
+      />
+      <button className="send-btn" onClick={() => send()} disabled={busy || !input.trim()} title="Send">
+        {busy ? <Loader2 size={17} className="spin" /> : <Send size={17} />}
+      </button>
+    </div>
+  )
+
   return (
-    <div className="chat-shell">
+    <div
+      className={`chat-shell ${hasArtifact ? 'with-artifact' : 'solo'}`}
+      onDrop={onDrop}
+      onDragOver={(e) => e.preventDefault()}
+    >
       <div className="chat-pane">
-        <div className="chat-head">
-          <div className="chat-head-icon"><Bot size={18} /></div>
-          <div className="chat-head-meta">
-            <div className="chat-head-title">Use-Case Research Agent</div>
-            <div className="chat-head-sub"><span className="live-dot" /> Live · hosted on our Agentforce sandbox</div>
+        {!started ? (
+          /* ── Centered, clean Agentforce prompt (the hero state) ───────────────────── */
+          <div className="chat-hero">
+            <div className="chat-hero-orb"><AgentAstro size={40} /></div>
+            <h2 className="chat-hero-title">What use cases should we research?</h2>
+            <p className="chat-hero-sub">
+              Paste your workshop transcript and Lucid-board notes — or <b>talk to me</b> with the mic, or
+              <b> drop in an image or PDF</b> of your board. I'll research them on the web and in Salesforce
+              docs, then build a polished report.
+            </p>
+            <div className="chat-hero-composer">
+              {composer('Describe the use cases, or paste your workshop notes…')}
+              <div className="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
+            </div>
+            <div className="suggestions">
+              {SUGGESTIONS.map((s) => (
+                <button key={s} className="suggestion-chip" onClick={() => onSuggestion(s)}>{s}</button>
+              ))}
+            </div>
+            {error && (
+              <div className="chat-error">
+                {error}
+                <button className="retry-link" onClick={() => setError('')}>Dismiss</button>
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="chat-log" ref={scrollRef} onDrop={onDrop} onDragOver={(e) => e.preventDefault()}>
-          {messages.length === 0 && (
-            <div className="chat-welcome">
-              <div className="welcome-orb"><Sparkles size={24} /></div>
-              <h3>Turn your workshop into a researched report</h3>
-              <p>
-                Paste your meeting transcript and Lucid-board notes, <b>talk to it</b> with the mic, or
-                <b> drop in an image / PDF</b> of your board. I'll research your use cases on the web and in
-                Salesforce docs, then build a polished report on the right.
-              </p>
-              <div className="suggestions">
-                {SUGGESTIONS.map((s) => (
-                  <button key={s} className="suggestion-chip" onClick={() => onSuggestion(s)}>{s}</button>
-                ))}
+        ) : (
+          /* ── Conversation state ───────────────────────────────────────────────────── */
+          <>
+            <div className="chat-head">
+              <div className="chat-head-icon"><AgentAstro size={20} /></div>
+              <div className="chat-head-meta">
+                <div className="chat-head-title">Use-Case Research Agent</div>
+                <div className="chat-head-sub"><span className="live-dot" /> Live · hosted on our Agentforce sandbox</div>
               </div>
             </div>
-          )}
 
-          {messages.map((m, i) => (
-            <div key={i} className={`msg msg-${m.role}`}>
-              <div className="msg-avatar">{m.role === 'user' ? <User size={15} /> : <Bot size={15} />}</div>
-              <div className="msg-body">
-                {/* live agent activity (tool calls) */}
-                {m.role === 'assistant' && m.steps && m.steps.length > 0 && (
-                  <div className="agent-steps">
-                    {m.steps.map((s, si) => (
-                      <div key={si} className={`agent-step ${s.done ? 'done' : 'active'}`}>
-                        <span className="step-ico">
-                          {s.done ? <Check size={12} /> : <Loader2 size={12} className="spin" />}
-                        </span>
-                        <span className="step-ico-kind">{stepIcon(s.label)}</span>
-                        <span className="step-label">{s.label}</span>
+            <div className="chat-log" ref={scrollRef}>
+              {messages.map((m, i) => (
+                <div key={i} className={`msg msg-${m.role}`}>
+                  <div className="msg-avatar">{m.role === 'user' ? <User size={15} /> : <AgentAstro size={16} />}</div>
+                  <div className="msg-body">
+                    {m.role === 'assistant' && m.steps && m.steps.length > 0 && (
+                      <div className="agent-steps">
+                        {m.steps.map((s, si) => (
+                          <div key={si} className={`agent-step ${s.done ? 'done' : 'active'}`}>
+                            <span className="step-ico">
+                              {s.done ? <Check size={12} /> : <Loader2 size={12} className="spin" />}
+                            </span>
+                            <span className="step-ico-kind">{stepIcon(s.label)}</span>
+                            <span className="step-label">{s.label}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                    {m.text && (
+                      <div className="msg-bubble">
+                        {m.text}
+                        {m.role === 'assistant' && !m.done && busy && <span className="caret" />}
+                      </div>
+                    )}
                   </div>
-                )}
-                {m.text && (
-                  <div className="msg-bubble">
-                    {m.text}
-                    {m.role === 'assistant' && !m.done && busy && <span className="caret" />}
-                  </div>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {error && (
-          <div className="chat-error">
-            {error}
-            <button className="retry-link" onClick={() => setError('')}>Dismiss</button>
-          </div>
+            {error && (
+              <div className="chat-error">
+                {error}
+                <button className="retry-link" onClick={() => setError('')}>Dismiss</button>
+              </div>
+            )}
+
+            <div className="chat-input-wrap">
+              {composer('Message the research agent…')}
+              <div className="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
+            </div>
+          </>
         )}
+      </div>
 
-        <div className="chat-input-wrap">
-          <div className="chat-input">
-            <button
-              className={`icon-btn ${recording ? 'rec' : ''}`}
-              onClick={toggleRecording}
-              disabled={busy || attaching}
-              title={recording ? 'Stop recording' : 'Talk to the agent'}
-            >
-              {recording ? <Square size={17} /> : <Mic size={17} />}
-            </button>
-            <button
-              className="icon-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={busy || attaching}
-              title="Attach an image or PDF"
-            >
-              {attaching ? <Loader2 size={17} className="spin" /> : <Paperclip size={17} />}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,application/pdf"
-              multiple
-              hidden
-              onChange={(e) => onFiles(e.target.files)}
-            />
-            <textarea
-              ref={taRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  send()
-                }
-              }}
-              placeholder={recording ? 'Listening… tap stop when done' : 'Message the research agent…'}
-              rows={1}
-            />
-            <button className="send-btn" onClick={() => send()} disabled={busy || !input.trim()} title="Send">
-              {busy ? <Loader2 size={17} className="spin" /> : <Send size={17} />}
-            </button>
-          </div>
-          <div className="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
+      {/* The artifact canvas slides in only once a report starts streaming. */}
+      {hasArtifact && (
+        <div className="artifact-pane">
+          <ReportArtifact report={report} streaming={reportPending || busy} />
         </div>
-      </div>
-
-      <div className="artifact-pane">
-        <ReportArtifact report={report} streaming={reportPending || busy} />
-      </div>
+      )}
     </div>
   )
 }

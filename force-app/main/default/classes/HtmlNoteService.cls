@@ -56,7 +56,10 @@ public with sharing class HtmlNoteService {
             throw new HtmlNoteException('A note title is required.');
         }
         if (!isAvailable()) {
-            throw new AuraHandledException(
+            // NB: a plain custom Exception, NOT AuraHandledException — this method is also reached
+            // from an agent (invocable Apex) context, where throwing AuraHandledException itself
+            // fails with "Can only throw this exception type from VisualForce or Aura context".
+            throw new HtmlNoteException(
                 'Salesforce Notes (ContentNote) isn\'t available in this org, so an HTML note can\'t be created here.'
             );
         }
@@ -73,9 +76,9 @@ public with sharing class HtmlNoteService {
             }
             return note.Id;
         } catch (DmlException e) {
-            throw new AuraHandledException('Could not create the note: ' + e.getDmlMessage(0));
+            throw new HtmlNoteException('Could not create the note: ' + e.getDmlMessage(0));
         } catch (Exception e) {
-            throw new AuraHandledException('Could not create the note: ' + e.getMessage());
+            throw new HtmlNoteException('Could not create the note: ' + e.getMessage());
         }
     }
 
@@ -118,6 +121,7 @@ public with sharing class HtmlNoteService {
                 res.isSuccess = true;
                 res.noteId = docId;
                 res.note = loadNoteRecord(docId);
+                res.noteUrl = '/lightning/n/Employee_Agent_Workshop_Notes?id=' + docId;
                 res.message = 'Note "' + req.subject + '" created.';
             } catch (Exception e) {
                 res.isSuccess = false;
@@ -200,5 +204,10 @@ public with sharing class HtmlNoteService {
         @InvocableVariable(label='Note') public ContentDocument note;
         @InvocableVariable(label='Note Id') public Id noteId;
         @InvocableVariable(label='Message') public String message;
+        @InvocableVariable(
+            label='Note URL'
+            description='A direct link to view this note in the Enhanced Notes viewer. Share this URL with the user so they can click straight to the rendered note.'
+        )
+        public String noteUrl;
     }
 }

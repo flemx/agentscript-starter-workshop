@@ -40,3 +40,42 @@
     max-height: 520px;
     overflow-y: auto;
 }
+
+.note-html-container {
+    min-height: 520px;
+    padding: 16px;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    background: white;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+/* Style the injected HTML content */
+.note-html-container :global(h1),
+.note-html-container :global(h2),
+.note-html-container :global(h3),
+.note-html-container :global(h4),
+.note-html-container :global(h5),
+.note-html-container :global(h6) {
+    color: #032d60;
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+}
+
+.note-html-container :global(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.note-html-container :global(td),
+.note-html-container :global(th) {
+    border: 1px solid #d8dde6;
+    padding: 6px 10px;
+}
+
+.note-html-container :global(img) {
+    max-width: 100%;
+    height: auto;
+}

@@ -3,7 +3,7 @@
     <apiVersion>64.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Agent Deploy Button (Accelerator)</masterLabel>
-    <description>Optional one-click deploy/publish/activate of an Agent Script agent from the asset library.</description>
+    <description>Optional one-click deploy/publish/activate of the starter Agent Script agent.</description>
     <targets>
         <target>lightning__AppPage</target>
         <target>lightning__HomePage</target>

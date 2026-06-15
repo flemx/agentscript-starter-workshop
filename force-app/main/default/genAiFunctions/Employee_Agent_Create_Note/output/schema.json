@@ -36,6 +36,15 @@
       "copilotAction:isDisplayable" : true,
       "copilotAction:isUsedByPlanner" : false,
       "copilotAction:useHydratedPrompt" : false
+    },
+    "noteUrl" : {
+      "title" : "noteUrl",
+      "description" : "A direct clickable URL to view this note in the Enhanced Notes viewer. Always share this URL with the user in your response so they can immediately view the rendered note.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : false,
+      "copilotAction:useHydratedPrompt" : false
     }
   },
   "lightning:type" : "lightning__objectType"

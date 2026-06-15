@@ -18,6 +18,7 @@ export default class WorkshopLaunchpad extends LightningElement {
     isLoading = true;
     isRunning = false;
     setupComplete = false;
+    showModal = false;
     error;
 
     connectedCallback() {
@@ -45,6 +46,7 @@ export default class WorkshopLaunchpad extends LightningElement {
             this.applyStatus(results);
             if (this.allReady) {
                 this.setupComplete = true;
+                this.showModal = true;
                 this.toast('You\'re all set', 'Permission sets assigned — you\'re ready to build your agent.', 'success');
             } else if (this.hasErrors) {
                 this.toast('Setup needs attention', 'Some items could not be assigned. Review the list below or re-run setup.', 'warning');
@@ -57,6 +59,14 @@ export default class WorkshopLaunchpad extends LightningElement {
         } finally {
             this.isRunning = false;
         }
+    }
+
+    handleCloseModal() {
+        this.showModal = false;
+    }
+
+    handleOpenAgentStudio() {
+        window.open('/lightning/n/standard-AgentforceStudio?c__nav=agents', '_self');
     }
 
     handleOpenGuide() {

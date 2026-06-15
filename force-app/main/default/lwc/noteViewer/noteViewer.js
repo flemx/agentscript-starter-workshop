@@ -1,4 +1,5 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { CurrentPageReference } from 'lightning/navigation';
 import getNotes from '@salesforce/apex/NoteViewerController.getNotes';
 import getNote from '@salesforce/apex/NoteViewerController.getNote';
 
@@ -14,9 +15,18 @@ export default class NoteViewer extends LightningElement {
     @api recordId;
 
     @track notes = [];
-    @track selected; // { contentDocumentId, title, html }
+    @track selected; // { contentDocumentId, title, html, linkedRecordName, linkedRecordId, linkedRecordUrl }
     isLoading = true;
     error;
+    urlNoteId;
+
+    @wire(CurrentPageReference)
+    getPageReference(pageRef) {
+        if (pageRef && pageRef.state) {
+            // Check for both 'id' and 'c__id' (namespaced)
+            this.urlNoteId = pageRef.state.id || pageRef.state.c__id;
+        }
+    }
 
     connectedCallback() {
         this.loadNotes();
@@ -25,8 +35,11 @@ export default class NoteViewer extends LightningElement {
     async loadNotes() {
         this.isLoading = true;
         try {
-            this.notes = await getNotes({ limitSize: 50 });
-            if (this.recordId) {
+            this.notes = await getNotes({ limitSize: 20 });
+            // Priority: URL param > recordId prop > first note
+            if (this.urlNoteId) {
+                await this.open(this.urlNoteId);
+            } else if (this.recordId) {
                 await this.open(this.recordId);
             } else if (this.notes.length) {
                 await this.open(this.notes[0].contentDocumentId);
@@ -47,8 +60,22 @@ export default class NoteViewer extends LightningElement {
         this.error = undefined;
         try {
             this.selected = await getNote({ contentDocumentId });
+            // Render the HTML after selection
+            this.renderNoteHtml();
         } catch (e) {
             this.error = this.reduceError(e);
+        }
+    }
+
+    renderNoteHtml() {
+        // Use renderedCallback to ensure the DOM is ready
+        if (this.selected && this.selected.html) {
+            requestAnimationFrame(() => {
+                const container = this.template.querySelector('.note-html-container');
+                if (container) {
+                    container.innerHTML = this.selected.html;
+                }
+            });
         }
     }
 
@@ -81,13 +108,19 @@ export default class NoteViewer extends LightningElement {
   table{border-collapse:collapse;width:100%;} td,th{border:1px solid #d8dde6;padding:6px 10px;}
   img{max-width:100%;height:auto;}
   @media print{body{margin:0;}}
-</style></head><body><h1>${title}</h1>${html}
-<script>window.onload=function(){window.print();}</script></body></html>`;
+</style></head><body><h1>${title}</h1>${html}</body></html>`;
         const w = window.open('', '_blank');
         if (w) {
             w.document.open();
             w.document.write(doc);
             w.document.close();
+            // Trigger print from parent after a short delay to ensure content is loaded
+            setTimeout(() => {
+                if (w && !w.closed) {
+                    w.focus();
+                    w.print();
+                }
+            }, 100);
         }
     }
 
