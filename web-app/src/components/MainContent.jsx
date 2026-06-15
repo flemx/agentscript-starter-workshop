@@ -13,7 +13,7 @@ import Collapsible from './Collapsible'
 // The package version id (04t...) for the supporting-assets package (perm sets, actions,
 // the Lightning app + LWC launchpad, the Employee Agent V1 starter). Install links below
 // are built for BOTH production (login.salesforce.com) and sandbox (test.salesforce.com).
-const PACKAGE_VERSION_ID = '04tWt000000GFntIAG'
+const PACKAGE_VERSION_ID = '04tWt000000GHOHIA4'
 const PACKAGE_INSTALL_URL = `https://login.salesforce.com/packaging/installPackage.apexp?p0=${PACKAGE_VERSION_ID}`
 const PACKAGE_INSTALL_URL_SANDBOX = `https://test.salesforce.com/packaging/installPackage.apexp?p0=${PACKAGE_VERSION_ID}`
 // Agentforce Studio (agents view) — deep link inside the attendee's org.
