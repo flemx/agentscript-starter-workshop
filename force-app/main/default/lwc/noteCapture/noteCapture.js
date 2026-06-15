@@ -2,7 +2,6 @@ import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import uploadFile from '@salesforce/apex/NoteCaptureController.uploadFile';
 import listEmployeeAgents from '@salesforce/apex/NoteCaptureController.listEmployeeAgents';
-import transcribeAudio from '@salesforce/apex/NoteCaptureAI.transcribeAudio';
 import processFiles from '@salesforce/apex/NoteCaptureAI.processFiles';
 // Agentforce client (ACC) API — opens the agent side panel and submits an utterance.
 // Imported statically (LWC disallows dynamic import); calls are guarded at runtime so the
@@ -28,20 +27,20 @@ export default class NoteCapture extends LightningElement {
 
     // --- state ---
     isRecording = false;
-    isTranscribing = false;
     isProcessingFiles = false;
     @track files = []; // {key, name, kind, isImage, thumbnailUrl, contentVersionId, contentDocumentId}
     fileTranscript = ''; // extracted text from attached files — sent to the agent, not edited here
     pastedText = ''; // the editable notes (typed text + inserted audio transcript)
+    @track interimText = ''; // live speech preview while recording
     @track agentOptions = [];
     selectedAgent = '';
     error;
     _dragover = false;
     _needsResize = false;
 
-    // recording internals
-    mediaRecorder;
-    audioChunks = [];
+    // recording internals (Web Speech API)
+    _recognition;
+    _finalBuffer = ''; // accumulates confirmed words during this recording session
     timerId;
     seconds = 0;
     @track timerDisplay = '00:00';
@@ -51,8 +50,11 @@ export default class NoteCapture extends LightningElement {
     }
 
     disconnectedCallback() {
-        // Free any object URLs created for image thumbnails.
         this.files.forEach((f) => f.thumbnailUrl && URL.revokeObjectURL(f.thumbnailUrl));
+        if (this._recognition) {
+            this._recognition.abort();
+        }
+        this._stopTimer();
     }
 
     renderedCallback() {
@@ -116,71 +118,80 @@ export default class NoteCapture extends LightningElement {
         return this.isRecording ? 'Stop recording' : 'Record audio';
     }
 
-    async toggleRecording() {
+    toggleRecording() {
         if (this.isRecording) {
             this.stopRecording();
         } else {
-            await this.startRecording();
+            this.startRecording();
         }
     }
 
-    async startRecording() {
+    startRecording() {
         this.error = undefined;
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.audioChunks = [];
-            this.mediaRecorder = new MediaRecorder(stream);
-            this.mediaRecorder.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) this.audioChunks.push(e.data);
-            };
-            this.mediaRecorder.onstop = () => this.handleAudioStop(stream);
-            this.mediaRecorder.start();
-            this.isRecording = true;
-            this.seconds = 0;
-            this.timerDisplay = '00:00';
-            this.timerId = setInterval(() => {
-                this.seconds += 1;
-                const m = String(Math.floor(this.seconds / 60)).padStart(2, '0');
-                const s = String(this.seconds % 60).padStart(2, '0');
-                this.timerDisplay = `${m}:${s}`;
-            }, 1000);
-        } catch (e) {
-            this.error = 'Microphone access was blocked. Allow mic access, or attach files / type notes instead.';
+        // eslint-disable-next-line no-undef
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            this.error = 'Speech recognition is not supported in this browser. Try Chrome or Edge, or type/paste notes instead.';
+            return;
         }
+        this._finalBuffer = '';
+        this._recognition = new SR();
+        this._recognition.continuous = true;
+        this._recognition.interimResults = true;
+        this._recognition.lang = 'en-US';
+
+        this._recognition.onresult = (event) => {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    this._finalBuffer += event.results[i][0].transcript + ' ';
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+            this.interimText = interim;
+        };
+
+        this._recognition.onerror = (event) => {
+            if (event.error !== 'no-speech') {
+                this.error = `Microphone error: ${event.error}. Try again or type notes instead.`;
+            }
+        };
+
+        // When the browser ends the session (stop() called or timeout), flush to notes.
+        this._recognition.onend = () => {
+            this.interimText = '';
+            this._stopTimer();
+            if (this._finalBuffer.trim()) {
+                this.insertIntoNotes(this._finalBuffer.trim());
+                this.toast('Voice note added', 'Transcript added to your notes — edit it before sending.', 'success');
+            }
+            this.isRecording = false;
+        };
+
+        this._recognition.start();
+        this.isRecording = true;
+        this.seconds = 0;
+        this.timerDisplay = '00:00';
+        this.timerId = setInterval(() => {
+            this.seconds += 1;
+            const m = String(Math.floor(this.seconds / 60)).padStart(2, '0');
+            const s = String(this.seconds % 60).padStart(2, '0');
+            this.timerDisplay = `${m}:${s}`;
+        }, 1000);
     }
 
     stopRecording() {
-        this.isRecording = false;
-        if (this.timerId) {
-            clearInterval(this.timerId);
-            this.timerId = undefined;
-        }
-        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            this.mediaRecorder.stop();
+        this._stopTimer();
+        if (this._recognition) {
+            this._recognition.stop(); // triggers onend which flushes to notes
         }
     }
 
-    async handleAudioStop(stream) {
-        try {
-            stream.getTracks().forEach((t) => t.stop());
-            const blob = new Blob(this.audioChunks, { type: 'audio/mp4' });
-            const base64 = await this.blobToBase64(blob);
-            this.isTranscribing = true;
-            // Save the audio as a Salesforce File, then transcribe it.
-            const saved = await uploadFile({
-                fileName: `meeting-audio-${Date.now()}.m4a`,
-                base64,
-                linkToId: this.recordId || ''
-            });
-            const transcript = await transcribeAudio({ contentVersionId: saved.contentVersionId });
-            // Drop the transcript straight into the editable notes so the user can review and
-            // edit it before sending — same as Claude's voice input.
-            this.insertIntoNotes(transcript);
-            this.toast('Audio transcribed', 'Transcript added to your notes — edit it before sending.', 'success');
-        } catch (e) {
-            this.error = this.reduceError(e);
-        } finally {
-            this.isTranscribing = false;
+    _stopTimer() {
+        if (this.timerId) {
+            clearInterval(this.timerId);
+            this.timerId = undefined;
         }
     }
 
@@ -349,7 +360,7 @@ export default class NoteCapture extends LightningElement {
         return this.combinedTranscript.length > 0;
     }
     get sendDisabled() {
-        return !this.hasTranscript || !this.selectedAgent || this.isProcessingFiles || this.isTranscribing;
+        return !this.hasTranscript || !this.selectedAgent || this.isProcessingFiles || this.isRecording;
     }
 
     /**

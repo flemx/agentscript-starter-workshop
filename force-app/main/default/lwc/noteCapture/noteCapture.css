@@ -230,6 +230,15 @@
     color: #9aa9c2;
 }
 
+/* ---------- Live speech caption ---------- */
+.nc-interim {
+    padding: 0 4px 6px;
+    font-size: 13px;
+    color: #9aa9c2;
+    font-style: italic;
+    min-height: 20px;
+}
+
 /* ---------- Action bar ---------- */
 .nc-actions {
     display: flex;

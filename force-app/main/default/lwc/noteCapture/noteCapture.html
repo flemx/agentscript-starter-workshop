@@ -61,13 +61,7 @@
                 </div>
             </template>
 
-            <!-- Inline status -->
-            <template if:true={isTranscribing}>
-                <div class="nc-status">
-                    <lightning-spinner alternative-text="Transcribing" size="small"></lightning-spinner>
-                    <span>Transcribing audio…</span>
-                </div>
-            </template>
+            <!-- File processing status -->
             <template if:true={isProcessingFiles}>
                 <div class="nc-status">
                     <lightning-spinner alternative-text="Reading files" size="small"></lightning-spinner>
@@ -83,6 +77,11 @@
                 oninput={handleInput}
                 onkeydown={handleKeyDown}
                 placeholder="Paste or type meeting notes here…  (Enter to send · Shift+Enter for a new line)"></textarea>
+
+            <!-- Live speech caption — shows interim words while recording -->
+            <template if:true={interimText}>
+                <p class="nc-interim">{interimText}</p>
+            </template>
 
             <!-- Action bar -->
             <div class="nc-actions">
