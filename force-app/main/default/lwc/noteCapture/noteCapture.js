@@ -12,6 +12,12 @@ import { open as accOpen, execute as accExecute } from 'lightning/accApi';
 const MAX_FILES = 3;
 const IMAGE_RE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
 const PDF_RE = /\.pdf$/i;
+// Large images must be downscaled before upload: a base64 payload over the Aura
+// imperative-action request cap (~a few MB) is rejected server-side with a generic
+// aura:systemError before Apex runs. Phone photos (5–10 MB) routinely exceed it.
+const MAX_IMAGE_DIMENSION = 1600; // px on the longest edge — plenty for the prompt model
+const IMAGE_DOWNSCALE_THRESHOLD = 1500000; // ~1.5 MB: only resize images bigger than this
+const JPEG_QUALITY = 0.85;
 
 /**
  * noteCapture — a Claude-style composer that collects a meeting "transcript" from three
@@ -351,7 +357,9 @@ export default class NoteCapture extends LightningElement {
         this.isProcessingFiles = true;
         try {
             for (const file of fileList) {
-                const base64 = await this.blobToBase64(file);
+                // Downscale big images client-side so the base64 stays under the request cap.
+                const toUpload = await this.prepareForUpload(file);
+                const base64 = await this.blobToBase64(toUpload);
                 const saved = await uploadFile({
                     fileName: file.name,
                     base64,
@@ -483,6 +491,56 @@ export default class NoteCapture extends LightningElement {
     }
 
     // ───────────────────────── utils ─────────────────────────
+
+    /**
+     * Returns an upload-ready Blob for a file. Large images are downscaled (longest edge to
+     * MAX_IMAGE_DIMENSION) so their base64 stays under the Aura action request cap; everything
+     * else (PDFs, docs, small images) is returned unchanged. Downscale failures fall back to
+     * the original file so the upload still attempts.
+     */
+    async prepareForUpload(file) {
+        const isImage = (file.type || '').startsWith('image/') || IMAGE_RE.test(file.name || '');
+        if (!isImage || file.size <= IMAGE_DOWNSCALE_THRESHOLD) {
+            return file;
+        }
+        try {
+            return await this.downscaleImage(file);
+        } catch (e) {
+            // Couldn't resize (e.g. SVG/unsupported) — upload the original and let the
+            // server-side size guard surface a clear message if it's still too big.
+            return file;
+        }
+    }
+
+    /** Draws the image onto a canvas scaled to MAX_IMAGE_DIMENSION and returns a JPEG Blob. */
+    downscaleImage(file) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                URL.revokeObjectURL(url);
+                const longest = Math.max(img.width, img.height);
+                const scale = longest > MAX_IMAGE_DIMENSION ? MAX_IMAGE_DIMENSION / longest : 1;
+                const w = Math.round(img.width * scale);
+                const h = Math.round(img.height * scale);
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                canvas.toBlob(
+                    (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+                    'image/jpeg',
+                    JPEG_QUALITY
+                );
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error('image load failed'));
+            };
+            img.src = url;
+        });
+    }
 
     blobToBase64(blob) {
         return new Promise((resolve, reject) => {
