@@ -24,6 +24,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>Employee_Agent_Workshop_Agent</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>Employee_Agent_Workshop_Notes</tab>
         <visibility>Visible</visibility>
     </tabSettings>

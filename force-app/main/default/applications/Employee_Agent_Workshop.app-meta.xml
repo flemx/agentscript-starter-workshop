@@ -7,13 +7,14 @@
     <description>Your launchpad for the hands-on workshop: open the guide, run post-install setup, then build Employee Agent V1 in Agent Studio.</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
-    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Employee Agent Workshop</label>
     <navType>Standard</navType>
     <tabs>Employee_Agent_Workshop_Home</tabs>
-    <tabs>standard-AgentforceStudio</tabs>
+    <tabs>Employee_Agent_Workshop_Agent</tabs>
     <tabs>Employee_Agent_Workshop_Notes</tabs>
+    <tabs>standard-AgentforceStudio</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

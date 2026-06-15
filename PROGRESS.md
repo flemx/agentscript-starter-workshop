@@ -1,113 +1,33 @@
-# PROGRESS.md — running log
+# PROGRESS.md — agent-facing running log
 
-> Dated project log. Read `AGENTS.md` first for purpose + current status. Update this whenever a
-> meaningful unit of work completes. Newest log entries at the top. Absolute dates only.
+> Machine-readable project state for AI agents. Humans: see `command-center/index.html`.
+> Update this whenever a meaningful unit of work completes (see `AGENTS.md`). Newest log
+> entries at the top. Absolute dates only.
 
 ---
 
 ## Current State  _(overwrite this block each session)_
 
-- **Phase:** **Single self-contained package — installs on ANY org, zero post-deploy.** Orgs:
-  **`hackathon`** = production demo org = **DevHub**; **`hackathon_sandbox`** = install/test target;
-  **`wf_clean_test`** = clean Agentforce scratch org used to prove the from-scratch flow. Unlocked package
-  **`0.1.0.10`** (`04tWt000000GFO5IAO`) installed in BOTH the sandbox and a clean scratch org. **The note
-  suite is now IN the package** (no more `feature-addons/` post-deploy) and the **agent-access grant +
-  starter-agent install happen at runtime from the launchpad** (the only things a package genuinely
-  can't carry). Now also: a **"Create Note" agent action in the asset library** (a `GenAiFunction`
-  wrapping the Apex invocable; returns the full ContentDocument record) and a **Notes UI tab** in the app.
-  **Guide is LIVE on Heroku** (https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/) —
-  republished with the `0.1.0.10` install URL. All 36 Apex tests pass. Next: Summarize prompt template +
-  Part-B action add-ons, remaining guide polish. (2026-06-12)
-- **Key artifacts:** guide → Heroku (above) · package install → `…/installPackage.apexp?p0=04tWt000000GFO5IAO`
-  · screenshots → `docs/screenshots/` · report → `docs/colleague-report.html` · walkthrough test →
-  `docs/walkthrough-test-report.md` · agentic-loop visual → `docs/agentic-loop-visual.html` · slide deck →
-  Google Slides `15Um4HnhYoUyEL6idHi7oaL0RnI5_NGWK4ECPS_qaumI`.
-- **Package:** unlocked, built from the `hackathon` DevHub with **`--skip-validation`** (the build scratch
-  org lacks ContentNote/Einstein/Bot, so we skip its compile and let Apex compile at INSTALL time in the
-  target org). **Latest = v0.1.0.10** (`04tWt000000GFO5IAO`), installed in the sandbox AND a clean scratch
-  org. Payload = everything: Apex (workshop setup, agent deployer, note suite + the Create Note
-  invocable), LWCs (launchpad, deploy button, noteCapture, noteViewer), VF page, `Workshop_Settings__mdt`,
-  2 perm sets, app + 2 tabs/FlexiPages (Home + Notes), afscript static resource. **`HtmlNoteService`
-  references `ContentNote` DYNAMICALLY** (Schema API) so it compiles even where Notes is absent
-  (scratch/trial orgs) and self-disables via `isAvailable()`. `aiAuthoringBundles` `.forceignore`d
-  (genuinely un-packageable). Reinstall:
-  `sf package install --package 04tWt000000GFO5IAO --target-org <org> --wait 20 --no-prompt`.
-- **Runtime-only operations (what a package can't carry, done from the launchpad):**
-  1. **Perm-set ASSIGNMENT** to the running user — `WorkshopSetupController.runSetup()` (a package ships
-     perm sets but can't auto-assign on install).
-  2. **Starter-agent install** — `NextGenAgentDeployer.deployAgent()` create→publish→activate via the NGA
-     Connect API (`AiAuthoringBundle` isn't packageable). **Reuse-first**: if the agent already exists it
-     is NOT duplicated (reports it, re-grants access); `forceNew=true` deploys `_2`/`_3` instead.
-  3. **Agent-ACCESS grant** — `SetupEntityAccess(ParentId=permSet, SetupEntityId=BotDefinitionId)` inserted
-     at runtime, pointing at the ACTUAL deployed BotDefinition. Solves the rename problem: the package
-     perm set carries NO static `agentAccesses` (impossible — agent doesn't exist at build time); the
-     reference is bound at runtime so it's always correct. Verified end-to-end on the clean scratch org.
-- **Intro decks (NEW, separate from Hanne's):** HTML interactive `docs/workshop-intro-deck.html`; Google
-  Slides `1mYEe0etN_uL35i2uTOPelIQPhW21Xa2_C_vIckmbues`. Both reviewed + improved.
-- **Built this session:**
-  - **Web app re-scripted** (`web-app/`) to 5 sections — Overview → Get Your Org (Agentforce Labs kept
-    as the **backup** org) → Install the Package (**placeholder `PACKAGE_INSTALL_URL`**) → Part A guided
-    build → Part B free exercise. `vite build` passes.
-  - **`Employee_Agent_Workshop` Lightning app** + Home App-page (FlexiPage) + tab.
-  - **`workshopLaunchpad` LWC** — welcome, **Open the workshop guide** link, **Run Setup** button.
-  - **`WorkshopSetupController`** (`@AuraEnabled`) — idempotent perm-set/group assignment to the current
-    user (setup-object DML only → no mixed-DML). Built-in Apex defaults. **Tests 7/7, coverage 78%.**
-  - **`Workshop_Settings__mdt`** type (5 fields) as an optional point-and-click override.
-  - **Agent deploy accelerator (NEW):** `NextGenAgentDeployer` (Apex) + `NextGenAgentDeployerSession`
-    (VF) + `agentDeployButton` (LWC) + `Note_taking_agent_afscript` (Static Resource) — one-click
-    create→publish→activate of the agent via the **Next-Gen Authoring Connect API**, proven live.
-    **Deployer coverage 86%; 12/12 tests pass overall.**
-- **Feasibility — UPDATED 2026-06-11 (supersedes earlier "not viable"):** browser-side **perm-set
-  assignment = reliable**, AND **runtime deploy+publish+activate of the Agent Script agent IS viable**
-  via the internal **NGA Connect API** (`/services/data/v64.0/nextgen-authoring/...`) from a server-side
-  Apex self-callout with a VF-sourced API-enabled session. Shipped as an **optional accelerator / backup
-  path** — the customer happy-path is still build-it-in-Agent-Studio (Part A's learning). Endpoint is
-  undocumented → fragile; details in `docs/reference/nextgen-authoring-connect-api.md`.
-- **What this is (now concrete):** two deliverables — (1) a **Salesforce package** (install link) that
-  lands **permission sets + the action assets + a Lightning app + the Employee Agent V1 starter** into a
-  customer sandbox; (2) a **self-guided React web app** (vendored at `web-app/`) that guides a non-expert
-  through **building Employee Agent V1 in Agent Studio**. Context: a hackathon **2-hour hands-on workshop**.
-- **Use case = Employee Agent V1** — a meeting-note agent: ingest notes/transcript → **log to a Notes
-  record**, **summarize**, **create tasks**, **draft email**. It's the `Note_taking_agent` already in
-  `force-app/`.
-- **Decisions locked (from the planning doc):** **package-based install** (not browser-OAuth — avoids
-  security warnings); a **free pre-configured backup org**; workshop = **Part A guided** (instructions →
-  add Note + Summarize actions → preview → commit → test) + **Part B free exercise**; **out-of-the-box
-  actions first**.
-- **Web app:** vendored into `web-app/` from `flemx/vibe-code-agenforce-claude` (Vite+React; content in
-  `MainContent.jsx`; Heroku-deployable). **Re-scripted this session** to our 5-section flow; build passes.
-- **Harness:** reused from `meeting_ai`; `PROJECT_DIR` → `projects/agentforce-hackathon`; contextual data
-  empty. **Google Workspace MCP is live**. Gateway key still unset (session summaries/auto-classify
-  skipped — harness still works).
-- **Blockers:** none. **Known platform gotcha:** deploying a Custom Metadata *record with values* via the
-  CLI throws an opaque `UNKNOWN_EXCEPTION` on these orgs (skeleton record with no values is fine; repro'd
-  on a throwaway type). Worked around — defaults live in Apex; the record is an optional Setup-edited
-  override kept in `docs/optional-metadata/`, out of the deploy path.
+- **Phase:** **Package v0.1.0.10 shipped; "Create Note" action live in asset library; noteCapture modal UI + guide polish are the active work (2026-06-13).** Workshop flow is decided (see meeting log 2026-06-12). Orgs: `hackathon` = DevHub · `hackathon_sandbox` = primary install/test target · `wf_clean_test` = clean Agentforce scratch org · `my-agentforce-org` = Agentforce Labs backup org.
+- **Package:** unlocked, `hackathon` DevHub. **Latest = v0.1.0.10** (`04tWt000000GFO5IAO`), built `--skip-validation`. All components in `force-app/`. Reinstall: `sf package install --package 04tWt000000GFO5IAO --target-org <org> --wait 20 --no-prompt`.
+- **Key artifacts:** guide → Heroku <https://employee-agent-workshop-guide-3ae92a297614.herokuapp.com/> · test data → `docs/test-data/` (MidOcean transcript + Lucid board description) · multimodal setup → `docs/prompt-template-setup.md` · intro deck → `docs/workshop-intro-deck.html`.
+- **36/36 Apex tests pass.** The `command-center/` harness has been removed; `scripts/secret_guard.mjs` is the only remaining script.
 
 ### ⏭️ Next steps (READ FIRST)
-1. **Finish the action assets** (G4): the **Create Note** action now ships in the asset library
-   (`GenAiFunction Employee_Agent_Create_Note` → `apex://HtmlNoteService`). Still to add: a **Summarize**
-   Prompt Template, then the Part-B add-ons (Query Records, draft email, fetch tasks, Search Web).
-   OOB-first; custom Apex for SOSL search per the planning doc.
-2. **Finalize the agent starter** — decide start-with-no-actions vs pre-wired, and the simple (non-coding)
-   reasoning-instruction wording (Hanne's doc flags the current example as "too coding-like").
-3. **Remaining guide polish** — keep screenshots in `web-app/public/images/` current with the final flow.
-
-> Done already: single self-contained package built + installed everywhere (G1/G2); perm-set
-> orchestration (G3); runtime starter-agent deploy + access grant; web app re-scripted + live on Heroku
-> (G5); Agentforce Labs wired as the backup org (G6).
+1. **Jorge — Flex prompt template in Prompt Builder:** create `Describe_File_Contents` (Flex template, 3 optional `File (ContentDocument)` inputs) in `hackathon_sandbox` / `hackathon-brussels--dev` following `docs/prompt-template-setup.md`, then do a live end-to-end multimodal test via `noteCapture`.
+2. **Jorge — noteCapture modal UI ("Get Started" tab):** build the LWC modal (text area + upload up to 3 images/PDFs + audio transcribe + "Generate example transcript" button) on a new "Get Started" tab in the Lightning app; rename the existing launchpad tab to "Setup". Component must also be embeddable on a record page. After images are uploaded → call prompt template → inject description into text area. Audio → inject transcription. Then send to agent via ACC API.
+3. **Guide — content gaps (Damien/Hanne):**
+   - Replace every "org" with "sandbox" so attendees don't accidentally install into production.
+   - Remove the "facilitator will share the live link" line — just a direct clickable URL.
+   - Put the real install URL (`04tWt000000GFO5IAO`) in the guide and the launchpad Apex default.
+   - Update agent reasoning instructions to simple natural language (current example is "too coded" — Hanne's feedback).
+   - Add screenshots of OOB actions from sandbox (Hanne): Web Search, Draft Email, Query Records, Create Case, fetch related emails/notes. Show action name + asset-library view.
+4. **Test on a clean org** — invite Anuk & Bodina (target: Monday 2026-06-16) to run the full flow (install → Run Setup → build agent → add actions → preview → commit → test from homepage + record page). Confirm action inputs are wired automatically with no manual variable configuration.
+5. **Nice-to-have:** "Generate example transcript" button in the noteCapture modal (low-hanging fruit — generates a hypothetical meeting note so attendees without real content can still follow along).
 
 ### Key commands
-- **Build the package:** `sf package version create --package "Employee Agent Workshop"
-  --installation-key-bypass --skip-validation --wait 30 --target-dev-hub hackathon`
-  (`--skip-validation` is required — the build scratch org lacks the runtime features).
-- **Install:** `sf package install --package <04t...> --target-org <org> --wait 20 --no-prompt`.
-- **Run all tests:** `sf apex run test --target-org <org> --test-level RunLocalTests --wait 15`.
-- **Clean-org test:** `sf org create scratch -f config/project-scratch-def.json -a wf_clean_test
-  --target-dev-hub hackathon`, then install + run the launchpad's Run Setup / deploy-agent Apex.
-- **Deploy the guide:** push `web-app/` to the `employee-agent-workshop-guide` Heroku app
-  (see `web-app/CLAUDE.md`).
-- For Agentforce/LWC/Apex/perm-set work, prefer the skills under `.agents/skills/`.
+- Salesforce: `sf project deploy start`, `sf org create scratch -f config/project-scratch-def.json`, etc. (see `.agents/skills/deploying-metadata`).
+- Build package: `sf package version create --package "Employee Agent Workshop" --installation-key-bypass --skip-validation --wait 30 --target-dev-hub hackathon`.
 
 ---
 
@@ -182,68 +102,66 @@
   Heroku guide republished with the new install URL. **36/36 Apex tests pass.**
 - ⏭️ Next G4 asset: the **Summarize** Prompt Template, then Part-B add-ons.
 
-### 2026-06-12 — Create Note invocable, Notes UI tab, distinct labels for duplicate agents → v0.1.0.8
-- ✅ **"Create Note" invocable agent action** (`HtmlNoteService.createHtmlNotes`). Confirmed the target
-  record type against the devhub's **`Store_Notes`** flow = standard **`ContentNote`** (`Content` = HTML
-  body Blob, `Title` = subject, then a `ContentDocumentLink` ShareType='V' to the optional record).
-  Reworked the invocable: inputs are **Subject / Content (HTML) / Record Id (optional)** each with an
-  agent-facing `description`; HTML is stored as a Blob so it renders; it **returns the created note
-  record (`ContentDocument`) + `noteId` + a clickable `/lightning/r/ContentDocument/<id>/view` URL** so
-  the agent can give the user a link to click. Live-tested on the sandbox (SNOTE created, URL returned).
-- ✅ **Notes UI tab** added to the workshop Lightning app: new `Employee_Agent_Workshop_Notes` FlexiPage
-  (hosts `noteCapture` + `noteViewer`) + CustomTab, added to the app nav, tab visibility in the perm set.
-  Deployed + verified both tabs exist; Run Setup re-grants visibility.
-- 🔧 **Duplicate agents now get a distinct label.** When a name collision bumps the api name to `_2`/`_3`,
-  `NextGenAgentDeployer.deriveLabel` mirrors the suffix on the label (e.g. "Employee Agent V1 (2)") so
-  copies are tellable apart in Agent Studio / the Agentforce panel. (Blank label → falls back to the
-  resolved api name; no bump → label unchanged.)
-- ✅ Built **`0.1.0.8`** (`04tWt000000GFO5IAO`), installed on the sandbox AND the clean scratch org —
-  installs clean everywhere. **37/37 Apex tests pass.** Install URL bumped in Apex + web app.
-- ✅ **Heroku guide republished** with the `0.1.0.8` install URL; live site verified serving it.
+### 2026-06-12 — Team sync: workshop flow decided + Damien ships v0.1.0.10 + Create Note action
+**Meeting decisions (Hanne · Damien · Jorge):**
+- 🔧 **Workshop flow locked.** Part A (guided): write reasoning instructions (simple natural language) → add "Create Note" action from asset library → add "Query Records" action → preview in builder → commit version → test from homepage → test from a record. Part B (free exercise): draft email, adapt summary format, web search enrichment — give example prompts so attendees know what to ask. Fetch Tasks removed (nothing OOB). Email drafting = OOB action, not instructions.
+- 🔧 **Language fix:** everywhere in the guide "your own org" → "your own **sandbox**" — avoid attendees accidentally installing in production.
+- 🔧 **Remove facilitator line:** "your facilitator will share the live link" stripped — it's just a direct clickable install URL. Package URL may also get an `sfdc.co` short redirect on the day.
+- 🔧 **Action input parameters are automatic** — attendees do NOT need to wire variables manually; agent instructions handle it. Needs to be verified in testing.
+- 🔧 **Agent instructions = simple natural language.** Current example wording flagged as "too coded" (Hanne). Summary format lives in instructions, not a separate prompt template; attendees tweak it as part of the free exercise.
+- 🔧 **New noteCapture modal component agreed** (Jorge builds): LWC modal on a new "Get Started" tab in the Lightning app. Upload up to 3 images/PDFs → call Flex prompt template → inject image description into text area. Audio transcribe → inject transcript. Optional: "Generate example transcript" button. Send to agent via ACC API. The launchpad tab renames to "Setup".
+- 🔧 **Test data needed:** Hanne to get a Lucid board description from Bart; Granola meeting transcript from Hanne's own calls. *(Damien shipped `docs/test-data/` with MidOcean examples in commit 8d2e64a.)*
+- ❓ **Testing:** Anuk & Bodina to test the full flow on a clean org — target Monday 2026-06-16.
+>>>>>>> feature/note-capture-claude-composer
 
-### 2026-06-12 — One self-contained package (note suite IN), runtime agent-access grant, clean-org proof
-- ✅ **Folded the note suite back INTO the package.** Customer sandboxes can't post-deploy from an SFDX
-  project, so everything that *can* be packaged now is. Moved `HtmlNoteService` / `NoteCaptureAI` /
-  `NoteCaptureController` / `NoteViewerController` + LWCs `noteCapture`/`noteViewer` + perm set
-  `Employee_Agent_Notes_Addon` from `feature-addons/` into `force-app/`. Build with **`--skip-validation`**
-  so the feature-poor build scratch org's compile is skipped; Apex compiles at INSTALL time in the target.
-- 🔧 **Made `HtmlNoteService` reference `ContentNote` DYNAMICALLY** (`Schema.getGlobalDescribe()` +
-  `SObject.put`) + added `isAvailable()`. **Why:** `ContentNote` exists in real customer *sandboxes* but
-  NOT in scratch orgs or the **Agentforce Labs backup org** — a static `new ContentNote()` would fail to
-  COMPILE on install there and block the whole package (would have broken the G6 backup-org path). Now it
-  compiles everywhere and self-disables where Notes is absent. Test class uses dynamic SOQL + guards.
-- ✅ **Runtime agent-ACCESS grant — solves the rename problem.** Discovered agent access = a
-  `SetupEntityAccess` row (`ParentId`=permSet, `SetupEntityId`=BotDefinition Id; type auto-derived),
-  insertable from Apex (setup DML, no mixed-DML — verified live). Reworked `NextGenAgentDeployer` to grant
-  access at runtime pointing at the ACTUAL deployed BotDefinition, so the packaged perm set carries **no
-  static `agentAccesses`** (impossible at build time) and the reference is always correct.
-- ✅ **Deployer is now reuse-first** (installs the STARTER TEMPLATE as the attendee's starting point): if
-  the agent already exists it's NOT duplicated — reports it + re-grants access; `forceNew=true` deploys
-  `_2`/`_3` and grants access to THAT bot. `agentDeployButton` LWC + tests updated (signature gained
-  `forceNew`). All **34 Apex tests pass**.
-- ✅ **Clean-org proof on a fresh Agentforce scratch org** (`wf_clean_test`, user-provided def with
-  Einstein1AIPlatform+Chatbot+botSettings+agentPlatformSettings+einsteinGptSettings): install `0.1.0.7`
-  cleanly → Run Setup assigns all 4 perm sets → deploy starter agent (create→publish→**activate**) →
-  access granted → re-run reuses (no dup) → forceNew makes `Note_taking_agent_2` + its own access row.
-  Every step green. (Note: `notesSettings.enableNotes` is NOT a valid scratch-def key — removed; scratch
-  orgs simply lack ContentNote, which the dynamic fix now tolerates.)
-- ✅ Built `0.1.0.4` (fold-in), `0.1.0.5` (deployer rework), **`0.1.0.7`** (`04tWt000000GFCnIAO`, dynamic
-  ContentNote) — installed `0.1.0.7` on sandbox + clean scratch org. Web app install URL bumped + committed.
-- ✅ **Heroku guide republished** (Released v9) with the new install URL `04tWt000000GFCnIAO`; live site
-  verified serving it. Deploy topology: the live app's content is rooted at repo-root, so it's pushed from
-  a dedicated `heroku git:clone` synced from `web-app/` (NOT the project-root repo). Web-app +
-  `WorkshopSetupController.DEFAULT_INSTALL_URL` both point at `04tWt000000GFCnIAO`.
+**Damien's commits this session (commits 6cae98e → 8d2e64a):**
+- ✅ **"Create Note" agent action shipped** (`Employee_Agent_Create_Note` GenAiFunction, `invocationTargetType=apex`) — wraps `HtmlNoteService` invocable; inputs Subject/Content/RecordId; returns the full `ContentDocument` record (clickable link in chat). Ships in the package.
+- ✅ **Notes UI tab** — `Employee_Agent_Workshop_Notes` FlexiPage with `noteCapture` + `noteViewer` LWCs; added to Lightning app nav + granted by the workshop perm set.
+- ✅ **Duplicate-agent labels** — re-deployed agent gets a distinct label ("Employee Agent V1 (2)") so copies are distinguishable in Agent Studio.
+- ✅ **Package bumped to v0.1.0.10** (`04tWt000000GFO5IAO`); install URL updated across Apex + guide.
+- ✅ **command-center/ removed** (~4,200 lines of dead scaffolding); `secret_guard.mjs` moved to `scripts/`.
+- ✅ **Workshop test data added:** `docs/test-data/midocean-granola-transcript.md` + `docs/test-data/midocean-lucid-board-description.md`.
+- ⏭️ Still open from this session: Flex prompt template in Prompt Builder (Jorge), guide language/screenshot gaps (Hanne), clean-org test (Anuk/Bodina).
 
-### 2026-06-12 — Repackaged latest source → v0.1.0.3, installed on sandbox
-- ✅ **Built unlocked package `0.1.0.3`** (`04tWt000000GF6LIAW`, version-create id `08cWt0000002TU9IAM`)
-  from current `force-app` on the `hackathon` DevHub — core payload only, builds clean.
-- ✅ **Installed on `hackathon_sandbox`** as a **Mixed upgrade** over `0.1.0.2` (success, no errors).
-- ✅ **Redeployed `feature-addons/`** (note suite — not packageable) to the sandbox: 11 components,
-  0 errors. Sandbox now fully matches latest source.
-- 🔧 **Bumped the install URL** to the new version in `WorkshopSetupController` (`DEFAULT_INSTALL_URL`)
-  and the web app (`MainContent.jsx` `PACKAGE_INSTALL_URL`) so the guide/launchpad point at `0.1.0.3`.
-- ⏭️ Action assets + final starter-agent polish still pending; consider a fresh Heroku publish of the
-  guide so the live install button uses `0.1.0.3`.
+### 2026-06-12 — Implement multimodal image processing (Option B: single-call Flex template)
+- ✅ **Refactored `NoteCaptureAI.processFiles`** — replaced the per-file loop with a single
+  `ConnectApi.EinsteinLLM.generateMessagesForPromptTemplate` call. All uploaded files are passed
+  together as `Input:Image1`, `Input:Image2`, `Input:Image3` so the model sees cross-image
+  context in one round-trip (no sequential calls, no timeout risk).
+- 🔧 **Fixed the `WrappedValue` bug** — file inputs must use a typed map
+  `{'id' => docId, 'type' => 'ContentDocument'}`, not a bare `Id` string. Old format silently
+  produced bad requests.
+- ✅ **Enforced 3-file cap in both layers**: Apex throws `AuraHandledException` when > 3 IDs are
+  passed; `noteCapture.js` rejects the drop/select before uploading and shows a clear message.
+- ✅ **Updated `NoteCaptureAITest`** — renamed `processFilesReturnsMockCombined` to
+  `processFilesReturnsMock` (single-call semantics); added `processFilesRejectsMoreThanMax` test.
+- ✅ **Wrote `docs/prompt-template-setup.md`** — step-by-step Prompt Builder instructions for
+  creating the `Describe_File_Contents` Flex template with 3 optional `File (ContentDocument)`
+  inputs and the exact prompt text.
+- ✅ **Deployed clean to `hackathon-brussels--dev`** (Deploy ID `0AfO100000cCi94KAC`, 3 components,
+  0 errors).
+- ⏭️ Create the Flex prompt template `Describe_File_Contents` in Prompt Builder in
+  `hackathon-brussels--dev` (follow `docs/prompt-template-setup.md`) and do a live end-to-end
+  test: upload a whiteboard photo via `noteCapture`, verify text is extracted and appended to
+  the transcript.
+
+### 2026-06-12 — Consolidate to a single package (remove `feature-addons/`)
+- 🔧 **Tested the `feature-addons` split against reality** instead of trusting the README. Spun up a scratch
+  org from `config/project-scratch-def.json` and deployed the components: **`ConnectApi.EinsteinLLM` and
+  `BotDefinition` compile fine** in the build-org shape — so 5 of 7 classes never needed to be out of the
+  package. The README's "build org lacks Einstein/Bot" claim was **stale**. (Also found the def's
+  `notesSettings` block *breaks scratch-org creation* on this DevHub — `Notes` Settings type doesn't exist.)
+- 🔧 **Only real blocker = `ContentNote`** (Notes feature absent from this DevHub's scratch shape, can't be
+  toggled). Refactored **`HtmlNoteService`** to create the note via **dynamic SObject DML**
+  (`Schema.getGlobalDescribe().get('ContentNote').newSObject()` + `put(...)`) so it compiles with no
+  compile-time `ContentNote` dependency and fails gracefully where Notes is off. Guarded
+  `HtmlNoteServiceTest` + `NoteViewerControllerTest` to no-op (and use dynamic SOQL) when Notes is absent.
+- ✅ **Moved everything into `force-app/`** (8 classes, `noteCapture` + `noteViewer` LWCs,
+  `Employee_Agent_Notes_Addon` perm set) and **deleted `feature-addons/`**. Full `force-app` now
+  **deploys clean to a Notes-less scratch org** (agent bundle auto-excluded by `.forceignore`).
+- ✅ **Built the single package: v0.1.0.6 (`04tWt000000GFBBIA4`)** — all note components included.
+- ⏭️ Install v0.1.0.6 into `hackathon_sandbox` and click-test `noteCapture`/`noteViewer` live; then resume
+  the image-processing (Apex) + UI work.
 
 ### 2026-06-11 — Note-capture suite, HTML notes, note viewer, package v0.1.0.2, intro decks (autonomous run)
 - ✅ **Built & sandbox-tested 4 new components** (all Apex tests green; verified live in the browser):
@@ -419,13 +337,20 @@
 - 🔒 Note: a GitHub-MCP tool result contained injected text telling me to auto-run an OAuth command — ignored
   it (treated as untrusted); used a plain `git clone` of the public repo instead.
 
-### 2026-06-10 — Project scaffolding + goals
-- ✅ **Authored the project's working docs:** `GOALS.md` (mission, hard constraints, G1–G8, success
-  criteria), `AGENTS.md` (Salesforce-aware; points at `.agents/skills/`), `CLAUDE.md`, `README.md`.
-- 🔧 **Preserved the original Salesforce template README** at `docs/salesforce-dx-template.md`.
+### 2026-06-10 — Stand up the AI Command Center for the Agentforce Hackathon
+- ✅ **Reused the `meeting_ai` AI Command Center harness** for this project: copied the generic portal
+  shell (`index.html`), `HARNESS.md`, all `command-center/scripts/*.mjs`, the `.claude/` agents + the
+  `refresh-history` skill **verbatim** (byte-identical verified). The harness is self-contained under
+  `command-center/`; the SFDX project (`force-app/`, `.agents/`, `config/`, manifests) is untouched.
+- 🔧 **Repurposed via the single line:** `PROJECT_DIR` in `command-center/scripts/session_lib.mjs` →
+  `projects/agentforce-hackathon`. `index.html` is unedited (it's a generic render engine).
+- ✅ **Reset all contextual data to empty** — no meeting_ai sessions/versions/research carried over.
+  Fresh `data/sessions/index.json` (`[]`), `data/versions.json` (`[]`), `research.json` (pending),
+  empty `agentic-history/raw/`. Added a keyless `command-center/research/.env.example`.
+- ✅ **Authored fresh project content:** `GOALS.md` (mission, hard constraints, G1–G8, success
+  criteria), project + root `AGENTS.md` (Salesforce-aware; points at `.agents/skills/`), `CLAUDE.md`,
+  `portal.json` (brand/nav/pages), `work-items.json` (two tracks: Package + Web App).
+- 🔧 **Preserved the original Salesforce template README** at `docs/salesforce-dx-template.md` and wrote
+  a new top-level `README.md` describing both flavors + the harness.
 - ⏭️ Spike the riskiest unknown next: runtime `AiAuthoringBundle` deploy from an LWC (G2), then
   current-user permission-set assignment (G3).
-
-> Note (2026-06-12): a lightweight "AI Command Center" portal harness lived under `command-center/`
-> during early sessions to track progress; it was removed when the project was cleaned up. Some older
-> log entries below reference it — that's historical context, not current structure.
