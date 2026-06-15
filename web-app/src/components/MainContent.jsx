@@ -16,8 +16,6 @@ import Collapsible from './Collapsible'
 const PACKAGE_VERSION_ID = '04tWt000000GHOHIA4'
 const PACKAGE_INSTALL_URL = `https://login.salesforce.com/packaging/installPackage.apexp?p0=${PACKAGE_VERSION_ID}`
 const PACKAGE_INSTALL_URL_SANDBOX = `https://test.salesforce.com/packaging/installPackage.apexp?p0=${PACKAGE_VERSION_ID}`
-// Agentforce Studio (agents view) — deep link inside the attendee's org.
-const AGENTFORCE_STUDIO_PATH = '/lightning/n/standard-AgentforceStudio?c__nav=agents'
 // The free, pre-configured backup org (Agentforce Labs) — used if a primary org won't cooperate.
 const BACKUP_ORG_URL = 'https://labs.agentforce.com/'
 
@@ -25,7 +23,7 @@ const sections = ['overview', 'get-org', 'install-package', 'part-a', 'part-b', 
 
 const sectionTitles = {
   'overview': 'Workshop Overview',
-  'get-org': 'Get Your Sandbox',
+  'get-org': 'Setup your Org',
   'install-package': 'Install the Package',
   'part-a': 'Part A — Build the MVP',
   'part-b': 'Part B — Make It Yours',
@@ -50,7 +48,8 @@ function MainContent({ activeSection, setActiveSection }) {
     steps = [
       { id: 'org-primary', label: 'Option 1: Your Own Sandbox' },
       { id: 'org-backup', label: 'Option 2: Backup Lab Org' },
-      { id: 'org-verify', label: 'Verify Agentforce Is On' }
+      { id: 'org-verify', label: 'Verify Agentforce Is On' },
+      { id: 'org-enable', label: 'Confirm Access — Einstein, Agentforce & Notes' }
     ]
   } else if (activeSection === 'install-package') {
     steps = [
@@ -62,14 +61,13 @@ function MainContent({ activeSection, setActiveSection }) {
     ]
   } else if (activeSection === 'part-a') {
     steps = [
-      { id: 'a-access', label: '1. Confirm Access' },
-      { id: 'a-basics', label: '2. Open Agent Builder' },
-      { id: 'a-instructions', label: '3. Reasoning Instructions' },
-      { id: 'a-preview', label: '4. Test in Preview' },
-      { id: 'a-rich', label: '5. Make It Richer' },
-      { id: 'a-actions', label: '6. Add the Create Note Action' },
-      { id: 'a-commit', label: '7. Commit & Activate' },
-      { id: 'a-test', label: '8. Test on a Record' }
+      { id: 'a-basics', label: '1. Open Agent Builder' },
+      { id: 'a-instructions', label: '2. Reasoning Instructions' },
+      { id: 'a-preview', label: '3. Test in Preview' },
+      { id: 'a-rich', label: '4. Make It Richer' },
+      { id: 'a-actions', label: '5. Add the Create Note Action' },
+      { id: 'a-commit', label: '6. Commit & Activate' },
+      { id: 'a-test', label: '7. Test on a Record' }
     ]
   } else if (activeSection === 'part-b') {
     steps = [
@@ -215,7 +213,7 @@ function Overview({ setActiveSection }) {
 function GetOrg() {
   return (
     <div className="content-section">
-      <h1>Get Your Sandbox</h1>
+      <h1>Setup your Org</h1>
       <p>
         You'll build your agent in a Salesforce <strong>sandbox</strong> with Agentforce enabled — never in production. Use your own sandbox if you have one;
         otherwise we provide a free, pre-configured backup org so no one is blocked.
@@ -266,6 +264,35 @@ function GetOrg() {
         it, switch to the backup org above.
       </p>
       <ImageViewer src="/images/agentforce_studio.png" alt="Agentforce Studio in the App Launcher" />
+
+      <hr className="step-divider" />
+
+      <HeaderAnchor id="org-enable">Confirm Access — Einstein, Agentforce &amp; Notes</HeaderAnchor>
+      <p>
+        If <strong>Agentforce Studio</strong> opens and agents are available, you're set — skip ahead and install
+        the package. If agents aren't available, flip on these three settings in <strong>Setup</strong> first.
+      </p>
+      <h3>Enable Einstein</h3>
+      <p>In <strong>Setup</strong>, search <em>Einstein Setup</em> and turn <strong>Einstein</strong> on.</p>
+      <ImageViewer src="/guide-shots/enable-einstein.png" alt="Setup → Einstein Setup → Turn on Einstein" />
+      <h3>Enable Agentforce</h3>
+      <p>
+        Refresh the browser, then in <strong>Setup</strong> search <em>Agentforce Agents</em> and toggle
+        <strong> Agentforce</strong> on.
+      </p>
+      <ImageViewer src="/guide-shots/enable-agentforce.png" alt="Setup → Agentforce Agents → toggle Agentforce on" />
+      <h3>Enable Notes</h3>
+      <p>
+        Our agent saves rich Notes, so make sure Notes is on: in <strong>Setup</strong> search
+        <em> Notes Settings</em> and tick <strong>Enable Notes</strong>, then <strong>Save</strong>.
+      </p>
+      <ImageViewer src="/guide-shots/enable-notes.png" alt="Setup → Notes Settings → Enable Notes" />
+      <DocCallout variant="note">
+        <p>
+          Most real sandboxes already have these enabled. Scratch orgs and some trial orgs don't — that's what
+          these three toggles are for.
+        </p>
+      </DocCallout>
     </div>
   )
 }
@@ -291,22 +318,22 @@ function InstallPackage() {
         that matches your org type:
       </p>
       <div className="install-button-row">
-        <a className="install-button" href={PACKAGE_INSTALL_URL} target="_blank" rel="noopener noreferrer">
-          <Download size={18} /> Install in Production / Dev Edition
-        </a>
-        <a className="install-button install-button--ghost" href={PACKAGE_INSTALL_URL_SANDBOX} target="_blank" rel="noopener noreferrer">
+        <a className="install-button" href={PACKAGE_INSTALL_URL_SANDBOX} target="_blank" rel="noopener noreferrer">
           <Download size={18} /> Install in a Sandbox
+        </a>
+        <a className="install-button install-button--ghost" href={PACKAGE_INSTALL_URL} target="_blank" rel="noopener noreferrer">
+          <Download size={18} /> Install in Production / Dev Edition
         </a>
       </div>
       <DocCallout variant="tip" header="Which one?">
         <p>
-          Use <strong>Install in a Sandbox</strong> (<code>test.salesforce.com</code>) for a real sandbox —
-          including the Agentforce Labs backup org. Use <strong>Production / Dev Edition</strong>
-          (<code>login.salesforce.com</code>) for a Developer Edition or production org.
+          Use <strong>Install in a Sandbox</strong> (<code>test.salesforce.com</code>) for a real sandbox. Use
+          <strong> Production / Dev Edition</strong> (<code>login.salesforce.com</code>) for a Developer Edition,
+          a production org, or the <strong>Agentforce Labs backup org</strong> (it's a Dev/trial org, not a sandbox).
         </p>
       </DocCallout>
       <p style={{ color: 'var(--muted-foreground)' }}>Prefer to paste the link manually?</p>
-      <CodeBlock code={`Production / Dev Edition:\n${PACKAGE_INSTALL_URL}\n\nSandbox:\n${PACKAGE_INSTALL_URL_SANDBOX}`} language="text" />
+      <CodeBlock code={`Sandbox:\n${PACKAGE_INSTALL_URL_SANDBOX}\n\nProduction / Dev Edition:\n${PACKAGE_INSTALL_URL}`} language="text" />
 
       <hr className="step-divider" />
 
@@ -364,11 +391,6 @@ function InstallPackage() {
       <p>
         You can also (optionally) install the <strong>Use-Case Research Agent</strong> — a second, ready-made
         agent — from the same page. Building Employee Agent V1 yourself in Agent Studio is the main exercise, though!
-      </p>
-      <p>
-        <a className="install-button install-button--ghost" href={AGENTFORCE_STUDIO_PATH}>
-          Open Agentforce Studio →
-        </a>
       </p>
     </div>
   )
@@ -474,43 +496,13 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
     <div className="content-section">
       <h1>Part A — Set Up the MVP (Guided)</h1>
       <p>
-        Now you'll build the core of the agent together with the facilitator: confirm access, understand the
-        starter agent's instructions, preview it, make its response richer, add the Create Note action, and
-        put it live. By the end of Part A you'll have a working agent that summarizes notes into a polished
-        report and logs them as a Note.
+        Now you'll build the core of the agent together with the facilitator: open the starter agent, understand
+        its instructions, preview it, make its response richer, add the Create Note action, and put it live.
+        By the end of Part A you'll have a working agent that summarizes notes into a polished report and logs
+        them as a Note.
       </p>
 
-      <HeaderAnchor id="a-access">1. Confirm Access — Einstein, Agentforce &amp; Notes</HeaderAnchor>
-      <p>
-        Open the <strong>App Launcher</strong> (the grid icon, top-left) and go to <strong>Agentforce
-        Studio</strong>. If your agent is already there, skip ahead to step 2. If agents aren't available, flip
-        on these three settings in <strong>Setup</strong> first.
-      </p>
-      <h3>Enable Einstein</h3>
-      <p>In <strong>Setup</strong>, search <em>Einstein Setup</em> and turn <strong>Einstein</strong> on.</p>
-      <ImageViewer src="/guide-shots/enable-einstein.png" alt="Setup → Einstein Setup → Turn on Einstein" />
-      <h3>Enable Agentforce</h3>
-      <p>
-        Refresh the browser, then in <strong>Setup</strong> search <em>Agentforce Agents</em> and toggle
-        <strong> Agentforce</strong> on.
-      </p>
-      <ImageViewer src="/guide-shots/enable-agentforce.png" alt="Setup → Agentforce Agents → toggle Agentforce on" />
-      <h3>Enable Notes</h3>
-      <p>
-        Our agent saves rich Notes, so make sure Notes is on: in <strong>Setup</strong> search
-        <em> Notes Settings</em> and tick <strong>Enable Notes</strong>, then <strong>Save</strong>.
-      </p>
-      <ImageViewer src="/guide-shots/enable-notes.png" alt="Setup → Notes Settings → Enable Notes" />
-      <DocCallout variant="note">
-        <p>
-          Most real sandboxes already have these enabled. Scratch orgs and some trial orgs don't — that's what
-          these three toggles are for.
-        </p>
-      </DocCallout>
-
-      <hr className="step-divider" />
-
-      <HeaderAnchor id="a-basics">2. Open Your Agent in Agent Builder</HeaderAnchor>
+      <HeaderAnchor id="a-basics">1. Open Your Agent in Agent Builder</HeaderAnchor>
       <p>
         Back in <strong>Agentforce Studio</strong>, open the <strong>Agents</strong> list and click
         <strong> Employee Agent V1</strong> (your starter agent).
@@ -539,7 +531,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-instructions">3. Understand the Reasoning Instructions</HeaderAnchor>
+      <HeaderAnchor id="a-instructions">2. Understand the Reasoning Instructions</HeaderAnchor>
       <p>
         In the <strong>Explorer</strong>, expand <strong>Subagents</strong> and click the
         <strong> Notes Agent</strong> subagent. Your template already ships with simple reasoning instructions —
@@ -565,7 +557,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-preview">4. Test It in Preview</HeaderAnchor>
+      <HeaderAnchor id="a-preview">3. Test It in Preview</HeaderAnchor>
       <p>
         On the top-left of the canvas, click <strong>Preview</strong> to open <strong>Live Test Mode</strong>.
       </p>
@@ -591,7 +583,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-rich">5. Make the Response Richer</HeaderAnchor>
+      <HeaderAnchor id="a-rich">4. Make the Response Richer</HeaderAnchor>
       <p>
         We'll adjust the instructions so the agent produces a more detailed, beautifully formatted HTML summary.
         To edit a committed agent we first need a <strong>draft</strong>: on the top-right click
@@ -610,7 +602,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-actions">6. Give It Actionable Power — Add the Create Note Action</HeaderAnchor>
+      <HeaderAnchor id="a-actions">5. Give It Actionable Power — Add the Create Note Action</HeaderAnchor>
       <DocCallout variant="note" header="What actions are">
         <p>
           Actions are what the agent can actually <em>do</em>, not just think or say. The reasoning instructions
@@ -650,7 +642,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-commit">7. Put It Live — Commit &amp; Activate</HeaderAnchor>
+      <HeaderAnchor id="a-commit">6. Put It Live — Commit &amp; Activate</HeaderAnchor>
       <p>
         Happy with it? <strong>Save</strong>, then <strong>Commit</strong> the version, then click
         <strong> Activate</strong> so the version goes live. Keep the instructions as they are.
@@ -666,7 +658,7 @@ Sarah: Got it — auto-triage and generate quotes under €1K, route anything la
 
       <hr className="step-divider" />
 
-      <HeaderAnchor id="a-test">8. Use It — Test on a Record</HeaderAnchor>
+      <HeaderAnchor id="a-test">7. Use It — Test on a Record</HeaderAnchor>
       <p>
         Open the agent from your app (the agent icon appears because access was granted during install) and try
         it for real. Verify that the agent summarizes the notes, logs them as a Note, and gives you back a

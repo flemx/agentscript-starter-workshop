@@ -694,6 +694,14 @@ code {
   font-family: var(--font-mono) !important;
 }
 
+/* The code box is always dark, so force light text — otherwise the global inline-`code`
+   color (dark navy in light mode) is inherited and the text is invisible on plain blocks. */
+.code-block-content pre,
+.code-block-content pre code,
+.code-block-content pre span {
+  color: #e6edf3;
+}
+
 .code-block-content pre code {
   background: transparent !important;
   padding: 0 !important;
