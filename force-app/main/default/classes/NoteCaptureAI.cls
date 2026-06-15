@@ -8,8 +8,9 @@
  * working (the attendee can still paste text and send to the agent).
  *
  * Implementation notes:
- *  - Speech-to-text uses the platform standard action `convertBase64SpeechToText`, invoked
- *    via `Invocable.Action.createStandardAction`.
+ *  - Speech-to-text uses the platform standard action `voiceToText` (API v66+), invoked via
+ *    `Invocable.Action.createStandardAction`. Input `base64Audio`, output `convertedText`.
+ *    NOTE: the class apiVersion MUST be >= 66.0 or the action is "not a valid action type".
      *  - File-to-text uses a Flex GenAiPromptTemplate (developer name in PROMPT_TEMPLATE) with
      *    three optional file inputs (File1, File2, File3). Supported types: images (PNG/JPG/WEBP),
      *    PDFs, and any other ContentDocument format the model accepts. All uploaded files are
