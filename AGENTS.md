@@ -126,9 +126,22 @@ A package installs metadata, but three things can only happen *after* install, i
 
 - **For Salesforce metadata / agent / LWC / Apex work, prefer the `.agents/skills/` skills** over guessing
   — they encode current Agentforce DX conventions.
+- **Editing an agent's Agent Script — bundle is the SOURCE OF TRUTH, sync it to the resource.**
+  An `AiAuthoringBundle` can't be packaged, so each shipped agent ships its afscript as a Static Resource
+  the launchpad reads at runtime (`NextGenAgentDeployer`). There are therefore **two files per agent that
+  must stay byte-identical**:
+  - **source (edit this):** `force-app/main/default/aiAuthoringBundles/<Name>/<Name>.agent`
+  - **shipped copy (generated):** `force-app/main/default/staticresources/<Name>_afscript.resource`
+
+  **Always edit the `.agent` bundle, never the `.resource` directly.** After any edit run
+  **`npm run sync:agents`** (copies every bundle → its matching `_afscript.resource`). `npm run
+  sync:agents:check` verifies they're in sync (exit 1 if drifted) — run it before building/committing.
+  The bundle dir is `.forceignore`d (never packaged); only the synced resource ships. *(The hosted demo
+  agent in `demo-agents/` has no resource — it's published directly, not packaged, so the script skips it.)*
 - **Build the package:** `sf package version create --package "Employee Agent Workshop"
   --installation-key-bypass --skip-validation --wait 30 --target-dev-hub hackathon`
-  (`--skip-validation` is required — the build org lacks the runtime features).
+  (`--skip-validation` is required — the build org lacks the runtime features). **Run `npm run
+  sync:agents` first** so the shipped afscript resources match the edited bundles.
 - **Install:** `sf package install --package <04t...> --target-org <org> --wait 20 --no-prompt`.
 - **Keep the two deliverables in sync** — when the package's perms/actions change, update the matching
   guide step.

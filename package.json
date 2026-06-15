@@ -5,7 +5,9 @@
   "description": "Salesforce App",
   "scripts": {
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
-    "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\""
+    "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
+    "sync:agents": "node scripts/sync_agent_resources.mjs",
+    "sync:agents:check": "node scripts/sync_agent_resources.mjs --check"
   },
   "devDependencies": {
     "@prettier/plugin-xml": "^3.4.1",
