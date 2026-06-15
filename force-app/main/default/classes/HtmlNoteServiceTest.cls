@@ -97,10 +97,8 @@ private class HtmlNoteServiceTest {
 
         System.assertEquals(1, res.size());
         System.assertEquals(true, res[0].isSuccess, 'Invocable should succeed');
-        System.assertNotEquals(null, res[0].noteId, 'Should return the note Id');
-        System.assertNotEquals(null, res[0].note, 'Should return the full created ContentDocument record');
-        System.assertEquals(res[0].noteId, res[0].note.Id, 'Returned record Id should match noteId');
-        System.assertNotEquals(null, res[0].note.Title, 'Returned ContentDocument should carry its fields (Title)');
+        System.assertNotEquals(null, res[0].noteUrl, 'Should return a clickable note URL');
+        System.assert(res[0].noteUrl.contains('Employee_Agent_Workshop_Notes'), 'URL should point at the Enhanced Notes viewer');
     }
 
     @IsTest

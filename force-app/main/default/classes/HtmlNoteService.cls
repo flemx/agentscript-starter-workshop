@@ -119,8 +119,6 @@ public with sharing class HtmlNoteService {
             try {
                 Id docId = createHtmlNote(req.subject, req.content, req.recordId);
                 res.isSuccess = true;
-                res.noteId = docId;
-                res.note = loadNoteRecord(docId);
                 res.noteUrl = '/lightning/n/Employee_Agent_Workshop_Notes?id=' + docId;
                 res.message = 'Note "' + req.subject + '" created.';
             } catch (Exception e) {
@@ -130,20 +128,6 @@ public with sharing class HtmlNoteService {
             responses.add(res);
         }
         return responses;
-    }
-
-    /**
-     * Loads the created note as a full ContentDocument record (Files — present in every org, so
-     * safe to reference statically) for the agent to return. The agent renders this record as a
-     * clickable link to the note. Returns null if it can't be re-read.
-     */
-    private static ContentDocument loadNoteRecord(Id contentDocumentId) {
-        List<ContentDocument> docs = [
-            SELECT Id, Title, LatestPublishedVersionId, FileType, FileExtension,
-                   ContentSize, OwnerId, CreatedDate, LastModifiedDate
-            FROM ContentDocument WHERE Id = :contentDocumentId WITH USER_MODE LIMIT 1
-        ];
-        return docs.isEmpty() ? null : docs[0];
     }
 
     /**
@@ -196,13 +180,11 @@ public with sharing class HtmlNoteService {
     }
 
     /**
-     * Output of the invocable Create Note action. `note` is the full created ContentDocument
-     * record — surface it to the user so they can open the note (it renders as a clickable link).
+     * Output of the invocable Create Note action. Returns a success flag, a status message, and a
+     * direct URL to view the created note in the Enhanced Notes viewer.
      */
     public class Response {
         @InvocableVariable(label='Success') public Boolean isSuccess;
-        @InvocableVariable(label='Note') public ContentDocument note;
-        @InvocableVariable(label='Note Id') public Id noteId;
         @InvocableVariable(label='Message') public String message;
         @InvocableVariable(
             label='Note URL'

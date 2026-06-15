@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Mic, Square, Paperclip, Loader2, User, Sparkles, Globe, BookOpen, FileText, Check } from 'lucide-react'
-import { createSession, streamMessage, splitReport } from '../lib/agentClient'
+import { Send, Mic, Square, Paperclip, Loader2, User, Sparkles, Globe, BookOpen, FileText, Check, RefreshCw } from 'lucide-react'
+import { createSession, endSession, streamMessage, splitReport } from '../lib/agentClient'
 import ReportArtifact from './ReportArtifact'
 import AgentAstro from './AgentAstro'
 
@@ -32,6 +32,7 @@ export default function AgentChat() {
   const mediaRef = useRef(null)
   const fileInputRef = useRef(null)
   const taRef = useRef(null)
+  const abortRef = useRef(null)
 
   const started = messages.length > 0
   const hasArtifact = !!report || reportPending

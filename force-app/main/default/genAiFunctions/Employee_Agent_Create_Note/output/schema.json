@@ -10,24 +10,6 @@
       "copilotAction:isUsedByPlanner" : true,
       "copilotAction:useHydratedPrompt" : false
     },
-    "note" : {
-      "title" : "note",
-      "description" : "The created Note record (a ContentDocument). Share this record with the user so they can open the note — it renders as a clickable link to the note.",
-      "lightning:type" : "lightning__recordInfoType",
-      "lightning:isPII" : false,
-      "copilotAction:isDisplayable" : true,
-      "copilotAction:isUsedByPlanner" : false,
-      "copilotAction:useHydratedPrompt" : false
-    },
-    "noteId" : {
-      "title" : "noteId",
-      "description" : "The Id of the created note (its ContentDocument Id).",
-      "lightning:type" : "lightning__textType",
-      "lightning:isPII" : false,
-      "copilotAction:isDisplayable" : false,
-      "copilotAction:isUsedByPlanner" : true,
-      "copilotAction:useHydratedPrompt" : false
-    },
     "message" : {
       "title" : "message",
       "description" : "A short status message describing the result, suitable to relay to the user.",
