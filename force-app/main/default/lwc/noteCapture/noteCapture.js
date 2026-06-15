@@ -74,7 +74,13 @@ export default class NoteCapture extends LightningElement {
             // value = botId, because the ACC API targets an agent by its bot id.
             this.agentOptions = agents.map((a) => ({ label: a.label, value: a.botId }));
             if (this.agentOptions.length) {
-                this.selectedAgent = this.agentOptions[0].value;
+                // Prefer "Employee Agent V1" by name; fall back to the first in the list.
+                const preferred = this.agentOptions.find((a) =>
+                    a.label.toLowerCase().includes('employee agent v1')
+                );
+                this.selectedAgent = preferred
+                    ? preferred.value
+                    : this.agentOptions[0].value;
             }
         } catch (e) {
             this.error = this.reduceError(e);
