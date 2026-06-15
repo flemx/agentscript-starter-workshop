@@ -89,8 +89,8 @@ private class HtmlNoteServiceTest {
             return;
         }
         HtmlNoteService.Request req = new HtmlNoteService.Request();
-        req.title = 'Invocable Note';
-        req.htmlBody = '<p>From an agent</p>';
+        req.subject = 'Invocable Note';
+        req.content = '<p>From an agent</p>';
 
         Test.startTest();
         List<HtmlNoteService.Response> res = HtmlNoteService.createHtmlNotes(
@@ -100,14 +100,14 @@ private class HtmlNoteServiceTest {
 
         System.assertEquals(1, res.size());
         System.assertEquals(true, res[0].isSuccess, 'Invocable should succeed');
-        System.assertNotEquals(null, res[0].contentDocumentId);
+        System.assertNotEquals(null, res[0].noteId);
     }
 
     @IsTest
     static void invocableReportsFailure() {
         HtmlNoteService.Request req = new HtmlNoteService.Request();
-        req.title = ''; // invalid → failure captured, not thrown
-        req.htmlBody = '<p>x</p>';
+        req.subject = ''; // invalid → failure captured, not thrown
+        req.content = '<p>x</p>';
 
         Test.startTest();
         List<HtmlNoteService.Response> res = HtmlNoteService.createHtmlNotes(
@@ -116,7 +116,7 @@ private class HtmlNoteServiceTest {
         Test.stopTest();
 
         System.assertEquals(false, res[0].isSuccess, 'Blank title should be reported as failure');
-        System.assertNotEquals(null, res[0].errorMessage);
+        System.assertNotEquals(null, res[0].message);
     }
 
     @IsTest
