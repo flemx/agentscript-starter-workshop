@@ -11,27 +11,9 @@
  *
  * Why HTML matters here: it unlocks nicely-formatted meeting summaries and a polished
  * "workshop report" deliverable straight out of the agent.
- *
- * PORTABILITY — why ContentNote is referenced dynamically.
- *   `ContentNote` is a standard object, but it is NOT present in every org type: real
- *   customer sandboxes (production copies) have it, but scratch orgs and some trial orgs
- *   (e.g. the Agentforce Labs backup org used in the workshop) do not surface it. A STATIC
- *   `new ContentNote()` reference would fail to COMPILE on install in those orgs, which would
- *   block the whole package. To keep this in a single package that installs EVERYWHERE with
- *   no post-deploy step, we touch ContentNote only via the dynamic Schema API
- *   (`Schema.getGlobalDescribe()` + `SObject.put`). Where Notes isn't available the class
- *   still compiles and `isAvailable()` reports false, so callers degrade gracefully.
  */
 public with sharing class HtmlNoteService {
     public class HtmlNoteException extends Exception {}
-
-    private static final String CONTENT_NOTE = 'ContentNote';
-
-    /** True when this org supports ContentNote (real sandboxes do; scratch/trial may not). */
-    @AuraEnabled(cacheable=true)
-    public static Boolean isAvailable() {
-        return Schema.getGlobalDescribe().containsKey(CONTENT_NOTE);
-    }
 
     // ContentNote only persists a restricted set of HTML tags; everything else is stripped
     // on insert. We pre-sanitize to that whitelist so callers get predictable output and we
@@ -55,23 +37,25 @@ public with sharing class HtmlNoteService {
         if (String.isBlank(title)) {
             throw new HtmlNoteException('A note title is required.');
         }
-        if (!isAvailable()) {
-            throw new AuraHandledException(
-                'Salesforce Notes (ContentNote) isn\'t available in this org, so an HTML note can\'t be created here.'
-            );
+        // ContentNote is referenced dynamically so this class compiles in orgs where the
+        // Notes feature isn't enabled (e.g. the package-build scratch org). It still runs
+        // normally wherever ContentNote exists, and fails with a clear message where it doesn't.
+        Schema.SObjectType noteType = Schema.getGlobalDescribe().get('ContentNote');
+        if (noteType == null) {
+            throw new HtmlNoteException('Notes (ContentNote) is not enabled in this org.');
         }
         try {
-            // Dynamic ContentNote creation (see class header on portability).
-            SObject note = Schema.getGlobalDescribe().get(CONTENT_NOTE).newSObject();
+            SObject note = noteType.newSObject();
             note.put('Title', title.left(255));
             // ContentNote.Content is HTML stored as a Blob — supply HTML directly, do NOT escape.
             note.put('Content', Blob.valueOf(sanitize(String.isBlank(htmlBody) ? '<p></p>' : htmlBody)));
             insert note;
 
+            Id noteId = (Id) note.get('Id');
             if (String.isNotBlank(linkToId)) {
-                linkNoteToRecord(note.Id, (Id) linkToId);
+                linkNoteToRecord(noteId, (Id) linkToId);
             }
-            return note.Id;
+            return noteId;
         } catch (DmlException e) {
             throw new AuraHandledException('Could not create the note: ' + e.getDmlMessage(0));
         } catch (Exception e) {
@@ -100,13 +84,12 @@ public with sharing class HtmlNoteService {
     }
 
     /**
-     * Invocable entry point so an Agent (or Flow) can create a formatted note and get back the
-     * created Note record — so the agent can show the user a clickable link to it in the chat.
+     * Invocable entry point so an Agent / Flow can create a formatted note.
      * Accepts a list (bulk-safe) and returns a parallel list of results.
      */
     @InvocableMethod(
-        label='Create Note'
-        description='Creates a richly-formatted Salesforce Note from HTML, optionally linked to a record, and returns the created note so you can give the user a clickable link to it.'
+        label='Create HTML Note'
+        description='Creates a richly-formatted Salesforce Note (ContentNote) from HTML and optionally links it to a record.'
         category='Agent Workshop'
     )
     public static List<Response> createHtmlNotes(List<Request> requests) {
@@ -114,32 +97,15 @@ public with sharing class HtmlNoteService {
         for (Request req : requests) {
             Response res = new Response();
             try {
-                Id docId = createHtmlNote(req.subject, req.content, req.recordId);
+                res.contentDocumentId = createHtmlNote(req.title, req.htmlBody, req.linkToId);
                 res.isSuccess = true;
-                res.noteId = docId;
-                res.note = loadNoteRecord(docId);
-                res.message = 'Note "' + req.subject + '" created.';
             } catch (Exception e) {
                 res.isSuccess = false;
-                res.message = e.getMessage();
+                res.errorMessage = e.getMessage();
             }
             responses.add(res);
         }
         return responses;
-    }
-
-    /**
-     * Loads the created note as a full ContentDocument record (Files — present in every org, so
-     * safe to reference statically) for the agent to return. The agent renders this record as a
-     * clickable link to the note. Returns null if it can't be re-read.
-     */
-    private static ContentDocument loadNoteRecord(Id contentDocumentId) {
-        List<ContentDocument> docs = [
-            SELECT Id, Title, LatestPublishedVersionId, FileType, FileExtension,
-                   ContentSize, OwnerId, CreatedDate, LastModifiedDate
-            FROM ContentDocument WHERE Id = :contentDocumentId WITH USER_MODE LIMIT 1
-        ];
-        return docs.isEmpty() ? null : docs[0];
     }
 
     /**
@@ -170,35 +136,17 @@ public with sharing class HtmlNoteService {
         return out;
     }
 
-    /** Input for the invocable Create Note action. Descriptions guide the agent on what to pass. */
+    /** Input for the invocable Create HTML Note action. */
     public class Request {
-        @InvocableVariable(
-            required=true label='Subject'
-            description='The note title / subject — a short headline for the note, e.g. "Acme — discovery call notes".'
-        )
-        public String subject;
-
-        @InvocableVariable(
-            required=true label='Content'
-            description='The note body as HTML. Use tags like <h1>/<h2>, <p>, <b>, <ul>/<li>, <table> to format it; it is stored and rendered as rich text. Do NOT escape the HTML.'
-        )
-        public String content;
-
-        @InvocableVariable(
-            label='Record Id'
-            description='Optional. The Id of the record this note should be associated with (Account, Contact, Opportunity, or any object). Leave blank to create a standalone note. If the user is on a record, pass that record Id here.'
-        )
-        public String recordId;
+        @InvocableVariable(required=true label='Note Title') public String title;
+        @InvocableVariable(required=true label='HTML Body') public String htmlBody;
+        @InvocableVariable(label='Record Id to link to') public String linkToId;
     }
 
-    /**
-     * Output of the invocable Create Note action. `note` is the full created ContentDocument
-     * record — surface it to the user so they can open the note (it renders as a clickable link).
-     */
+    /** Output of the invocable Create HTML Note action. */
     public class Response {
         @InvocableVariable(label='Success') public Boolean isSuccess;
-        @InvocableVariable(label='Note') public ContentDocument note;
-        @InvocableVariable(label='Note Id') public Id noteId;
-        @InvocableVariable(label='Message') public String message;
+        @InvocableVariable(label='Content Document Id') public Id contentDocumentId;
+        @InvocableVariable(label='Error Message') public String errorMessage;
     }
 }

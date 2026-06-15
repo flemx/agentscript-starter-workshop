@@ -1,82 +1,177 @@
-.capture-card {
-    --accent: #0176d3;
+:host {
+    --sf-blue: #0176d3;
+    --sf-blue-dark: #014486;
+    --sf-navy: #032d60;
+    --sf-bg: #f3f6f9;
+    --sf-border: #e5e9f0;
+    --sf-text-weak: #5b6b85;
 }
 
-/* ---------- Audio recorder ---------- */
-.recorder {
+.nc-root {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 8px;
+}
+
+/* ---------- Header ---------- */
+.nc-header {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 20px;
-    border: 1px dashed #c9d4e3;
-    border-radius: 14px;
-    background: #f7faff;
+    gap: 12px;
+    margin: 4px 4px 14px;
 }
 
-.mic-button {
-    position: relative;
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #1b9bff, #0a4ea8);
-    color: #fff;
-    cursor: pointer;
-    display: flex;
+.nc-logo {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 18px rgba(1, 118, 211, 0.35);
-    transition: transform 0.1s ease;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--sf-blue), var(--sf-blue-dark));
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.3);
+    flex: 0 0 auto;
 }
 
-.mic-button:hover {
-    transform: scale(1.04);
+.nc-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--sf-navy);
+    line-height: 1.2;
 }
 
-.mic-button.recording {
-    background: linear-gradient(135deg, #ff5d5d, #c0392b);
+.nc-subtitle {
+    font-size: 13px;
+    color: var(--sf-text-weak);
+    margin-top: 2px;
 }
 
-/* Pulsing rings while recording */
-.mic-button.recording::before,
-.mic-button.recording::after {
-    content: '';
-    position: absolute;
-    inset: 0;
+/* ---------- Composer ---------- */
+.composer {
+    background: #fff;
+    border: 1px solid var(--sf-border);
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 6px 24px rgba(3, 45, 96, 0.08);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.composer.dragover {
+    border-color: var(--sf-blue);
+    box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.18);
+}
+
+/* ---------- Attachment tray ---------- */
+.nc-tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.nc-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 240px;
+    padding: 6px 10px;
+    background: #f7faff;
+    border: 1px solid var(--sf-border);
+    border-radius: 12px;
+}
+
+.nc-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: block;
+}
+
+.nc-chip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #eef4ff;
+}
+
+.nc-chip-icon.audio {
+    background: linear-gradient(135deg, var(--sf-blue), var(--sf-blue-dark));
+}
+
+.nc-chip-meta {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nc-chip-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sf-navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nc-chip-sub {
+    font-size: 11px;
+    color: var(--sf-text-weak);
+}
+
+.nc-chip-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
     border-radius: 50%;
-    border: 2px solid rgba(255, 93, 93, 0.5);
-    animation: pulse 1.6s infinite ease-out;
+    background: rgba(3, 45, 96, 0.08);
+    cursor: pointer;
+    padding: 0;
+    flex: 0 0 auto;
+    --slds-c-icon-color-foreground-default: var(--sf-navy);
 }
 
-.mic-button.recording::after {
-    animation-delay: 0.8s;
+.nc-chip-x:hover {
+    background: rgba(3, 45, 96, 0.18);
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
-    100% {
-        transform: scale(2.1);
-        opacity: 0;
-    }
+/* ---------- Recording state ---------- */
+.nc-recording {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    background: #fff5f5;
+    border: 1px solid #f6c5c5;
+    border-radius: 12px;
 }
 
-/* Animated waveform bars */
+.nc-recording-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c0392b;
+}
+
 .waveform {
     display: flex;
     align-items: center;
-    gap: 4px;
-    height: 40px;
-    margin-top: 16px;
+    gap: 3px;
+    height: 28px;
 }
 
 .waveform .bar {
-    width: 4px;
-    background: #1b9bff;
+    width: 3px;
+    background: #e0463f;
     border-radius: 2px;
-    height: 8px;
+    height: 6px;
     animation: wave 1s infinite ease-in-out;
 }
 
@@ -91,50 +186,139 @@
 .waveform .bar:nth-child(10) { animation-delay: 0.1s; }
 
 @keyframes wave {
-    0%, 100% { height: 8px; }
-    50% { height: 34px; }
+    0%, 100% { height: 6px; }
+    50% { height: 26px; }
 }
 
 .timer {
-    margin-top: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
-    font-weight: 600;
-    color: #16325c;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sf-navy);
 }
 
-/* ---------- File drop zone ---------- */
-.dropzone {
-    border: 2px dashed #c9d4e3;
-    border-radius: 14px;
-    padding: 28px;
-    text-align: center;
-    color: #5b6b85;
-    background: #fafcff;
-    transition: background 0.15s ease, border-color 0.15s ease;
+/* ---------- Inline status ---------- */
+.nc-status {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 6px 4px 10px;
+    font-size: 13px;
+    color: var(--sf-text-weak);
 }
 
-.dropzone.dragover {
-    background: #eef4ff;
-    border-color: #1b9bff;
+/* ---------- Text area ---------- */
+.nc-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    min-height: 96px;
+    max-height: 260px;
+    padding: 6px 4px;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--sf-navy);
+    background: transparent;
+    box-sizing: border-box;
 }
 
-.file-chip {
+.nc-textarea::placeholder {
+    color: #9aa9c2;
+}
+
+/* ---------- Action bar ---------- */
+.nc-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.nc-actions-left,
+.nc-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icon-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: #eef4ff;
-    border: 1px solid #c9d4e3;
-    border-radius: 999px;
-    padding: 4px 12px;
-    margin: 4px;
-    font-size: 13px;
-    color: #16325c;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--sf-border);
+    background: #fff;
+    color: var(--sf-navy);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
 }
 
-.section-label {
-    font-weight: 700;
-    color: #16325c;
-    margin: 18px 0 8px;
-    display: block;
+.icon-btn:hover:not(:disabled) {
+    background: #eef4ff;
+    border-color: var(--sf-blue);
+}
+
+.icon-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.icon-btn.mic.recording {
+    background: linear-gradient(135deg, #ff5d5d, #c0392b);
+    border-color: transparent;
+    --slds-c-icon-color-foreground-default: #fff;
+    animation: micpulse 1.4s infinite ease-out;
+}
+
+@keyframes micpulse {
+    0% { box-shadow: 0 0 0 0 rgba(224, 70, 63, 0.5); }
+    100% { box-shadow: 0 0 0 10px rgba(224, 70, 63, 0); }
+}
+
+.nc-agent {
+    min-width: 190px;
+}
+
+.send-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--sf-blue), var(--sf-blue-dark));
+    cursor: pointer;
+    padding: 0;
+    box-shadow: 0 4px 14px rgba(1, 118, 211, 0.4);
+    transition: transform 0.1s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.send-btn:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.03);
+}
+
+.send-btn:disabled {
+    background: #c4d0e0;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* ---------- Error ---------- */
+.nc-error {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fdecea;
+    border: 1px solid #f5c6c0;
+    color: #8b1a10;
+    font-size: 13px;
 }

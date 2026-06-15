@@ -9,14 +9,19 @@ import processFiles from '@salesforce/apex/NoteCaptureAI.processFiles';
 // component still works where the panel isn't available (it then falls back to an event).
 import { open as accOpen, execute as accExecute } from 'lightning/accApi';
 
+const MAX_FILES = 3;
+const IMAGE_RE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
+const PDF_RE = /\.pdf$/i;
+
 /**
- * noteCapture — collect a meeting "transcript" from three sources and send it to an
- * Employee Agent:
- *   1. recorded audio  → speech-to-text (with a live recording animation)
- *   2. dropped files   → uploaded as Salesforce Files, read to text via a prompt template
- *                        (multiple files processed in parallel, server-side)
- *   3. pasted text
- * The combined text is then sent to a chosen Employee Agent.
+ * noteCapture — a Claude-style composer that collects a meeting "transcript" from three
+ * sources and sends it to an Employee Agent:
+ *   1. recorded audio  → speech-to-text (live recording state inside the composer)
+ *   2. attached files  → uploaded as Salesforce Files (max 3, images render as thumbnails),
+ *                        read to text via a single multimodal prompt template call
+ *   3. typed/pasted text
+ * Attachments appear as removable chips in a tray at the top of the composer. The combined
+ * text is sent to the chosen Employee Agent via the Agentforce client (ACC) API.
  */
 export default class NoteCapture extends LightningElement {
     @api recordId; // when on a record page, files/notes link here
@@ -25,13 +30,14 @@ export default class NoteCapture extends LightningElement {
     isRecording = false;
     isTranscribing = false;
     isProcessingFiles = false;
-    @track files = []; // {key, name, contentDocumentId, text}
-    audioTranscript = '';
-    fileTranscript = '';
-    pastedText = '';
+    @track files = []; // {key, name, kind, isImage, thumbnailUrl, contentVersionId, contentDocumentId}
+    fileTranscript = ''; // extracted text from attached files — sent to the agent, not edited here
+    pastedText = ''; // the editable notes (typed text + inserted audio transcript)
     @track agentOptions = [];
     selectedAgent = '';
     error;
+    _dragover = false;
+    _needsResize = false;
 
     // recording internals
     mediaRecorder;
@@ -42,6 +48,24 @@ export default class NoteCapture extends LightningElement {
 
     connectedCallback() {
         this.loadAgents();
+    }
+
+    disconnectedCallback() {
+        // Free any object URLs created for image thumbnails.
+        this.files.forEach((f) => f.thumbnailUrl && URL.revokeObjectURL(f.thumbnailUrl));
+    }
+
+    renderedCallback() {
+        // After we programmatically change the notes (e.g. inserting an audio transcript),
+        // grow the textarea to fit the new content.
+        if (this._needsResize) {
+            this._needsResize = false;
+            const el = this.template.querySelector('.nc-textarea');
+            if (el) {
+                el.style.height = 'auto';
+                el.style.height = `${el.scrollHeight}px`;
+            }
+        }
     }
 
     async loadAgents() {
@@ -57,18 +81,33 @@ export default class NoteCapture extends LightningElement {
         }
     }
 
+    // ───────────────────────── attachment tray ─────────────────────────
+
+    get attachments() {
+        // Only files appear as chips. A recorded audio clip is transcribed straight into the
+        // editable notes (Claude-style), so the user can review/edit the text before sending.
+        return this.files.map((f) => ({ ...f, isFile: !f.isImage }));
+    }
+    get hasAttachments() {
+        return this.files.length > 0;
+    }
+    get canAttachMore() {
+        return this.files.length < MAX_FILES;
+    }
+    get attachDisabled() {
+        return !this.canAttachMore || this.isProcessingFiles;
+    }
+
     // ───────────────────────── audio recording ─────────────────────────
 
     get micButtonClass() {
-        return this.isRecording ? 'mic-button recording' : 'mic-button';
+        return this.isRecording ? 'icon-btn mic recording' : 'icon-btn mic';
     }
     get micIcon() {
-        return this.isRecording ? 'utility:stop' : 'utility:record';
+        return this.isRecording ? 'utility:stop' : 'utility:unmuted';
     }
-    get recorderHint() {
-        return this.audioTranscript
-            ? 'Audio transcribed ✓ — record again to replace.'
-            : 'Tap to record. Tap again to stop and transcribe.';
+    get micTitle() {
+        return this.isRecording ? 'Stop recording' : 'Record audio';
     }
 
     async toggleRecording() {
@@ -100,7 +139,7 @@ export default class NoteCapture extends LightningElement {
                 this.timerDisplay = `${m}:${s}`;
             }, 1000);
         } catch (e) {
-            this.error = 'Microphone access was blocked. Allow mic access, or use file/text input instead.';
+            this.error = 'Microphone access was blocked. Allow mic access, or attach files / type notes instead.';
         }
     }
 
@@ -127,8 +166,11 @@ export default class NoteCapture extends LightningElement {
                 base64,
                 linkToId: this.recordId || ''
             });
-            this.audioTranscript = await transcribeAudio({ contentVersionId: saved.contentVersionId });
-            this.toast('Audio transcribed', 'Your recording was converted to text.', 'success');
+            const transcript = await transcribeAudio({ contentVersionId: saved.contentVersionId });
+            // Drop the transcript straight into the editable notes so the user can review and
+            // edit it before sending — same as Claude's voice input.
+            this.insertIntoNotes(transcript);
+            this.toast('Audio transcribed', 'Transcript added to your notes — edit it before sending.', 'success');
         } catch (e) {
             this.error = this.reduceError(e);
         } finally {
@@ -136,16 +178,22 @@ export default class NoteCapture extends LightningElement {
         }
     }
 
+    // Appends text to the editable notes and flags the textarea for a resize on next render.
+    insertIntoNotes(text) {
+        if (!text) {
+            return;
+        }
+        this.pastedText = [this.pastedText, text]
+            .map((s) => (s || '').trim())
+            .filter(Boolean)
+            .join('\n\n');
+        this._needsResize = true;
+    }
+
     // ───────────────────────── file handling ─────────────────────────
 
-    get dropzoneClass() {
-        return this._dragover ? 'dropzone dragover' : 'dropzone';
-    }
-    get hasFiles() {
-        return this.files.length > 0;
-    }
-    get fileCount() {
-        return this.files.length;
+    get composerClass() {
+        return this._dragover ? 'composer dragover' : 'composer';
     }
 
     handleDragOver(e) {
@@ -160,17 +208,42 @@ export default class NoteCapture extends LightningElement {
         this._dragover = false;
         this.ingestFiles(Array.from(e.dataTransfer.files || []));
     }
+    openFilePicker() {
+        const input = this.template.querySelector('input[type="file"]');
+        if (input) input.click();
+    }
     handleFilePick(e) {
         this.ingestFiles(Array.from(e.target.files || []));
+        e.target.value = null; // allow re-picking the same file
+    }
+
+    fileKind(file) {
+        const name = file.name || '';
+        const type = file.type || '';
+        if (type.startsWith('image/') || IMAGE_RE.test(name)) return 'image';
+        if (type === 'application/pdf' || PDF_RE.test(name)) return 'pdf';
+        return 'doc';
+    }
+
+    iconForKind(kind) {
+        if (kind === 'pdf') return 'doctype:pdf';
+        if (kind === 'image') return 'doctype:image';
+        return 'doctype:attachment';
     }
 
     async ingestFiles(fileList) {
         if (!fileList.length) return;
+
+        // Enforce the 3-file cap before uploading anything (template has 3 File slots).
+        const totalAfter = this.files.length + fileList.length;
+        if (totalAfter > MAX_FILES) {
+            this.error = `Maximum ${MAX_FILES} files allowed. Remove one before adding more.`;
+            return;
+        }
+
         this.error = undefined;
         this.isProcessingFiles = true;
         try {
-            // 1. Upload each file as a Salesforce File.
-            const uploaded = [];
             for (const file of fileList) {
                 const base64 = await this.blobToBase64(file);
                 const saved = await uploadFile({
@@ -178,17 +251,24 @@ export default class NoteCapture extends LightningElement {
                     base64,
                     linkToId: this.recordId || ''
                 });
-                uploaded.push(saved);
+                const kind = this.fileKind(file);
+                const isImage = kind === 'image';
                 this.files = [
                     ...this.files,
-                    { key: saved.contentDocumentId, name: file.name, contentDocumentId: saved.contentDocumentId }
+                    {
+                        key: saved.contentDocumentId,
+                        name: file.name,
+                        kind,
+                        isImage,
+                        iconName: this.iconForKind(kind),
+                        thumbnailUrl: isImage ? URL.createObjectURL(file) : null,
+                        contentVersionId: saved.contentVersionId,
+                        contentDocumentId: saved.contentDocumentId
+                    }
                 ];
             }
-            // 2. Read all files to text via the multimodal prompt template — in parallel, server-side.
-            const ids = uploaded.map((u) => u.contentVersionId);
-            const text = await processFiles({ contentVersionIds: ids });
-            this.fileTranscript = [this.fileTranscript, text].filter(Boolean).join('\n\n');
-            this.toast('Files processed', `${fileList.length} file(s) read into text.`, 'success');
+            await this.recomputeFileTranscript();
+            this.toast('Files added', `${fileList.length} file(s) read into text.`, 'success');
         } catch (e) {
             this.error = this.reduceError(e);
         } finally {
@@ -196,17 +276,65 @@ export default class NoteCapture extends LightningElement {
         }
     }
 
+    async removeFile(e) {
+        const key = e.currentTarget.dataset.key;
+        const removed = this.files.find((f) => f.key === key);
+        if (removed && removed.thumbnailUrl) URL.revokeObjectURL(removed.thumbnailUrl);
+        this.files = this.files.filter((f) => f.key !== key);
+        this.isProcessingFiles = true;
+        try {
+            await this.recomputeFileTranscript();
+        } catch (err) {
+            this.error = this.reduceError(err);
+        } finally {
+            this.isProcessingFiles = false;
+        }
+    }
+
+    /**
+     * Rebuilds fileTranscript from the CURRENT set of files in one multimodal prompt
+     * template call. Called whenever the file set changes (add or remove) so the combined
+     * transcript always matches what's attached.
+     */
+    async recomputeFileTranscript() {
+        const ids = this.files.map((f) => f.contentVersionId).filter(Boolean);
+        if (!ids.length) {
+            this.fileTranscript = '';
+            return;
+        }
+        this.fileTranscript = await processFiles({ contentVersionIds: ids });
+    }
+
     // ───────────────────────── text + combine + send ─────────────────────────
 
     handleTextChange(e) {
         this.pastedText = e.target.value;
     }
+    // Keep pastedText live on every keystroke (so Enter-to-send has the latest text)
+    // and grow the textarea to fit its content.
+    handleInput(e) {
+        this.pastedText = e.target.value;
+        const el = e.target;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+    }
+    // Enter sends; Shift+Enter inserts a newline (Claude-style composer behaviour).
+    handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!this.sendDisabled) {
+                this.handleSend();
+            }
+        }
+    }
     handleAgentChange(e) {
         this.selectedAgent = e.detail.value;
     }
 
+    // What we send to the agent: the extracted file text plus the editable notes (which
+    // already include any audio transcript the user reviewed/edited).
     get combinedTranscript() {
-        return [this.audioTranscript, this.fileTranscript, this.pastedText]
+        return [this.fileTranscript, this.pastedText]
             .map((s) => (s || '').trim())
             .filter(Boolean)
             .join('\n\n');
@@ -215,7 +343,7 @@ export default class NoteCapture extends LightningElement {
         return this.combinedTranscript.length > 0;
     }
     get sendDisabled() {
-        return !this.hasTranscript || !this.selectedAgent;
+        return !this.hasTranscript || !this.selectedAgent || this.isProcessingFiles || this.isTranscribing;
     }
 
     /**
@@ -229,12 +357,10 @@ export default class NoteCapture extends LightningElement {
         const botId = this.selectedAgent;
         this.error = undefined;
         try {
-            // Preferred: open the agent side panel and submit the transcript as an utterance.
             await accOpen(botId);
             await accExecute(transcript, botId);
             this.toast('Sent to agent', 'Opened the agent and sent your notes.', 'success');
         } catch (e) {
-            // ACC panel not available in this context — fall back to a host-handled event.
             this.dispatchEvent(
                 new CustomEvent('sendtoagent', {
                     detail: { botId, message: transcript },
