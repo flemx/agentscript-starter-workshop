@@ -18,6 +18,11 @@ const PDF_RE = /\.pdf$/i;
 const MAX_IMAGE_DIMENSION = 1600; // px on the longest edge — plenty for the prompt model
 const IMAGE_DOWNSCALE_THRESHOLD = 1500000; // ~1.5 MB: only resize images bigger than this
 const JPEG_QUALITY = 0.85;
+// Hard ceiling for what we'll send to the server. Base64 inflates bytes by ~33% and the
+// Aura imperative-action request has a size cap; anything past this would be rejected with a
+// generic aura:systemError, so we stop it here with a clear message instead. Applied AFTER
+// image downscaling, so it mainly guards large PDFs/docs.
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // 3 MB raw (~4 MB as base64)
 
 // Ready-made meeting transcripts so an attendee without their own notes can try the agent
 // in one click, then edit before sending. Deliberately written as messy, verbatim-style
@@ -497,10 +502,18 @@ export default class NoteCapture extends LightningElement {
 
         this.error = undefined;
         this.isProcessingFiles = true;
+        const tooLarge = [];
+        let addedCount = 0;
         try {
             for (const file of fileList) {
                 // Downscale big images client-side so the base64 stays under the request cap.
                 const toUpload = await this.prepareForUpload(file);
+                // Guard the final size — a PDF/doc (or stubborn image) over the cap would be
+                // rejected server-side with a cryptic error, so skip it with a clear message.
+                if (toUpload.size > MAX_UPLOAD_BYTES) {
+                    tooLarge.push(file.name);
+                    continue;
+                }
                 const base64 = await this.blobToBase64(toUpload);
                 const saved = await uploadFile({
                     fileName: file.name,
@@ -522,9 +535,16 @@ export default class NoteCapture extends LightningElement {
                         contentDocumentId: saved.contentDocumentId
                     }
                 ];
+                addedCount += 1;
             }
-            await this.recomputeFileTranscript();
-            this.toast('Files added', `${fileList.length} file(s) read into text.`, 'success');
+            if (addedCount > 0) {
+                await this.recomputeFileTranscript();
+                this.toast('Files added', `${addedCount} file(s) read into text.`, 'success');
+            }
+            if (tooLarge.length) {
+                const limitMb = Math.round(MAX_UPLOAD_BYTES / (1024 * 1024));
+                this.error = `These files are too large to upload (max ${limitMb} MB): ${tooLarge.join(', ')}. Compress them or paste the text instead.`;
+            }
         } catch (e) {
             this.error = this.reduceError(e);
         } finally {
